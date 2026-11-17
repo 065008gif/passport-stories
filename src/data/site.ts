@@ -1,0 +1,58 @@
+/**
+ * Site-wide settings. This is the one file to edit for social links,
+ * Reels embeds, the logo and the Country of the Week.
+ */
+export const site = {
+  name: 'Passport Stories',
+  tagline: 'Same planet. Different lives.',
+  description:
+    'Take a one-minute flight around a 3D globe, then explore how people in 20 countries work, study, marry, eat, live and commute, compared with India.',
+  url: process.env.NEXT_PUBLIC_SITE_URL || 'https://passport-stories.vercel.app',
+
+  /** Swap to '/logo.png' once the real badge is in /public. */
+  logo: '/logo.svg',
+
+  social: {
+    instagram: 'https://www.instagram.com/passport.stories_195',
+    youtube: 'https://www.youtube.com/@Passport.stories_195-g6q',
+    handle: '@passport.stories_195',
+  },
+
+  /** Formspree form ID for Ask the Map (set NEXT_PUBLIC_FORMSPREE_ID). */
+  formspreeId: process.env.NEXT_PUBLIC_FORMSPREE_ID || '',
+
+  /**
+   * Country of the Week. Leave null to rotate automatically through all
+   * countries by calendar week, or set a slug (e.g. 'japan') to pin one.
+   */
+  countryOfTheWeek: null as string | null,
+
+  /**
+   * Latest Reels / Shorts. Leave `youtubeId` empty to show a placeholder
+   * tile; add a YouTube Shorts video ID to embed it. `href` is where the
+   * tile links to (an Instagram Reel URL works here).
+   */
+  reels: [
+    { title: 'A school day in Japan, start to finish', platform: 'Instagram', youtubeId: '', href: '' },
+    { title: 'India vs Germany: who leaves work first?', platform: 'YouTube', youtubeId: '', href: '' },
+    { title: 'Three weddings, three continents', platform: 'Instagram', youtubeId: '', href: '' },
+    { title: 'How Amsterdam cycles to work', platform: 'YouTube', youtubeId: '', href: '' },
+  ],
+
+  /** Shown on the About page. Replace with the real team. */
+  team: 'A small student team curious about how the rest of the world spends an ordinary Tuesday.',
+};
+
+/**
+ * The main menu: four pages plus the home flight. `purpose` is the one line
+ * shown under each page's title and in the phone menu, so a first-time
+ * visitor always knows what a page is for.
+ */
+export const NAV = [
+  { href: '/', label: 'Home', purpose: 'The flight: five stops, then spin the globe yourself.' },
+  { href: '/countries', label: 'Countries', purpose: 'One country, six topics: work, school, weddings, food, housing and transport.' },
+  { href: '/compare', label: 'Compare', purpose: 'Two countries, side by side, on all six topics.' },
+  { href: '/your-life', label: 'Your Life', purpose: 'Your salary, rent, hours and commute, moved to another country.' },
+  { href: '/quiz', label: 'Play Zone', purpose: 'Three quick games: Clue Chase, Higher or Lower and Flag Run.' },
+  { href: '/facts', label: 'Community', purpose: 'Facts sent in by visitors. Add one of your own.' },
+];

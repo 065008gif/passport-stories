@@ -1,0 +1,1501 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ------------------------------------------------------------------
+   Passport Stories v3: global styles.
+
+   The look is an airport terminal: a dark departures hall (night /
+   panel / ink), yellow wayfinding signs (sun), cream paper tickets,
+   and a split-flap departures board. Colours are flat on purpose:
+   no animated gradients, nothing that costs frames.
+
+   Motion rule for the whole site: things respond to a tap or click
+   within ~150 ms and finish within ~300 ms. Nothing is tied to scroll.
+------------------------------------------------------------------- */
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+    --header: 4rem;
+    /* Theme colours as R G B, so one block (.deck) can flip them to the bright theme. */
+    --cream: 255 244 224;
+    --night: 13 15 58;
+    --panel: 20 23 74;
+  }
+  /* Laptops and up: the whole site is drawn at 90 %, which reads better than
+     full size. Everything is sized in rem, so this one line scales it all. */
+  @media (min-width: 768px) {
+    html {
+      font-size: 90%;
+      --header: 5.25rem;
+    }
+  }
+  body {
+    @apply bg-night font-sans text-cream antialiased;
+    overflow-x: clip;
+  }
+  :focus-visible {
+    outline: 3px solid #4cc9f0;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  ::selection {
+    background: #ffb703;
+    color: #1b1f5e;
+  }
+}
+
+@layer components {
+  /* Headings: Bricolage Grotesque. Friendly, a bit quirky, never shouting. */
+  .h-display {
+    @apply font-display;
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+  }
+  /* Big page titles: the same face, heavier and tighter. Normal case. */
+  .sign {
+    @apply font-display;
+    font-weight: 800;
+    line-height: 0.98;
+    letter-spacing: -0.035em;
+  }
+  .kicker {
+    @apply font-mono text-[11px] font-semibold uppercase tracking-[0.18em];
+  }
+
+  .btn {
+    @apply inline-flex min-h-[46px] items-center justify-center gap-2 rounded-full px-5 py-2.5 text-[15px] font-bold;
+    transition: transform 0.12s ease, background-color 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+  }
+  .btn:active {
+    transform: translateY(1px) scale(0.985);
+  }
+  .btn-sun {
+    @apply bg-sun text-ink hover:bg-[#ffc533];
+  }
+  .btn-ink {
+    @apply bg-ink text-cream hover:bg-[#262b7a];
+  }
+  .btn-ghost {
+    @apply border-2 border-cream/35 text-cream hover:border-cream hover:bg-cream/10;
+  }
+  .btn-ghost-ink {
+    @apply border-2 border-ink/35 text-ink hover:border-ink hover:bg-ink/5;
+  }
+  .chip {
+    @apply inline-flex min-h-[40px] items-center gap-2 rounded-lg border-2 border-cream/25 px-3.5 py-1.5 text-sm font-bold hover:border-sun;
+    transition: border-color 0.12s ease, background-color 0.12s ease, color 0.12s ease;
+  }
+  .chip[aria-pressed='true'],
+  .chip[aria-current='true'],
+  .chip[aria-selected='true'] {
+    @apply border-sun bg-sun text-ink;
+  }
+  .container-x {
+    @apply mx-auto w-full max-w-6xl px-4 sm:px-6;
+  }
+  .sample-tag {
+    @apply ml-1 inline-block rounded border border-current px-1 align-middle font-mono text-[9px] font-semibold uppercase leading-4 tracking-wider opacity-65;
+  }
+  .link-u {
+    @apply underline decoration-2 underline-offset-4 hover:text-sun;
+  }
+}
+
+/* --------------------------- Surfaces ----------------------------- */
+
+.paper {
+  background-color: #fff4e0;
+  color: #1b1f5e;
+}
+/* Kept as a class name from earlier versions: now simply the dark hall. */
+.stars {
+  background-color: #0d0f3a;
+  background-image: radial-gradient(1.5px 1.5px at 24px 38px, rgba(255, 244, 224, 0.9), transparent 60%),
+    radial-gradient(1px 1px at 120px 90px, rgba(255, 244, 224, 0.7), transparent 60%),
+    radial-gradient(1.5px 1.5px at 200px 20px, rgba(76, 201, 240, 0.8), transparent 60%),
+    radial-gradient(1px 1px at 70px 170px, rgba(255, 244, 224, 0.6), transparent 60%),
+    radial-gradient(1px 1px at 260px 140px, rgba(255, 183, 3, 0.7), transparent 60%),
+    radial-gradient(1px 1px at 170px 230px, rgba(255, 244, 224, 0.5), transparent 60%);
+  background-size: 300px 280px;
+}
+/* Sunset sky from the first published version: indigo melting into the badge colours. */
+.sunset-sky {
+  background: linear-gradient(180deg, #0d0f3a 0%, #1b1f5e 28%, #7b2f6b 52%, #f94144 70%, #fb8500 84%, #ffb703 100%);
+}
+/* The retro sun with horizontal slits, as on the logo. */
+.retro-sun {
+  border-radius: 9999px;
+  background: linear-gradient(180deg, #ffb703 0%, #fb8500 55%, #f94144 100%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0 52%, transparent 52% 55%, #000 55% 64%, transparent 64% 68%, #000 68% 76%, transparent 76% 81%, #000 81% 88%, transparent 88% 94%, #000 94%);
+  mask-image: linear-gradient(to bottom, #000 0 52%, transparent 52% 55%, #000 55% 64%, transparent 64% 68%, #000 68% 76%, transparent 76% 81%, #000 81% 88%, transparent 88% 94%, #000 94%);
+}
+/* Dark page body used under every inner-page heading (replaces the cream paper). */
+.deck {
+  color: #fff4e0;
+  background: radial-gradient(1200px 500px at 85% -10%, rgba(123, 47, 107, 0.35), transparent 60%), radial-gradient(900px 500px at 0% 100%, rgba(251, 133, 0, 0.1), transparent 60%), #0d0f3a;
+}
+
+.stripes {
+  height: 8px;
+  background: linear-gradient(180deg, #ffb703 0 33.3%, #fb8500 33.3% 66.6%, #f94144 66.6%);
+}
+.barcode {
+  background-image: repeating-linear-gradient(90deg, #1b1f5e 0 2px, transparent 2px 5px, #1b1f5e 5px 6px, transparent 6px 10px, #1b1f5e 10px 13px, transparent 13px 15px);
+}
+
+/* Yellow wayfinding tile with a gate code, e.g. "A3". */
+.gate-tile {
+  @apply inline-flex shrink-0 items-center justify-center rounded-md bg-sun font-display text-ink;
+  font-weight: 800;
+}
+
+/* Perforated ticket edge with a notch punched at each end. */
+.perforation {
+  position: relative;
+  border-top: 2px dashed rgba(255, 244, 224, 0.3);
+}
+.perforation::before,
+.perforation::after {
+  content: '';
+  position: absolute;
+  top: -13px;
+  width: 24px;
+  height: 24px;
+  border-radius: 9999px;
+  background: var(--notch, #0d0f3a);
+}
+.perforation::before {
+  left: -12px;
+}
+.perforation::after {
+  right: -12px;
+}
+
+.stamp-ink {
+  mix-blend-mode: multiply;
+  opacity: 0.92;
+}
+
+/* ------------------- The split-flap departures board --------------- */
+
+.board {
+  --cell: clamp(10px, 3vw, 17px);
+  background: #0a0c2e;
+  border: 1px solid rgba(255, 244, 224, 0.14);
+}
+@media (min-width: 1024px) {
+  .board {
+    --cell: clamp(13px, 1.05vw, 15px);
+  }
+}
+.flap-row {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--cell) * 0.7);
+  padding: calc(var(--cell) * 0.32) calc(var(--cell) * 0.6);
+  border-bottom: 1px solid rgba(255, 244, 224, 0.07);
+  transition: background-color 0.12s ease;
+}
+a.flap-row:hover,
+a.flap-row:focus-visible {
+  background: rgba(255, 183, 3, 0.14);
+}
+.flaps {
+  display: inline-flex;
+  gap: 1px;
+}
+/* One character tile: dark card, light letter, a hairline across the middle. */
+.flap {
+  display: inline-block;
+  width: var(--cell);
+  height: calc(var(--cell) * 1.55);
+  line-height: calc(var(--cell) * 1.55);
+  text-align: center;
+  font-family: 'JetBrains Mono Variable', ui-monospace, monospace;
+  font-size: calc(var(--cell) * 0.98);
+  font-weight: 700;
+  color: #fff4e0;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #1c2060 0 49%, #0a0c2e 49% 53%, #171a52 53% 100%);
+}
+.flaps[data-tone='sun'] .flap {
+  color: #ffb703;
+}
+.flaps[data-tone='teal'] .flap {
+  color: #2fd3a6;
+}
+.flaps[data-tone='coral'] .flap {
+  color: #ff7a7c;
+}
+.flaps[data-tone='dim'] .flap {
+  color: rgba(255, 244, 224, 0.6);
+}
+@keyframes flap-settle {
+  0% {
+    transform: scaleY(0.2);
+    filter: brightness(1.8);
+  }
+  100% {
+    transform: scaleY(1);
+    filter: none;
+  }
+}
+.flap.settle {
+  animation: flap-settle 0.14s ease-out;
+}
+@keyframes blink {
+  50% {
+    opacity: 0.35;
+  }
+}
+.blink {
+  animation: blink 1.2s steps(1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Mobile menu rows */
+.board-row {
+  @apply grid items-center gap-3 border-b border-cream/10 px-3 py-3 font-mono text-sm hover:bg-cream/10;
+  grid-template-columns: 1.5rem 1fr auto;
+}
+
+/* ------------------------ Home page: the flight -------------------- */
+
+/* Deep space behind the globe: brand indigo with a faint glow, no animation. */
+.space {
+  background: radial-gradient(ellipse 80% 70% at 70% 45%, #1b1f5e 0%, #0d0f3a 55%, #070824 100%);
+}
+/* Shown instead of the 3D globe if WebGL is unavailable. */
+.planet-fallback {
+  background: radial-gradient(circle at 32% 30%, #4cc9f0 0%, #1b1f5e 55%, #0d0f3a 100%);
+  box-shadow: 0 0 80px rgba(76, 201, 240, 0.35);
+}
+
+/* One screen per stop. On touch screens a swipe snaps to the next one. */
+.flight-screen {
+  height: 100svh;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+@media (pointer: coarse) {
+  html.snap-page {
+    scroll-snap-type: y mandatory;
+  }
+  html.snap-page .after-flight,
+  html.snap-page footer {
+    scroll-snap-align: start;
+  }
+}
+html.snap-page {
+  scroll-behavior: auto; /* the script chooses when to animate */
+}
+
+/* Stop text pops in quickly when its screen arrives. */
+.stop-card > * {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.28s ease-out, transform 0.28s ease-out;
+}
+.flight-screen.is-here .stop-card > * {
+  opacity: 1;
+  transform: none;
+}
+.flight-screen.is-here .stop-card > *:nth-child(2) {
+  transition-delay: 0.05s;
+}
+.flight-screen.is-here .stop-card > *:nth-child(3) {
+  transition-delay: 0.1s;
+}
+.flight-screen.is-here .stop-card > *:nth-child(4) {
+  transition-delay: 0.15s;
+}
+.flight-screen.is-here .stop-card > *:nth-child(5) {
+  transition-delay: 0.2s;
+}
+/* Without JavaScript, or with reduced motion, everything is simply visible. */
+html:not(.snap-page) .stop-card > * {
+  opacity: 1;
+  transform: none;
+}
+@keyframes nudge {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(6px);
+  }
+}
+.nudge {
+  animation: nudge 1.4s ease-in-out infinite;
+}
+
+/* The Earth's edge at the bottom of inner-page headers. */
+.horizon {
+  background: radial-gradient(circle at 50% 0%, #1d3a8a 0%, #101a4f 18%, #0a0c2e 40%);
+  box-shadow: 0 0 60px 6px rgba(76, 201, 240, 0.45), 0 0 140px 30px rgba(76, 201, 240, 0.18), inset 0 6px 24px rgba(120, 210, 255, 0.5);
+}
+
+/* ------------------- Flag pins on the free-spin globe --------------- */
+.globe-pin {
+  width: 34px;
+  height: 34px;
+  border-radius: 9999px;
+  transition: transform 0.25s cubic-bezier(0.2, 1.4, 0.4, 1);
+  will-change: transform;
+}
+.globe-pin img {
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+  object-fit: cover;
+  border: 2.5px solid #fff4e0;
+  box-shadow: 0 0 0 0 rgba(255, 183, 3, 0.7), 0 4px 10px rgba(0, 0, 0, 0.5);
+  transition: scale 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.globe-pin:hover,
+.globe-pin:focus-visible {
+  z-index: 5;
+}
+.globe-pin:hover img,
+.globe-pin:focus-visible img {
+  scale: 1.45;
+  border-color: #ffb703;
+  box-shadow: 0 0 0 6px rgba(255, 183, 3, 0.35), 0 6px 16px rgba(0, 0, 0, 0.55);
+}
+.globe-pin-label {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 14px);
+  translate: -50% 6px;
+  white-space: nowrap;
+  border-radius: 9999px;
+  background: #ffb703;
+  color: #1b1f5e;
+  padding: 3px 12px;
+  font-family: 'Bricolage Grotesque Variable', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease, translate 0.12s ease;
+}
+.globe-pin:hover .globe-pin-label,
+.globe-pin:focus-visible .globe-pin-label {
+  opacity: 1;
+  translate: -50% 0;
+}
+@media (max-width: 767px) {
+  .globe-pin {
+    width: 26px;
+    height: 26px;
+  }
+}
+
+/* ------------------------- Flight tracker -------------------------- */
+.tracker {
+  position: relative;
+  width: min(100%, 34rem);
+  border-radius: 22px;
+  border: 1px solid rgba(255, 244, 224, 0.18);
+  background: rgba(13, 15, 58, 0.82);
+  backdrop-filter: blur(10px);
+  padding: 20px 18px 8px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+.tracker-line {
+  position: absolute;
+  left: 37px;
+  right: 37px;
+  top: 38px;
+  height: 3px;
+  border-radius: 3px;
+  background: rgba(255, 244, 224, 0.2);
+}
+.tracker-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 3px;
+  background: #ffb703;
+  transition: width 0.35s ease-out;
+}
+.tracker-plane {
+  position: absolute;
+  top: 50%;
+  translate: -50% -175%;
+  z-index: 3;
+  font-size: 20px;
+  line-height: 1;
+  color: #fff4e0;
+  text-shadow: 0 0 10px rgba(255, 183, 3, 0.9), 0 2px 4px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+}
+.tracker-stop {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  width: 38px;
+  opacity: 0.55;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.tracker-stop:hover,
+.tracker-stop.is-done {
+  opacity: 0.9;
+}
+.tracker-stop.is-active {
+  opacity: 1;
+  transform: translateY(-3px) scale(1.12);
+}
+.tracker-stop img,
+.tracker-globe {
+  width: 34px;
+  height: 34px;
+  border-radius: 9999px;
+  object-fit: cover;
+  border: 2.5px solid rgba(255, 244, 224, 0.75);
+  background: #1b1f5e;
+}
+.tracker-stop.is-active img,
+.tracker-stop.is-active .tracker-globe {
+  border-color: #ffb703;
+  box-shadow: 0 0 0 4px rgba(255, 183, 3, 0.3);
+}
+.tracker-globe {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Bricolage Grotesque Variable', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  color: #ffb703;
+}
+.tracker-code {
+  font-family: 'JetBrains Mono Variable', monospace;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #fff4e0;
+}
+.tracker-stop.is-active .tracker-code {
+  color: #ffb703;
+}
+
+/* --------------------- "Flying to..." page change ------------------- */
+@keyframes cloud-drift {
+  from {
+    transform: translateX(110vw);
+  }
+  to {
+    transform: translateX(-60vw);
+  }
+}
+.cloud {
+  position: absolute;
+  height: 10px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, transparent, rgba(255, 244, 224, 0.55), transparent);
+  animation: cloud-drift 0.9s linear infinite;
+}
+
+/* ---------------------- Passport stamp on arrival ------------------- */
+@keyframes stamp-shake {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0);
+  }
+  20% {
+    transform: translate(-3px, 2px) rotate(-0.6deg);
+  }
+  45% {
+    transform: translate(3px, -1px) rotate(0.5deg);
+  }
+  70% {
+    transform: translate(-1px, 1px) rotate(-0.2deg);
+  }
+}
+.stamp-shake {
+  animation: stamp-shake 0.28s ease-out 0.42s;
+}
+@keyframes count-pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.35) rotate(-4deg);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.count-pop {
+  animation: count-pop 0.5s cubic-bezier(0.2, 1.5, 0.4, 1);
+}
+
+/* ------------------------------------------------------------------
+   v6: life on the inner pages. Scroll reveals, tilt cards, the
+   reading-progress plane, country cards, the flag picker, guess cards.
+------------------------------------------------------------------- */
+
+html.js [data-rv] {
+  opacity: 0;
+  transition: opacity 0.55s ease, transform 0.65s cubic-bezier(0.2, 0.9, 0.25, 1.15);
+  transition-delay: var(--d, 0ms);
+  will-change: opacity, transform;
+}
+html.js [data-rv='up'] {
+  transform: translateY(34px);
+}
+html.js [data-rv='left'] {
+  transform: translateX(-48px) rotate(-1.5deg);
+}
+html.js [data-rv='right'] {
+  transform: translateX(48px) rotate(1.5deg);
+}
+html.js [data-rv='pop'] {
+  transform: scale(0.82);
+}
+html.js [data-rv].rv-in {
+  opacity: 1;
+  transform: none;
+}
+
+.tilt {
+  transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transition: transform 0.18s ease-out;
+  transform-style: preserve-3d;
+  position: relative;
+}
+.tilt::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  background: radial-gradient(420px circle at var(--gx, 50%) var(--gy, 50%), rgba(255, 255, 255, 0.28), transparent 45%);
+}
+.tilt:hover::after {
+  opacity: 1;
+}
+
+.scroll-plane {
+  position: fixed;
+  left: 0;
+  right: 0;
+  /* rides along the bottom edge of the header */
+  top: calc(var(--header) - 8px);
+  height: 8px;
+  z-index: 70;
+  pointer-events: none;
+  background: rgba(13, 15, 58, 0.85);
+  box-shadow: 0 1px 0 rgba(255, 244, 224, 0.18);
+}
+/* dashed runway line the plane flies along */
+.scroll-plane::before {
+  content: '';
+  position: absolute;
+  inset: 3px 0 auto 0;
+  border-top: 2px dashed rgba(255, 244, 224, 0.4);
+}
+.scroll-plane-fill {
+  position: absolute;
+  inset: 0;
+  transform-origin: left;
+  transform: scaleX(var(--p, 0));
+  background: linear-gradient(90deg, #fb8500, #ffb703, #ffe08a);
+  box-shadow: 0 0 14px rgba(255, 183, 3, 0.9);
+}
+.scroll-plane-icon {
+  position: absolute;
+  top: -15px;
+  left: calc(var(--p, 0) * (100% - 38px));
+  width: 38px;
+  height: 38px;
+  transform: rotate(90deg);
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.55));
+}
+
+/* Flag ribbon under the Countries heading */
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+.marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 38s linear infinite;
+}
+.marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Country cards */
+.ccard {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 1.4rem;
+  background: linear-gradient(170deg, #262270 0%, #1b1f5e 55%, #2f1f58 100%);
+  color: #fff4e0;
+  box-shadow: 0 0 0 1px rgba(255, 244, 224, 0.12), 0 18px 32px -18px rgba(0, 0, 0, 0.7);
+  transition: box-shadow 0.2s ease, translate 0.2s ease;
+}
+.ccard:hover,
+.ccard:focus-visible {
+  translate: 0 -6px;
+  box-shadow: 0 0 0 2px var(--accent, #ffb703), 0 26px 40px -18px rgba(0, 0, 0, 0.85);
+}
+.ccard-cover {
+  position: relative;
+  height: 7.5rem;
+  overflow: hidden;
+  background: #1b1f5e;
+}
+.ccard-wash {
+  position: absolute;
+  inset: -30%;
+  width: 160%;
+  height: 160%;
+  object-fit: cover;
+  filter: blur(22px) saturate(1.25);
+  transition: transform 0.7s ease;
+}
+.ccard:hover .ccard-wash {
+  transform: scale(1.2) rotate(8deg);
+}
+.ccard-sticker {
+  position: absolute;
+  left: 1.1rem;
+  top: 1.15rem;
+  z-index: 2;
+  width: 4.6rem;
+  height: 4.6rem;
+  border-radius: 1.1rem;
+  border: 4px solid #fff4e0;
+  object-fit: cover;
+  transform: rotate(-7deg);
+  box-shadow: 0 10px 18px -8px rgba(0, 0, 0, 0.6);
+  transition: transform 0.35s cubic-bezier(0.3, 1.8, 0.5, 1);
+}
+.ccard:hover .ccard-sticker {
+  transform: rotate(5deg) scale(1.14);
+}
+.ccard-cover::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(13, 15, 58, 0) 30%, rgba(13, 15, 58, 0.6));
+}
+.ccard-code {
+  position: absolute;
+  right: 0.75rem;
+  bottom: 0.4rem;
+  z-index: 1;
+  font-family: 'Bricolage Grotesque Variable', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 2.6rem;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: #fff4e0;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+}
+.ccard-tear {
+  height: 14px;
+  margin-top: -7px;
+  position: relative;
+  z-index: 1;
+  background: radial-gradient(circle at 7px 0, transparent 6px, #262270 6.5px) 0 0 / 14px 14px repeat-x;
+}
+.ccard-peek {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s ease;
+}
+.ccard-peek > div {
+  overflow: hidden;
+}
+.ccard:hover .ccard-peek,
+.ccard:focus-visible .ccard-peek {
+  grid-template-rows: 1fr;
+}
+@media (hover: none) {
+  .ccard-peek {
+    grid-template-rows: 1fr;
+  }
+}
+.ccard-plane {
+  display: inline-block;
+  transition: transform 0.45s cubic-bezier(0.3, 0.8, 0.3, 1);
+}
+.ccard:hover .ccard-plane {
+  transform: translate(14px, -6px) rotate(-12deg);
+}
+
+/* Flag picker */
+.pick-flag {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 1rem;
+  padding: 0.6rem 0.25rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.1;
+  text-align: center;
+  color: #fff4e0;
+  transition: background-color 0.12s ease, transform 0.18s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.pick-flag img {
+  transition: transform 0.22s cubic-bezier(0.3, 1.8, 0.5, 1);
+}
+.pick-flag:hover:not(:disabled),
+.pick-flag:focus-visible {
+  background: rgba(255, 183, 3, 0.16);
+}
+.pick-flag:hover:not(:disabled) img,
+.pick-flag:focus-visible img {
+  transform: scale(1.22) rotate(-6deg);
+}
+.pick-flag[aria-selected='true'] {
+  background: #ffb703;
+  color: #1b1f5e;
+}
+.pick-flag:disabled {
+  opacity: 0.3;
+}
+
+/* VS clash on the Compare heading */
+@keyframes clash-left {
+  0% {
+    transform: translateX(-60vw) rotate(-20deg);
+  }
+  70% {
+    transform: translateX(14px) rotate(4deg);
+  }
+  100% {
+    transform: none;
+  }
+}
+@keyframes clash-right {
+  0% {
+    transform: translateX(60vw) rotate(20deg);
+  }
+  70% {
+    transform: translateX(-14px) rotate(-4deg);
+  }
+  100% {
+    transform: none;
+  }
+}
+@keyframes vs-pop {
+  0%,
+  55% {
+    transform: scale(0) rotate(-30deg);
+  }
+  80% {
+    transform: scale(1.35) rotate(8deg);
+  }
+  100% {
+    transform: scale(1) rotate(-6deg);
+  }
+}
+.clash-left {
+  animation: clash-left 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.clash-right {
+  animation: clash-right 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.vs-pop {
+  animation: vs-pop 0.95s cubic-bezier(0.3, 1.4, 0.5, 1) both;
+}
+
+@keyframes bob {
+  50% {
+    transform: translateY(-9px) rotate(3deg);
+  }
+}
+.bob {
+  animation: bob 4.5s ease-in-out infinite;
+}
+@keyframes wiggle {
+  0%,
+  100% {
+    transform: rotate(-2deg);
+  }
+  50% {
+    transform: rotate(2deg);
+  }
+}
+.guess-btn {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 1.1rem;
+  border: 2px solid rgba(255, 244, 224, 0.25);
+  padding: 0.9rem 0.5rem;
+  font-weight: 800;
+  transition: transform 0.16s cubic-bezier(0.3, 1.6, 0.5, 1), border-color 0.12s ease, background-color 0.12s ease;
+}
+.guess-btn:hover:not(:disabled) {
+  transform: translateY(-4px) scale(1.04);
+  border-color: #ffb703;
+  background: rgba(255, 183, 3, 0.12);
+}
+.guess-btn:hover:not(:disabled) img {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+.guess-btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+@keyframes burst {
+  0% {
+    transform: translate(-50%, -50%) scale(0.2);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(-50% + var(--bx)), calc(-50% + var(--by))) scale(1) rotate(var(--br));
+    opacity: 0;
+  }
+}
+.burst i {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  animation: burst 0.8s ease-out forwards;
+}
+.big-no {
+  font-family: 'Bricolage Grotesque Variable', system-ui, sans-serif;
+  font-weight: 800;
+  line-height: 0.8;
+  color: transparent;
+  -webkit-text-stroke: 2px var(--accent, #1b1f5e);
+  opacity: 0.22;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.js [data-rv] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .marquee,
+  .bob,
+  .clash-left,
+  .clash-right,
+  .vs-pop {
+    animation: none;
+  }
+  .tilt {
+    transform: none;
+  }
+}
+
+/* Your Life sliders */
+.life-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 16px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--c1, #ffb703) 0, var(--c2, #fb8500) var(--pct, 50%), rgba(255, 244, 224, 0.14) var(--pct, 50%));
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+.life-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #fff4e0 radial-gradient(circle, #1b1f5e 0 4px, transparent 5px);
+  border: 4px solid var(--c1, #ffb703);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
+  transition: transform 0.14s cubic-bezier(0.3, 1.7, 0.5, 1);
+}
+.life-range::-webkit-slider-thumb:hover,
+.life-range:active::-webkit-slider-thumb {
+  transform: scale(1.18);
+}
+.life-range::-moz-range-thumb {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #fff4e0;
+  border: 4px solid var(--c1, #ffb703);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
+}
+/* no browser spinner arrows on the money fields */
+.no-spin::-webkit-outer-spin-button,
+.no-spin::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.no-spin {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* ------------------------- Country backdrops ------------------------- */
+.scene-art {
+  display: block;
+}
+@keyframes scene-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.scene-spin {
+  animation: scene-spin 18s linear infinite;
+  transform-box: view-box;
+}
+@keyframes aurora {
+  0%,
+  100% {
+    transform: translateX(0) scaleY(1);
+    opacity: 0.55;
+  }
+  50% {
+    transform: translateX(-28px) scaleY(1.25);
+    opacity: 0.9;
+  }
+}
+.scene-aurora {
+  animation: aurora 9s ease-in-out infinite;
+  filter: blur(7px);
+  transform-origin: center;
+}
+@keyframes sun-rise {
+  from {
+    transform: translateY(40%);
+  }
+}
+.scene-sun {
+  animation: sun-rise 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.scene-particles {
+  position: absolute;
+  inset: 0;
+}
+.scene-particles i {
+  position: absolute;
+  display: block;
+  width: calc(9px * var(--s, 1));
+  height: calc(9px * var(--s, 1));
+  will-change: transform;
+}
+@keyframes p-fall {
+  0% {
+    transform: translate(0, -10vh) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.95;
+  }
+  100% {
+    transform: translate(-90px, 105vh) rotate(540deg);
+    opacity: 0.7;
+  }
+}
+@keyframes p-fall-slow {
+  0% {
+    transform: translate(0, -10vh);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.9;
+  }
+  50% {
+    transform: translate(24px, 50vh);
+  }
+  100% {
+    transform: translate(-10px, 105vh);
+    opacity: 0.8;
+  }
+}
+@keyframes p-twinkle {
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: scale(0.6);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes p-rise {
+  0% {
+    transform: translate(0, 30vh);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.95;
+  }
+  100% {
+    transform: translate(40px, -70vh);
+    opacity: 0;
+  }
+}
+@keyframes p-blow {
+  0% {
+    transform: translate(-10vw, 60vh);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate(60vw, 40vh);
+    opacity: 0;
+  }
+}
+.scene-petals i,
+.scene-marigold i,
+.scene-leaves i,
+.scene-confetti i {
+  animation: p-fall linear infinite;
+}
+.scene-petals i,
+.scene-marigold i {
+  border-radius: 80% 0 80% 0;
+}
+.scene-leaves i {
+  border-radius: 0 70% 0 70%;
+  width: calc(11px * var(--s, 1));
+}
+.scene-confetti i {
+  width: calc(7px * var(--s, 1));
+  height: calc(12px * var(--s, 1));
+  border-radius: 2px;
+}
+.scene-snow i {
+  border-radius: 50%;
+  width: calc(6px * var(--s, 1));
+  height: calc(6px * var(--s, 1));
+  animation: p-fall-slow linear infinite;
+}
+.scene-stars i {
+  border-radius: 50%;
+  width: calc(3.5px * var(--s, 1));
+  height: calc(3.5px * var(--s, 1));
+  animation: p-twinkle ease-in-out infinite;
+  animation-duration: 3s !important;
+}
+.scene-lanterns i {
+  width: calc(12px * var(--s, 1));
+  height: calc(16px * var(--s, 1));
+  border-radius: 40% 40% 30% 30%;
+  box-shadow: 0 0 14px 3px rgba(251, 133, 0, 0.7);
+  animation: p-rise linear infinite;
+  animation-duration: 14s !important;
+}
+.scene-sand i {
+  width: calc(3px * var(--s, 1));
+  height: calc(3px * var(--s, 1));
+  border-radius: 50%;
+  top: 0 !important;
+  animation: p-blow linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .scene-particles i,
+  .scene-spin,
+  .scene-aurora,
+  .scene-sun {
+    animation: none;
+  }
+}
+
+/* ------------------------------- Arcade ------------------------------- */
+.arcade-mode {
+  display: block;
+  width: 100%;
+  height: 100%;
+  text-align: left;
+  border-radius: 1.5rem;
+  padding: 1.4rem;
+  color: #fff4e0;
+  background: linear-gradient(165deg, #2a2674 0%, #1b1f5e 48%, #33205a 100%);
+  border: 1px solid rgba(255, 244, 224, 0.16);
+  border-top: 4px solid var(--accent);
+  transition: border-color 0.15s ease, box-shadow 0.2s ease;
+}
+.arcade-mode:hover {
+  border-color: var(--accent);
+  box-shadow: 0 26px 40px -20px rgba(0, 0, 0, 0.85);
+}
+.arcade-emoji {
+  display: inline-flex;
+  height: 4rem;
+  width: 4rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 1.2rem;
+  font-size: 2rem;
+  background: rgba(255, 244, 224, 0.1);
+  transition: transform 0.3s cubic-bezier(0.3, 1.8, 0.5, 1);
+}
+.arcade-mode:hover .arcade-emoji {
+  transform: scale(1.2) rotate(-10deg);
+}
+.arcade-option {
+  display: flex;
+  min-height: 64px;
+  align-items: center;
+  gap: 0.75rem;
+  border-radius: 1.1rem;
+  border: 2px solid rgba(255, 244, 224, 0.25);
+  background: rgba(255, 244, 224, 0.06);
+  padding: 0.7rem 0.9rem;
+  text-align: left;
+  font-size: 1.05rem;
+  font-weight: 800;
+  transition: transform 0.14s cubic-bezier(0.3, 1.6, 0.5, 1), border-color 0.1s ease, background-color 0.1s ease, opacity 0.2s ease;
+}
+.arcade-option.idle:hover {
+  transform: translateY(-3px) scale(1.02);
+  border-color: #ffb703;
+  background: rgba(255, 183, 3, 0.14);
+}
+.arcade-option.idle:active {
+  transform: scale(0.96);
+}
+.arcade-option.right {
+  border-color: #06a77d;
+  background: #06a77d;
+  color: #fff;
+  transform: scale(1.03);
+}
+.arcade-option.wrong {
+  border-color: #fb8500;
+  background: #fb8500;
+  color: #fff;
+}
+.arcade-option.dim {
+  opacity: 0.4;
+}
+@keyframes arcade-shake {
+  20% {
+    transform: translateX(-8px) rotate(-1deg);
+  }
+  40% {
+    transform: translateX(8px) rotate(1deg);
+  }
+  60% {
+    transform: translateX(-5px);
+  }
+  80% {
+    transform: translateX(5px);
+  }
+}
+.arcade-shake {
+  animation: arcade-shake 0.35s ease;
+}
+@keyframes arcade-confetti {
+  0% {
+    transform: translateY(-10vh) rotate(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(110vh) rotate(720deg);
+    opacity: 0.6;
+  }
+}
+.arcade-confetti {
+  position: absolute;
+  top: 0;
+  width: 9px;
+  height: 14px;
+  border-radius: 2px;
+  animation: arcade-confetti linear forwards;
+}
+
+/* Flat map pins: placed by latitude/longitude percentages */
+.flat-pin {
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+}
+.flat-pin img {
+  width: 26px;
+  height: 26px;
+}
+.flat-map::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(13, 15, 58, 0.25), rgba(13, 15, 58, 0.05) 40%, rgba(123, 47, 107, 0.3));
+}
+.flat-map ul {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+/* Dark replacements for the old cream surfaces */
+.panel-dark {
+  color: #fff4e0;
+  background: linear-gradient(170deg, #1b1f5e, #14174a 60%);
+  border: 1px solid rgba(255, 244, 224, 0.16);
+}
+.strip-sunset {
+  background: linear-gradient(90deg, #fb8500, #ffb703 60%, #ffd24d);
+  color: #1b1f5e;
+}
+
+/* ------------------------------------------------------------------
+   v7: chunky headings and solid colour blocks, after the Theme Tours
+   cards of the first published version.
+------------------------------------------------------------------- */
+.chunk {
+  font-family: 'Bowlby One', 'Bricolage Grotesque Variable', system-ui, sans-serif;
+  font-weight: 400;
+  line-height: 1.04;
+  letter-spacing: -0.005em;
+}
+/* Calm card: deep indigo melting into plum, with a thin line of the accent
+   colour along the top. Colour is a hint here, never the whole surface. */
+.blk {
+  position: relative;
+  overflow: hidden;
+  color: #fff4e0;
+  border-radius: 1.6rem;
+  background: linear-gradient(165deg, #2a2674 0%, #1b1f5e 48%, #33205a 100%);
+  border: 1px solid rgba(255, 244, 224, 0.14);
+  box-shadow: 0 18px 40px -22px rgba(0, 0, 0, 0.8);
+}
+.blk::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  background: var(--blk, #ffb703);
+}
+.blk-lift {
+  transition: transform 0.2s cubic-bezier(0.3, 1.5, 0.5, 1), box-shadow 0.2s ease;
+}
+.blk-lift:hover {
+  transform: translateY(-6px);
+  border-color: var(--blk, #ffb703);
+}
+.guess-solid .guess-btn {
+  border-color: #1b1f5e;
+  background: #fff4e0;
+  color: #1b1f5e;
+}
+.guess-solid .guess-btn:hover:not(:disabled) {
+  border-color: #1b1f5e;
+  background: #ffb703;
+}
+/* Filter chips on the Countries page */
+.fchip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border-radius: 999px;
+  padding: 0.55rem 1.05rem;
+  font-family: 'Bricolage Grotesque Variable', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 1.02rem;
+  letter-spacing: -0.01em;
+  color: #fff4e0;
+  background: rgba(255, 244, 224, 0.1);
+  transition: transform 0.16s cubic-bezier(0.3, 1.7, 0.5, 1), background-color 0.12s ease, color 0.12s ease, box-shadow 0.12s ease;
+}
+.fchip i {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  background: var(--c);
+}
+.fchip:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 244, 224, 0.18);
+}
+.fchip[aria-pressed='true'] {
+  background: #ffb703;
+  color: #1b1f5e;
+  box-shadow: 0 5px 0 rgba(0, 0, 0, 0.4);
+  transform: scale(1.04);
+}
+.fchip[aria-pressed='true'] i {
+  background: #1b1f5e;
+}
+
+/* Arcade play card: a little glow and coloured answer letters */
+.arcade-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.8rem;
+  border: 2px solid rgba(255, 183, 3, 0.55);
+  background: radial-gradient(520px 260px at 100% 0%, rgba(251, 133, 0, 0.28), transparent 70%), radial-gradient(520px 300px at 0% 100%, rgba(76, 201, 240, 0.22), transparent 70%), linear-gradient(165deg, #2a2674, #1b1f5e 55%, #33205a);
+  box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.9);
+}
+.arcade-letter {
+  display: inline-flex;
+  height: 2.1rem;
+  width: 2.1rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.7rem;
+  font-family: 'Bowlby One', system-ui, sans-serif;
+  font-size: 0.95rem;
+  color: #1b1f5e;
+  background: var(--l, #ffb703);
+}
+.arcade-clue {
+  border-left: 5px solid var(--l, #ffb703);
+  background: linear-gradient(90deg, rgba(255, 244, 224, 0.14), rgba(255, 244, 224, 0.05));
+}
+
+/* ------------------- Boarding pass printer (v8) -------------------- */
+@keyframes print-feed {
+  0% { transform: translateY(-100%); }
+  15% { transform: translateY(-82%); }
+  25% { transform: translateY(-80%); }
+  45% { transform: translateY(-55%); }
+  55% { transform: translateY(-53%); }
+  80% { transform: translateY(-20%); }
+  100% { transform: translateY(0%); }
+}
+.print-feed { animation: print-feed 2.6s cubic-bezier(.3,.7,.4,1) infinite; }
+@keyframes print-scan { 0%,100% { transform: scaleX(.15); opacity: .3 } 50% { transform: scaleX(1); opacity: 1 } }
+.print-scan { animation: print-scan .9s ease-in-out infinite; transform-origin: center; }
+@keyframes print-blink { 0%,60% { opacity: 1 } 61%,100% { opacity: .2 } }
+.print-blink { animation: print-blink .6s steps(1) infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .print-feed, .print-scan, .print-blink { animation: none; }
+}
+
+/* ---------------- Home: "Boarding now" gates band (v8) ---------------- */
+.gates-band {
+  background:
+    radial-gradient(60% 90% at 88% 105%, rgba(255, 244, 224, 0.55), transparent 60%),
+    linear-gradient(160deg, #ff9e1b 0%, #ffb703 45%, #ffd24d 100%);
+  border-top: 6px solid #1b1f5e;
+  border-bottom: 6px solid #1b1f5e;
+  color: #1b1f5e;
+}
+.gates-glow {
+  /* retro sun rays fanning from the bottom right */
+  position: absolute;
+  inset: 0;
+  background: repeating-conic-gradient(from 200deg at 88% 115%, rgba(251, 133, 0, 0.28) 0deg 6deg, transparent 6deg 14deg);
+  pointer-events: none;
+}
+.gate-pass {
+  background: #fff4e0;
+  border: 3px solid #1b1f5e;
+  box-shadow: 0 8px 0 #1b1f5e;
+}
+.gate-tear {
+  border-top: 2px dashed rgba(27, 31, 94, 0.25);
+  background: rgba(27, 31, 94, 0.06);
+}
+.gate-tear::before,
+.gate-tear::after {
+  content: '';
+  position: absolute;
+  top: -11px;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: #ffc52e;
+  border: 3px solid #1b1f5e;
+}
+.gate-tear::before { left: -10px; }
+.gate-tear::after { right: -10px; }
+
+/* ---------------- Your Life: bright check-in desk (v8) ---------------- */
+.checkin {
+  background: radial-gradient(120% 60% at 50% 0%, #2a2f86 0%, #1b1f5e 55%, #15184a 100%);
+  box-shadow: 0 14px 0 #0b0d33, 0 30px 60px -20px rgba(0, 0, 0, 0.7);
+}
+.checkin-head {
+  background: linear-gradient(90deg, #fb8500 0%, #ffb703 60%, #ffd24d 100%);
+  border-bottom: 3px solid #1b1f5e;
+}
+.lane {
+  box-shadow: 0 7px 0 #0b0d33;
+}
+.print-btn {
+  background: linear-gradient(180deg, #ffd24d 0%, #ffb703 55%, #fb8500 100%);
+  box-shadow: 0 6px 0 #1b1f5e, 0 0 0 4px rgba(255, 183, 3, 0.25), 0 16px 30px -8px rgba(251, 133, 0, 0.7);
+}
+.life-range-ink {
+  background: linear-gradient(90deg, #1b1f5e 0, #1b1f5e var(--pct, 50%), rgba(27, 31, 94, 0.18) var(--pct, 50%)) !important;
+  box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.2) !important;
+}
+.life-range-ink::-webkit-slider-thumb {
+  border-color: #1b1f5e !important;
+  background: #fff4e0 radial-gradient(circle, #fb8500 0 6px, transparent 7px) !important;
+}
+.life-range-ink::-moz-range-thumb {
+  border-color: #1b1f5e !important;
+}
+
+/* ---------------- Your Life: the bright boarding pass (v8) ---------------- */
+.bright-pass {
+  background: #1b1f5e;
+  box-shadow: 0 12px 0 #0b0d33, 0 30px 60px -18px rgba(0, 0, 0, 0.75);
+}
+.bright-pass-route {
+  background:
+    radial-gradient(40% 120% at 50% 120%, rgba(255, 244, 224, 0.6), transparent 70%),
+    linear-gradient(100deg, #fb8500 0%, #ffb703 50%, #ffd24d 100%);
+}
+.bright-pass-stub {
+  background: linear-gradient(100deg, #4cc9f0 0%, #7bdcf7 100%);
+}
+.printer-body {
+  background: linear-gradient(180deg, #ffd24d 0%, #ffb703 50%, #fb8500 100%);
+  box-shadow: 0 8px 0 #1b1f5e, 0 24px 40px -14px rgba(0, 0, 0, 0.7);
+}
+.print-overlay {
+  background:
+    repeating-conic-gradient(from 0deg at 50% 38%, rgba(255, 183, 3, 0.16) 0deg 8deg, transparent 8deg 20deg),
+    radial-gradient(60% 50% at 50% 38%, rgba(251, 133, 0, 0.45), transparent 70%),
+    rgba(11, 13, 51, 0.94);
+}
+
+/* Home hero: keep clear of the flight tracker on short laptop screens (v8) */
+@media (min-width: 768px) and (max-height: 820px) {
+  .hero-card { max-width: 40rem; }
+  .hero-h1 { font-size: 3.3rem; }
+  .hero-p { font-size: 1.05rem; line-height: 1.5; }
+  .hero-cta { margin-top: 0.8rem; }
+  .hero-scroll { margin-top: 0.6rem; }
+  .hero-card ul { margin-top: 0.6rem; }
+  .hero-card ul li { padding-top: 0.15rem; padding-bottom: 0.15rem; }
+}
+@media (min-width: 768px) and (max-height: 610px) {
+  .hero-h1 { font-size: 3rem; }
+  .hero-p { font-size: 0.98rem; }
+  .hero-card ul { display: none; }
+}

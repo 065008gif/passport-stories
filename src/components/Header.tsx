@@ -1,0 +1,157 @@
+'use client';
+
+/**
+ * Top menu shown on every page: logo, main navigation, search button and
+ * the passport counter. On small screens the links fold into a full-width
+ * "departures" menu.
+ */
+import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { NAV, site } from '@/data/site';
+import { earnBadge, usePassport } from '@/lib/passport';
+
+export default function Header() {
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+  const stamps = Object.keys(usePassport().stamps).length;
+  const clicks = useRef<number[]>([]);
+
+  useEffect(() => setOpen(false), [pathname]);
+
+  // Easter egg: five quick taps on the logo earn the secret "Stowaway" badge.
+  const onLogo = () => {
+    const now = Date.now();
+    clicks.current = [...clicks.current.filter((t) => now - t < 2500), now];
+    if (clicks.current.length >= 5) {
+      clicks.current = [];
+      earnBadge('stowaway');
+    }
+  };
+
+  const isActive = (href: string) => (href === '/' ? pathname === '/' : pathname.startsWith(href));
+
+  return (
+    <header className="sticky top-0 z-50 bg-night/90 shadow-[0_8px_30px_-10px_rgba(0,0,0,.7)] backdrop-blur-md">
+      <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded focus:bg-sun focus:px-3 focus:py-2 focus:text-ink">
+        Skip to content
+      </a>
+      <div className="mx-auto flex h-[calc(var(--header)-3px)] max-w-7xl items-center gap-2 px-3 sm:px-5">
+        <Link href="/" onClick={onLogo} className="flex shrink-0 items-center gap-2" aria-label="Passport Stories home">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={site.logo} alt="" width={60} height={60} className="h-11 w-11 transition-transform duration-300 hover:rotate-12 md:h-[3.9rem] md:w-[3.9rem]" />
+          <span className="sign hidden text-[17px] leading-[0.95] text-cream sm:block md:text-[1.55rem]">
+            Passport
+            <br />
+            Stories
+          </span>
+        </Link>
+
+        <nav aria-label="Main" className="ml-auto hidden items-center gap-0.5 rounded-full border border-cream/20 bg-white/[0.06] p-1 md:flex">
+          {NAV.map((n) => (
+            <Link
+              key={n.href}
+              href={n.href}
+              aria-current={isActive(n.href) ? 'page' : undefined}
+              className={`whitespace-nowrap rounded-full px-2.5 py-2 text-[0.98rem] font-extrabold transition-colors xl:px-4 xl:text-[1.05rem] ${isActive(n.href) ? 'bg-sun text-ink shadow-[0_3px_0_#fb8500]' : 'text-cream hover:bg-cream/15 hover:text-sun'}`}
+            >
+              {n.label}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="ml-auto flex items-center gap-2 md:ml-3">
+          <button
+            onClick={() => window.dispatchEvent(new Event('ps:search'))}
+            className="flex h-11 items-center gap-2 rounded-full border-2 border-cream/25 px-3 text-sm font-semibold text-cream/90 hover:border-sun md:h-12 md:px-4 md:text-base"
+            aria-label="Search (Ctrl or Command + K)"
+          >
+            <span aria-hidden className="text-lg leading-none">
+              ⌕
+            </span>
+            <span className="hidden xl:inline">Search</span>
+            <kbd className="hidden rounded border border-cream/30 px-1 font-mono text-[10px] xl:inline">⌘K</kbd>
+          </button>
+          <Link
+            href="/passport"
+            className="passport-btn group flex h-12 items-center gap-6 rounded-2xl border-2 border-cream/70 bg-white/[0.06] pl-2.5 pr-4 transition-all hover:-translate-y-0.5 hover:border-sun hover:bg-white/[0.1] md:h-[54px] md:gap-7"
+            aria-label={`Your passport: ${stamps} of 20 stamps`}
+            data-passport-button
+          >
+            {/* the passport: the Passport Stories sunset on the cover, with the stamp count pressed on it */}
+            <span className="relative inline-block h-[44px] w-[35px] shrink-0 -rotate-[7deg] transition-transform duration-200 group-hover:rotate-0">
+              <svg aria-hidden width="35" height="44" viewBox="0 0 46 58" className="drop-shadow-[0_3px_0_#05061f]">
+                <defs>
+                  <clipPath id="ps-cover">
+                    <rect x="1" y="1" width="44" height="56" rx="5" />
+                  </clipPath>
+                </defs>
+                <g clipPath="url(#ps-cover)">
+                  <rect width="46" height="58" fill="#1B1F5E" />
+                  <rect width="46" height="16" fill="#FB8500" />
+                  <rect y="16" width="46" height="12" fill="#FFB703" />
+                  <circle cx="25" cy="30" r="9" fill="#FFF4E0" />
+                  <rect y="30" width="46" height="28" fill="#4CC9F0" />
+                  <rect y="35" width="46" height="2" fill="#1B1F5E" opacity=".45" />
+                  <rect y="40" width="46" height="2" fill="#1B1F5E" opacity=".45" />
+                  <rect y="45" width="46" height="13" fill="#1B1F5E" />
+                  <rect width="6" height="58" fill="#0D0F3A" />
+                </g>
+                <text x="26" y="11" textAnchor="middle" fontFamily="Bowlby One, Arial Black" fontSize="5.4" fill="#1B1F5E" letterSpacing=".4">
+                  PASSPORT
+                </text>
+                <text x="26" y="54" textAnchor="middle" fontFamily="Bowlby One, Arial Black" fontSize="5.4" fill="#FFB703" letterSpacing=".4">
+                  STORIES
+                </text>
+                <rect x="1" y="1" width="44" height="56" rx="5" fill="none" stroke="#FFF4E0" strokeWidth="1.5" />
+              </svg>
+              {/* key = the count, so the little pop animation replays whenever a stamp is added */}
+              <span
+                key={stamps}
+                className={`absolute -right-[18px] bottom-[5px] flex h-[30px] w-[30px] rotate-[14deg] items-center justify-center rounded-full border-[2.5px] border-ink bg-tang font-mono text-[10.5px] font-extrabold leading-none tracking-tighter text-white shadow-[0_0_0_2px_#FFF4E0] ${stamps ? 'count-pop' : ''}`}
+              >
+                {stamps}/20
+              </span>
+            </span>
+            <span className="hidden flex-col leading-none lg:flex">
+              <span className="chunk whitespace-nowrap text-[17px] text-cream">Your passport</span>
+              <span className="mt-1.5 whitespace-nowrap font-mono text-[12px] font-bold tracking-[0.08em] text-sun">
+                {stamps === 1 ? '1 stamp so far' : `${stamps} stamps so far`}
+              </span>
+            </span>
+          </Link>
+          <button
+            onClick={() => setOpen((o) => !o)}
+            aria-expanded={open}
+            aria-controls="mobile-menu"
+            aria-label={open ? 'Close menu' : 'Open menu'}
+            className="flex h-11 w-11 items-center justify-center rounded-lg border border-cream/25 text-xl md:hidden"
+          >
+            <span aria-hidden>{open ? '✕' : '☰'}</span>
+          </button>
+        </div>
+      </div>
+
+      <div aria-hidden className="h-[3px] bg-gradient-to-r from-coral via-tang to-sun" />
+      {open && (
+        <nav id="mobile-menu" aria-label="Main (mobile)" className="max-h-[calc(100dvh-var(--header))] overflow-y-auto border-t border-cream/10 bg-night md:hidden">
+          <p className="kicker px-5 pt-4 text-sun">Departures</p>
+          <ul className="px-2 pb-6 pt-2">
+            {NAV.map((n) => (
+              <li key={n.href}>
+                <Link href={n.href} aria-current={isActive(n.href) ? 'page' : undefined} className="board-row text-cream">
+                  <span aria-hidden className="text-sun">→</span>
+                  <span>
+                    <span className="block font-sans text-lg font-bold">{n.label}</span>
+                    <span className="block font-sans text-xs text-cream/70">{n.purpose}</span>
+                  </span>
+                  <span className={isActive(n.href) ? 'text-teal' : 'text-cream/60'}>{isActive(n.href) ? 'HERE' : 'OPEN'}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
+    </header>
+  );
+}
