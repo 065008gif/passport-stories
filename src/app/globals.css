@@ -24,6 +24,13 @@
     --night: 13 15 58;
     --panel: 20 23 74;
   }
+  /* Phones: draw everything a little smaller so pages do not feel zoomed in. */
+  @media (max-width: 639px) {
+    html {
+      font-size: 87.5%;
+      --header: 4.25rem;
+    }
+  }
   /* Laptops and up: the whole site is drawn at 90 %, which reads better than
      full size. Everything is sized in rem, so this one line scales it all. */
   @media (min-width: 768px) {
@@ -32,9 +39,12 @@
       --header: 5.25rem;
     }
   }
+  html,
+  body {
+    overflow-x: clip; /* nothing may push the page sideways on phones */
+  }
   body {
     @apply bg-night font-sans text-cream antialiased;
-    overflow-x: clip;
   }
   :focus-visible {
     outline: 3px solid #4cc9f0;
@@ -289,7 +299,7 @@ a.flap-row:focus-visible {
 
 /* One screen per stop. On touch screens a swipe snaps to the next one. */
 .flight-screen {
-  height: 100svh;
+  height: calc(100svh - var(--header));
   scroll-snap-align: start;
   scroll-snap-stop: always;
 }
@@ -304,6 +314,7 @@ a.flap-row:focus-visible {
 }
 html.snap-page {
   scroll-behavior: auto; /* the script chooses when to animate */
+  scroll-padding-top: var(--header); /* snap each screen to just under the header, not behind it */
 }
 
 /* Stop text pops in quickly when its screen arrives. */

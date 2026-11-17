@@ -30,27 +30,29 @@ export default function HomePage() {
         <section className={`${SCREEN} is-here md:!pb-40`} aria-labelledby="hero-title">
           <div className="hero-card stop-card max-w-xl md:max-w-[36rem]">
             <p className="kicker text-sun">Flight PS 001 · Departing {INDIA.airport}</p>
-            <h1 id="hero-title" className="hero-h1 sign mt-2 text-5xl sm:text-7xl">
+            <h1 id="hero-title" className="hero-h1 sign mt-1.5 text-[2.5rem] leading-[0.95] sm:mt-2 sm:text-7xl">
               Same planet. <span className="text-sun">Different lives.</span>
             </h1>
-            <p className="hero-p mt-3 text-base text-cream/90 sm:text-xl">
-              Who works the longest week? Where does dinner start early? Where is a wedding a three-day party? Explore how people around the world
+            <p className="hero-p mt-2.5 text-[0.95rem] leading-snug text-cream/90 sm:mt-3 sm:text-xl sm:leading-normal">
+              <span className="sm:hidden">Who works the longest week? Where is a wedding a three-day party? Explore how the world really lives, compare any two countries, print your boarding pass and collect stamps.</span>
+              <span className="hidden sm:inline">Who works the longest week? Where does dinner start early? Where is a wedding a three-day party? Explore how people around the world
               really live, compare any two countries head to head or theme by theme, print your own boarding pass, collect stamps, play trivia.
               Enjoy, and repeat!
+              </span>
             </p>
-            <ul className="mt-3 flex flex-wrap gap-2 text-[13px] font-bold sm:text-sm" aria-label="What is on this site">
+            <ul className="mt-2.5 flex flex-wrap gap-1.5 text-[11px] font-bold sm:mt-3 sm:gap-2 sm:text-sm" aria-label="What is on this site">
               {['One new country every week', 'Compare any two countries', 'Games and your own boarding pass'].map((t) => (
-                <li key={t} className="rounded-full border border-cream/30 bg-night/50 px-3 py-1 backdrop-blur">
+                <li key={t} className="rounded-full border border-cream/30 bg-night/50 px-2.5 py-0.5 backdrop-blur sm:px-3 sm:py-1">
                   {t}
                 </li>
               ))}
             </ul>
-            <p className="hero-scroll mt-3 font-mono text-xs uppercase tracking-widest text-sun">Scroll for a one-minute flight through five of them ↓</p>
-            <p className="hero-cta mt-5 flex flex-wrap items-center gap-3">
-              <a href="#stop-1" className="btn btn-sun">
+            <p className="hero-scroll mt-2.5 font-mono text-[10px] uppercase tracking-widest text-sun sm:mt-3 sm:text-xs">Scroll for a one-minute flight through five of them ↓</p>
+            <p className="hero-cta mt-3.5 flex flex-wrap items-center gap-2.5 sm:mt-5 sm:gap-3">
+              <a href="#stop-1" className="btn btn-sun max-sm:px-4 max-sm:py-2.5 max-sm:text-sm">
                 Take off <span aria-hidden className="nudge inline-block">↓</span>
               </a>
-              <Link href="/countries" className="btn btn-ghost">
+              <Link href="/countries" className="btn btn-ghost max-sm:px-4 max-sm:py-2.5 max-sm:text-sm">
                 See every country →
               </Link>
             </p>

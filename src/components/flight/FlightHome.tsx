@@ -72,6 +72,8 @@ export default function FlightHome({
   const board = useBoard();
 
   /** Height of one flight screen in pixels (they are all 100svh tall). */
+  // Where the flight starts, measured from just under the sticky header.
+  const flightTop = () => (root.current ? root.current.offsetTop - (document.querySelector('header')?.offsetHeight || 0) : 0);
   const screenH = () => root.current?.querySelector<HTMLElement>('.flight-screen')?.offsetHeight || window.innerHeight;
 
   const legs = route.length - 1; // hops in the flight
@@ -90,17 +92,17 @@ export default function FlightHome({
   // normally again.
   useEffect(() => {
     let locked = 0;
-    const position = () => (root.current ? Math.max(0, (window.scrollY - root.current.offsetTop) / screenH()) : 0);
+    const position = () => (root.current ? Math.max(0, (window.scrollY - flightTop()) / screenH()) : 0);
     const hop = (dir: number) => {
       const here = position();
       const target = dir > 0 ? Math.floor(here + 0.02) + 1 : Math.ceil(here - 0.02) - 1;
       if (target < 0 || target > screens - 1) return;
       locked = performance.now() + 620;
-      window.scrollTo({ top: root.current!.offsetTop + target * screenH(), behavior: 'smooth' });
+      window.scrollTo({ top: flightTop() + target * screenH(), behavior: 'smooth' });
     };
     const inFlight = (dir: number) => {
       const here = position();
-      return dir > 0 ? here < screens - 1.02 : here > 0.02 && here <= screens - 0.98 && window.scrollY > root.current!.offsetTop;
+      return dir > 0 ? here < screens - 1.02 : here > 0.02 && here <= screens - 0.98 && window.scrollY > flightTop();
     };
     const onWheel = (e: WheelEvent) => {
       if (e.ctrlKey || Math.abs(e.deltaY) < Math.abs(e.deltaX)) return;
@@ -154,7 +156,7 @@ export default function FlightHome({
       const dt = Math.min(0.05, (now - previous) / 1000);
       previous = now;
       if (document.hidden || !h || !root.current) return; // (the page may be mid-navigation)
-      const top = root.current.offsetTop;
+      const top = flightTop();
       const page = screenH();
       const raw = clamp((window.scrollY - top) / page, 0, screens - 1);
 
@@ -202,7 +204,7 @@ export default function FlightHome({
       const mobile = w < 768;
       const viewH = world.viewHeight;
       const viewW = viewH * (w / h);
-      const fly = mobile ? { x: 0, y: viewH * 0.2, scale: Math.min(viewW * 0.47, viewH * 0.24) } : { x: viewW * 0.2, y: 0, scale: Math.min(viewH * 0.36, viewW * 0.24) };
+      const fly = mobile ? { x: 0, y: viewH * 0.28, scale: Math.min(viewW * 0.36, viewH * 0.17) } : { x: viewW * 0.2, y: 0, scale: Math.min(viewH * 0.36, viewW * 0.24) };
       const roam = mobile ? { x: 0, y: viewH * 0.02, scale: Math.min(viewW * 0.46, viewH * 0.25) } : { x: 0, y: -viewH * 0.02, scale: Math.min(viewH * 0.3, viewW * 0.3) };
       frame.progress = Math.min(smooth, legs);
       frame.free = free;
@@ -285,7 +287,7 @@ export default function FlightHome({
     const onTeleport = (e: Event) => {
       const detail = (e as CustomEvent<{ slug: string; handled: boolean }>).detail;
       const target = countries.find((c) => c.slug === detail.slug);
-      const onLastScreen = (window.scrollY - root.current!.offsetTop) / screenH() > screens - 1.5;
+      const onLastScreen = (window.scrollY - flightTop()) / screenH() > screens - 1.5;
       if (!target || !onLastScreen) return;
       detail.handled = true;
       const s = spin.current;
@@ -350,7 +352,7 @@ export default function FlightHome({
     (e.currentTarget as HTMLElement).style.cursor = 'grab';
   };
 
-  const jump = (i: number) => window.scrollTo({ top: root.current!.offsetTop + i * screenH(), behavior: 'smooth' });
+  const jump = (i: number) => window.scrollTo({ top: flightTop() + i * screenH(), behavior: 'smooth' });
   const stops = route.map((i) => countries[i]);
   const free = step === screens - 1;
 
