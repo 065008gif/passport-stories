@@ -17,6 +17,7 @@
  * some momentum), and every country appears as a flag that can be tapped.
  */
 import { useEffect, useRef, useState } from 'react';
+import { preload } from 'react-dom';
 import { track } from '@/lib/analytics';
 import { earnBadge } from '@/lib/passport';
 import { flagSrc } from '../Flag';
@@ -37,6 +38,9 @@ const IDLE_SPIN = 0.12; // radians per second when nobody is touching the globe
 const clamp = (x: number, a = 0, b = 1) => Math.min(b, Math.max(a, x));
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
+// Start downloading the Earth pictures as early as possible, in parallel with the 3D code.
+const TEXTURES = { day: '/textures/earth-day.webp', night: '/textures/earth-night.webp' };
+
 export default function FlightHome({
   countries,
   route,
@@ -47,6 +51,8 @@ export default function FlightHome({
   route: number[];
   children: React.ReactNode;
 }) {
+  preload(TEXTURES.day, { as: 'image', fetchPriority: 'high' });
+  preload(TEXTURES.night, { as: 'image' });
   const root = useRef<HTMLDivElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -311,7 +317,7 @@ export default function FlightHome({
           canvas.current!,
           countries.map((c) => ({ lat: c.lat, lng: c.lng })),
           route,
-          { day: '/textures/earth-day.jpg', night: '/textures/earth-night.jpg' },
+          TEXTURES,
         );
         measure();
         setReady(true);
@@ -466,7 +472,7 @@ export default function FlightHome({
                 <div className="flat-map relative h-full shrink-0 overflow-hidden rounded-3xl border-2 border-cream/25 shadow-ticket" style={{ width: mapW }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <div className="absolute inset-x-0" style={{ top: (-fullH * (90 - N)) / 180, height: fullH }}>
-                  <img src="/textures/earth-day.jpg" alt="" className="block h-full w-full" draggable={false} />
+                  <img src="/textures/earth-day.webp" alt="" className="block h-full w-full" draggable={false} />
                   <ul aria-label="Countries on the map">
                     {countries.map((c) => (
                       <li key={c.slug}>
