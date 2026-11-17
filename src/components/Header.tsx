@@ -1,4 +1,5 @@
 'use client';
+import { createPortal } from 'react-dom';
 
 /**
  * Top menu shown on every page: logo, main navigation, search button and
@@ -11,6 +12,16 @@ import { usePathname } from 'next/navigation';
 import { NAV, site } from '@/data/site';
 import { earnBadge, usePassport } from '@/lib/passport';
 
+/** Phone menu tiles: one bright colour, an icon and a short line per page. */
+const MENU_TILES = [
+  { bg: '#FFB703', icon: '🏠', line: 'The flight and the globe' },
+  { bg: '#4CC9F0', icon: '🌍', line: 'Every country, six topics' },
+  { bg: '#B693FF', icon: '⚖️', line: 'Any two, side by side' },
+  { bg: '#FB8500', icon: '🎫', line: 'Print your boarding pass' },
+  { bg: '#06A77D', icon: '🎮', line: 'Three quick games' },
+  { bg: '#FFD24D', icon: '💬', line: 'Facts from travellers' },
+];
+
 export default function Header() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -18,6 +29,13 @@ export default function Header() {
   const clicks = useRef<number[]>([]);
 
   useEffect(() => setOpen(false), [pathname]);
+  // While the phone menu is open, the page behind it stays still.
+  useEffect(() => {
+    document.documentElement.style.overflow = open ? 'hidden' : '';
+    return () => {
+      document.documentElement.style.overflow = '';
+    };
+  }, [open]);
 
   // Easter egg: five quick taps on the logo earn the secret "Stowaway" badge.
   const onLogo = () => {
@@ -113,6 +131,11 @@ export default function Header() {
                 {stamps}/20
               </span>
             </span>
+            {/* phones: a short label so the passport is obvious */}
+            <span className="chunk flex flex-col text-[11px] leading-[1.05] text-cream md:hidden">
+              <span>Your</span>
+              <span>passport</span>
+            </span>
             <span className="hidden flex-col leading-none lg:flex">
               <span className="chunk whitespace-nowrap text-[17px] text-cream">Your passport</span>
               <span className="mt-1.5 whitespace-nowrap font-mono text-[12px] font-bold tracking-[0.08em] text-sun">
@@ -134,23 +157,40 @@ export default function Header() {
 
       <div aria-hidden className="h-[3px] bg-gradient-to-r from-coral via-tang to-sun" />
       {open && (
-        <nav id="mobile-menu" aria-label="Main (mobile)" className="max-h-[calc(100dvh-var(--header))] overflow-y-auto border-t border-cream/10 bg-night md:hidden">
-          <p className="kicker px-5 pt-4 text-sun">Departures</p>
-          <ul className="px-2 pb-6 pt-2">
-            {NAV.map((n) => (
-              <li key={n.href}>
-                <Link href={n.href} aria-current={isActive(n.href) ? 'page' : undefined} className="board-row text-cream">
-                  <span aria-hidden className="text-sun">→</span>
-                  <span>
-                    <span className="block font-sans text-lg font-bold">{n.label}</span>
-                    <span className="block font-sans text-xs text-cream/70">{n.purpose}</span>
-                  </span>
-                  <span className={isActive(n.href) ? 'text-teal' : 'text-cream/60'}>{isActive(n.href) ? 'HERE' : 'OPEN'}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
+        createPortal(<div className="fixed inset-x-0 bottom-0 top-[var(--header)] z-40 md:hidden">
+          <button aria-label="Close menu" className="absolute inset-0 bg-[#05061f]/70 backdrop-blur-sm" onClick={() => setOpen(false)} />
+          <nav id="mobile-menu" aria-label="Main (mobile)" className="relative max-h-full overflow-y-auto rounded-b-3xl border-b-2 border-sun/60 bg-night px-4 pb-5 pt-4 shadow-[0_20px_40px_rgba(0,0,0,.6)]">
+            <p className="kicker text-sun">Where to?</p>
+            <ul className="mt-3 grid grid-cols-2 gap-2.5">
+              {NAV.map((n, i) => {
+                const on = isActive(n.href);
+                const tile = MENU_TILES[i % MENU_TILES.length];
+                return (
+                  <li key={n.href}>
+                    <Link
+                      href={n.href}
+                      onClick={() => setOpen(false)}
+                      aria-current={on ? 'page' : undefined}
+                      className={`flex h-full flex-col rounded-2xl border-2 p-3 text-ink transition-transform active:scale-95 ${on ? 'border-cream ring-2 ring-cream ring-offset-2 ring-offset-night' : 'border-ink'}`}
+                      style={{ background: tile.bg }}
+                    >
+                      <span className="flex items-center justify-between">
+                        <span aria-hidden className="text-xl">{tile.icon}</span>
+                        {on && <span className="rounded-full bg-ink px-2 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider text-sun">You are here</span>}
+                      </span>
+                      <span className="chunk mt-2 text-lg leading-none">{n.label}</span>
+                      <span className="mt-1 text-[11.5px] font-semibold leading-snug text-ink/75">{tile.line}</span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+            <Link href="/passport" onClick={() => setOpen(false)} className="mt-2.5 flex items-center justify-between rounded-2xl border-2 border-cream/70 bg-white/[0.06] px-4 py-3">
+              <span className="chunk text-base">Your passport</span>
+              <span className="rounded-full bg-tang px-2.5 py-1 font-mono text-xs font-bold text-white">{stamps}/20 stamps</span>
+            </Link>
+          </nav>
+        </div>, document.body)
       )}
     </header>
   );
