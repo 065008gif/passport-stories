@@ -57,8 +57,8 @@ const GATES = [
 
 // Plane hops: start before gate 1, land on each gate in turn.
 const XS = ['2%', '12.5%', '25%', '37.5%', '50%', '62.5%', '75%', '87.5%'];
-const YS = [0, 0, -34, 0, -34, 0, -34, 0];
-const HOP = 0.75; // seconds per half hop
+const YS = [0, 0, -28, 0, -28, 0, -28, 0];
+const HOP = 0.42; // seconds per half hop (quick, so no card waits long)
 const LAND = [1, 3, 5, 7].map((k) => k * HOP); // when the plane reaches each gate
 
 export default function BoardingGates() {
@@ -86,15 +86,17 @@ export default function BoardingGates() {
 
         <div ref={ref} className="relative mt-6 sm:mt-10">
           {/* The dotted hop route and the plane (desktop) */}
-          <div aria-hidden className="relative hidden h-20 lg:block">
+          <div aria-hidden className="relative mb-2 h-12 sm:h-16 lg:mb-0 lg:h-20">
             <svg viewBox="0 0 100 20" preserveAspectRatio="none" className="absolute inset-0 h-full w-full overflow-visible">
               <path d="M12.5 18 Q25 0 37.5 18 Q50 0 62.5 18 Q75 0 87.5 18" fill="none" stroke="#1B1F5E" strokeOpacity=".7" strokeWidth="3" strokeDasharray="1 7" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
             </svg>
             {GATES.map((g, i) => (
-              <span key={g.gate} className="absolute bottom-[4px] h-4 w-4 -translate-x-1/2 rounded-full border-[3px] border-ink" style={{ left: `${12.5 + i * 25}%`, background: g.color }} />
+              <span key={g.gate} className="absolute bottom-[4px] h-4 w-4 -translate-x-1/2 rounded-full border-[3px] border-ink" style={{ left: `${12.5 + i * 25}%`, background: g.color }}>
+                <span className="absolute left-1/2 top-4 -translate-x-1/2 whitespace-nowrap font-mono text-[9px] font-bold text-ink lg:hidden">{g.gate}</span>
+              </span>
             ))}
             <motion.span
-              className="absolute bottom-3 -ml-5 text-4xl leading-none text-ink drop-shadow-[0_3px_0_rgba(255,244,224,.8)]"
+              className="absolute bottom-3 -ml-4 text-3xl leading-none text-ink sm:-ml-5 sm:text-4xl drop-shadow-[0_3px_0_rgba(255,244,224,.8)]"
               initial={{ left: XS[0], y: 0 }}
               animate={go ? { left: XS, y: YS } : reduce ? { left: XS[7], y: 0 } : {}}
               transition={{
@@ -112,7 +114,7 @@ export default function BoardingGates() {
                 key={g.gate}
                 initial={{ opacity: 0, y: 30, rotate: 0 }}
                 animate={seen ? { opacity: 1, y: 0, rotate: i % 2 ? 1.2 : -1.2 } : {}}
-                transition={{ delay: reduce ? 0 : LAND[i] - 0.25, type: 'spring', stiffness: 220, damping: 16 }}
+                transition={{ delay: reduce ? 0 : Math.max(0, LAND[i] - 0.2), type: 'spring', stiffness: 260, damping: 18 }}
                 whileHover={{ rotate: 0, y: -8 }}
               >
                 <Link href={g.href} onClick={() => track('home_gate_click', { gate: g.gate, target: g.href })} className="gate-pass group flex h-full flex-col overflow-hidden rounded-2xl text-ink">
