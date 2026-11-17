@@ -146,9 +146,23 @@ export default function FlightHome({
     const frame: Frame = { progress: 0, free: 0, x: 0, y: 0, scale: 1, dragX: 0, dragY: 0, time: 0 };
     const screenEls = Array.from(root.current!.querySelectorAll<HTMLElement>('.flight-screen'));
 
+    // Free-roam screen: the gap between the title block and the buttons,
+    // measured from the top of that screen, so the globe can fill it exactly.
+    const gap = { top: 0, bottom: 0 };
+    let pxPerUnit = 0; // globe radius in pixels per unit of scale (learned from the renderer)
+    const measureGap = () => {
+      const last = screenEls[screenEls.length - 1];
+      const cards = last?.querySelectorAll<HTMLElement>('.stop-card');
+      if (last && cards && cards.length >= 2) {
+        const base = last.getBoundingClientRect().top;
+        gap.top = cards[0].getBoundingClientRect().bottom - base;
+        gap.bottom = cards[cards.length - 1].getBoundingClientRect().top - base;
+      }
+    };
     const measure = () => {
       w = stage.current!.clientWidth;
       h = stage.current!.clientHeight;
+      measureGap();
       world?.resize(w, h, Math.min(window.devicePixelRatio || 1, w < 768 ? 2 : 1.75));
     };
 
@@ -167,6 +181,7 @@ export default function FlightHome({
         lastStep = current;
         setStep(current);
         screenEls.forEach((el, i) => el.classList.toggle('is-here', i === current));
+        measureGap(); // fonts and layout may have settled since the last measure
         if (current === screens - 1 && !landed) {
           landed = true; // flew the whole route
           window.setTimeout(() => earnBadge('tour-guide'), 2600); // let the spin screen land first
@@ -206,8 +221,14 @@ export default function FlightHome({
       const viewH = world.viewHeight;
       const viewW = viewH * (w / h);
       const fly = mobile ? { x: 0, y: viewH * 0.28, scale: Math.min(viewW * 0.36, viewH * 0.17) } : { x: viewW * 0.2, y: 0, scale: Math.min(viewH * 0.36, viewW * 0.24) };
-      const short = h < 800; // short laptop screens: smaller globe so it sits between the title and the buttons
-      const roam = mobile ? { x: 0, y: viewH * 0.02, scale: Math.min(viewW * 0.46, viewH * 0.25) } : { x: 0, y: -viewH * (short ? 0.02 : 0.02), scale: Math.min(viewH * (short ? 0.215 : 0.3), viewW * 0.3) };
+      const roam = mobile ? { x: 0, y: viewH * 0.02, scale: Math.min(viewW * 0.46, viewH * 0.25) } : { x: 0, y: -viewH * 0.02, scale: Math.min(viewH * 0.3, viewW * 0.3) };
+      // Laptops: size and centre the globe to fill the space between the title and the buttons.
+      if (!mobile && pxPerUnit > 0 && gap.bottom - gap.top > 120) {
+        const room = gap.bottom - gap.top - 28; // breathing space above and below
+        roam.scale = Math.min(room / 2 / pxPerUnit, viewW * 0.3);
+        const centre = (gap.top + gap.bottom) / 2;
+        roam.y = -((centre - h / 2) * viewH) / h;
+      }
       frame.progress = Math.min(smooth, legs);
       frame.free = free;
       frame.x = lerp(fly.x, roam.x, free);
@@ -242,6 +263,7 @@ export default function FlightHome({
       // The drag handle sits exactly over the globe, and only on the last
       // screen, so the rest of the page keeps scrolling normally.
       world.disc(disc);
+      if (frame.scale > 0 && disc.r > 0) pxPerUnit = disc.r / frame.scale;
       const g = grab.current!;
       g.style.width = g.style.height = `${disc.r * 2}px`;
       g.style.transform = `translate(${disc.x - disc.r}px, ${disc.y - disc.r}px)`;
