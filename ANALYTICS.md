@@ -50,21 +50,13 @@ Menu names in GA4 move from time to time; these are the reports to look for.
 
 GA4 measures engagement time and returning users by itself. To break reports down by the site's own parameters (`country`, `label`, `section`, `percent`, `metric`, `result`, `filter`, `value`, `placement`), register each one once under Admin > Custom definitions > Create custom dimension (scope: Event). `seconds` goes in as a custom metric. Standard reports take roughly a day to fill; Realtime is immediate.
 
-## Session recordings and heatmaps (Microsoft Clarity)
-
-GA4 counts things. Clarity shows them: a replay of each visit, click heatmaps and scroll heatmaps. It is free.
-
-1. Create a project at clarity.microsoft.com and copy the project ID.
-2. Set `NEXT_PUBLIC_CLARITY_ID` next to `NEXT_PUBLIC_GA_ID` (`.env.local` and Vercel). Redeploy.
-
-Clarity masks typed text by default, so the salary and rent fields on Your Life are not recorded.
 
 **Where the code lives**
 
 | File | Role |
 |---|---|
 | `src/lib/analytics.ts` | `track()`, page views, UTM capture. The only file that talks to GA. |
-| `src/components/Analytics.tsx` | Loads gtag.js and Clarity, captures UTMs, sends `page_view`, runs the automatic tracking and the `?debug=1` panel. |
+| `src/components/Analytics.tsx` | Loads gtag.js, captures UTMs, sends `page_view`, runs the automatic tracking and the `?debug=1` panel. |
 | `src/components/Bits.tsx` | `<TrackEvent>` and `<CountryVisit>` helpers used by pages. |
 
 ## Custom events

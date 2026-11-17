@@ -4,8 +4,6 @@
  * Everything that measures the visit lives here.
  *
  *  - Loads Google Analytics 4 when NEXT_PUBLIC_GA_ID is set.
- *  - Loads Microsoft Clarity (heatmaps + session recordings) when
- *    NEXT_PUBLIC_CLARITY_ID is set.
  *  - Sends a page_view on every route change.
  *  - Automatic tracking, no per-button code needed:
  *      ui_click      every link and button pressed
@@ -17,7 +15,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Script from 'next/script';
-import { CLARITY_ID, GA_ID, captureUtm, pageview, track } from '@/lib/analytics';
+import { GA_ID, captureUtm, pageview, track } from '@/lib/analytics';
 
 const label = (el: Element) =>
   (el.getAttribute('data-track') || el.getAttribute('aria-label') || (el.textContent || '').replace(/\s+/g, ' ').trim() || el.tagName).slice(0, 60);
@@ -176,12 +174,6 @@ export default function Analytics() {
   return (
     <>
       {GA_ID && <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />}
-      {/* lazyOnload: Clarity loads only after the page has fully loaded and the browser is idle, so it never slows the first view. */}
-      {CLARITY_ID && (
-        <Script id="clarity" strategy="lazyOnload">
-          {`(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","${CLARITY_ID}");`}
-        </Script>
-      )}
       <DebugPanel />
     </>
   );

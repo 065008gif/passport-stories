@@ -13,7 +13,6 @@ export async function GET() {
     tables,
     adminPassword: Boolean(process.env.ADMIN_PASSWORD),
     ga4: Boolean(process.env.NEXT_PUBLIC_GA_ID),
-    clarity: Boolean(process.env.NEXT_PUBLIC_CLARITY_ID),
     siteUrl: process.env.NEXT_PUBLIC_SITE_URL || '',
   });
 }

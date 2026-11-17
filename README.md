@@ -87,7 +87,6 @@ Open http://localhost:3000. Other commands: `npm run build` (production build), 
    | Name | Value |
    |---|---|
    | `NEXT_PUBLIC_GA_ID` | Your GA4 Measurement ID, e.g. `G-ABC123XYZ` |
-   | `NEXT_PUBLIC_CLARITY_ID` | Optional. Microsoft Clarity project ID for session recordings and heatmaps |
    | `NEXT_PUBLIC_FORMSPREE_ID` | Your Formspree form ID |
    | `NEXT_PUBLIC_SITE_URL` | The final site address, e.g. `https://passport-stories.vercel.app` |
 6. Press **Deploy**. Every later `git push` redeploys automatically.

@@ -72,7 +72,7 @@ export default function AdminClient({ names }: { names: Record<string, string> }
   const [error, setError] = useState('');
   const [tab, setTab] = useState<'facts' | 'suggestions' | 'analytics' | 'setup'>('facts');
   const [sugs, setSugs] = useState<{ id: string; kind: string; suggestion: string; reason: string; email: string; status: 'new' | 'done'; created_at: string }[] | null>(null);
-  const [setup, setSetup] = useState<{ storage: string; tables: Record<string, boolean>; adminPassword: boolean; ga4: boolean; clarity: boolean; siteUrl: string } | null>(null);
+  const [setup, setSetup] = useState<{ storage: string; tables: Record<string, boolean>; adminPassword: boolean; ga4: boolean; siteUrl: string } | null>(null);
   const [facts, setFacts] = useState<{ pending: Fact[]; approved: Fact[]; rejected: Fact[] } | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
   const [days, setDays] = useState(7);
@@ -301,7 +301,6 @@ export default function AdminClient({ names }: { names: Record<string, string> }
                 ['Table: admin_attempts (sign-in lockout)', setup?.tables.admin_attempts, 'Run supabase/schema.sql again (it only adds what is missing).'],
                 ['Admin password set', setup?.adminPassword, 'Add ADMIN_PASSWORD in Vercel.'],
                 ['Google Analytics 4', setup?.ga4, 'Add NEXT_PUBLIC_GA_ID (G-XXXXXXXXXX) in Vercel, then redeploy.'],
-                ['Microsoft Clarity (optional)', setup?.clarity, 'Optional: add NEXT_PUBLIC_CLARITY_ID for heatmaps.'],
               ] as const
             ).map(([label, ok, fix]) => (
               <li key={label} className={`${CARD} flex items-start gap-3`}>

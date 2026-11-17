@@ -7,8 +7,6 @@
  */
 
 export const GA_ID = process.env.NEXT_PUBLIC_GA_ID || '';
-/** Microsoft Clarity project ID: free heatmaps and session recordings. */
-export const CLARITY_ID = process.env.NEXT_PUBLIC_CLARITY_ID || '';
 
 /** The custom events in the tracking plan. */
 export type EventName =
