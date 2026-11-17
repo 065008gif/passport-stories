@@ -106,11 +106,11 @@ export default function HomePage() {
         {/* The globe takes the middle of the screen; the words step aside. */}
         <section id="all" className="flight-screen flex flex-col items-center justify-between px-4 pb-28 pt-5 text-center sm:pb-32 sm:pt-6 lg:pb-[7.25rem]" aria-labelledby="free-title">
           <div className="stop-card">
-            <p className="kicker text-sun">You have the controls</p>
+            <p className="free-kicker kicker text-sun">You have the controls</p>
             <h2 id="free-title" className="sign mt-0.5 text-3xl sm:text-4xl">
               Your turn. <span className="text-sun">Spin it.</span>
             </h2>
-            <p className="mx-auto mt-0.5 max-w-sm text-sm text-cream/85">Drag the globe. Tap a flag to fly there.</p>
+            <p className="free-sub mx-auto mt-0.5 max-w-sm text-sm text-cream/85">Drag the globe. Tap a flag to fly there.</p>
             {/* Laptops: the switch and both buttons share one row at the top, so the globe gets the rest of the screen. */}
             <div className="mt-3 flex flex-wrap items-center justify-center gap-3">
               <MapToggle />
