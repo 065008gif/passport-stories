@@ -206,7 +206,8 @@ export default function FlightHome({
       const viewH = world.viewHeight;
       const viewW = viewH * (w / h);
       const fly = mobile ? { x: 0, y: viewH * 0.28, scale: Math.min(viewW * 0.36, viewH * 0.17) } : { x: viewW * 0.2, y: 0, scale: Math.min(viewH * 0.36, viewW * 0.24) };
-      const roam = mobile ? { x: 0, y: viewH * 0.02, scale: Math.min(viewW * 0.46, viewH * 0.25) } : { x: 0, y: -viewH * 0.02, scale: Math.min(viewH * 0.3, viewW * 0.3) };
+      const short = h < 800; // short laptop screens: smaller globe so it sits between the title and the buttons
+      const roam = mobile ? { x: 0, y: viewH * 0.02, scale: Math.min(viewW * 0.46, viewH * 0.25) } : { x: 0, y: -viewH * (short ? 0.02 : 0.02), scale: Math.min(viewH * (short ? 0.215 : 0.3), viewW * 0.3) };
       frame.progress = Math.min(smooth, legs);
       frame.free = free;
       frame.x = lerp(fly.x, roam.x, free);

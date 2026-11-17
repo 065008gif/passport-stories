@@ -104,7 +104,7 @@ export default function HomePage() {
 
         {/* ----------------------------- Your turn ----------------------------- */}
         {/* The globe takes the middle of the screen; the words step aside. */}
-        <section id="all" className="flight-screen flex flex-col items-center justify-between px-4 pb-28 pt-[calc(var(--header)+0.8rem)] text-center sm:pb-32 sm:pt-[calc(var(--header)+1rem)]" aria-labelledby="free-title">
+        <section id="all" className="flight-screen flex flex-col items-center justify-between px-4 pb-28 pt-5 text-center sm:pb-32 sm:pt-7 lg:pb-[6.5rem]" aria-labelledby="free-title">
           <div className="stop-card">
             <p className="kicker text-sun">You have the controls</p>
             <h2 id="free-title" className="sign mt-0.5 text-3xl sm:text-4xl">
