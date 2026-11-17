@@ -17,7 +17,6 @@
  * some momentum), and every country appears as a flag that can be tapped.
  */
 import { useEffect, useRef, useState } from 'react';
-import { preload } from 'react-dom';
 import { track } from '@/lib/analytics';
 import { earnBadge } from '@/lib/passport';
 import { flagSrc } from '../Flag';
@@ -38,7 +37,7 @@ const IDLE_SPIN = 0.12; // radians per second when nobody is touching the globe
 const clamp = (x: number, a = 0, b = 1) => Math.min(b, Math.max(a, x));
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
-// Start downloading the Earth pictures as early as possible, in parallel with the 3D code.
+// Earth pictures for the globe (WebP).
 const TEXTURES = { day: '/textures/earth-day.webp', night: '/textures/earth-night.webp' };
 
 export default function FlightHome({
@@ -51,8 +50,6 @@ export default function FlightHome({
   route: number[];
   children: React.ReactNode;
 }) {
-  preload(TEXTURES.day, { as: 'image', fetchPriority: 'high' });
-  preload(TEXTURES.night, { as: 'image' });
   const root = useRef<HTMLDivElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
