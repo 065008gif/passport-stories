@@ -151,7 +151,7 @@ export default function YourLifeClient({ countries, slug }: { countries: LifeCou
     setSaved(inputs);
     track('your_life_generated', { country: dest, work_hours: inputs.hours, commute_minutes: inputs.commute, salary_band: salaryBand(inputs.salary) });
     // Show the badge after the pass has printed, not on top of the printer.
-    setTimeout(() => earnBadge('parallel-life'), 4200);
+    setTimeout(() => earnBadge('parallel-life'), 5600);
     markPrinting();
     setPrinting(true);
     track('pass_print_started', { country: dest });

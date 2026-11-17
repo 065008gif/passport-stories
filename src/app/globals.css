@@ -1387,8 +1387,8 @@ html.js [data-rv].rv-in {
 
 /* ------------------- Boarding pass printer (v8) -------------------- */
 @keyframes print-feed {
-  0% { transform: translateY(-100%); }
-  15% { transform: translateY(-82%); }
+  0% { transform: translateY(-70%); }
+  15% { transform: translateY(-62%); }
   25% { transform: translateY(-80%); }
   45% { transform: translateY(-55%); }
   55% { transform: translateY(-53%); }

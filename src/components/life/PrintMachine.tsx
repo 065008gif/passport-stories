@@ -10,7 +10,7 @@
  * <PrintReveal> wraps the finished pass on the result page: the pass feeds
  * out of the printer slot line by line, then the printer slides away.
  */
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Flag from '@/components/Flag';
 
@@ -82,7 +82,7 @@ export function PrintingOverlay({ show, dest }: { show: boolean; dest?: { slug: 
           <div className="w-full max-w-md text-center">
             <Printer />
             {/* paper feeding out in short jolts */}
-            <div className="relative mx-auto -mt-3 h-48 w-[86%] overflow-hidden">
+            <div className="relative mx-auto -mt-3 h-40 w-[86%] overflow-hidden sm:h-48">
               <div className="print-feed absolute inset-x-0 top-0 overflow-hidden rounded-b-2xl border-[3px] border-t-0 border-ink text-ink">
                 <div className="h-3 bg-ink" />
                 <div className="bright-pass-route flex items-center justify-between px-4 pb-2 pt-3">
@@ -126,8 +126,15 @@ export function PrintingOverlay({ show, dest }: { show: boolean; dest?: { slug: 
  */
 export function PrintReveal({ play, children }: { play: boolean; children: ReactNode }) {
   const [done, setDone] = useState(!play);
+  const box = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!play) return;
+    // Bring the printer into view first (on phones it starts below the fold).
+    const el = box.current;
+    if (el) {
+      const header = document.querySelector('header')?.getBoundingClientRect().height || 0;
+      window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - header - 12, behavior: 'smooth' });
+    }
     const t = setTimeout(() => setDone(true), 2300);
     return () => clearTimeout(t);
   }, [play]);
@@ -135,7 +142,7 @@ export function PrintReveal({ play, children }: { play: boolean; children: React
   if (!play) return <>{children}</>;
 
   return (
-    <div className="relative">
+    <div ref={box} className="relative">
       <AnimatePresence>
         {!done && (
           <motion.div key="printer" className="relative z-10 mx-auto max-w-[92%]" initial={{ y: 0, opacity: 1 }} exit={{ y: -40, opacity: 0, transition: { duration: 0.45 } }}>
