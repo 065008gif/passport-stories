@@ -48,6 +48,7 @@ On `/admin` > Analytics, **Export CSV** downloads every event for the last 30 da
 ## How it is protected
 
 - `/admin` needs the password. Signing in sets a cookie that lasts 12 hours.
+- Lockout: 5 wrong passwords from one sender lock sign-in for that sender for 15 minutes; 30 wrong passwords from everyone together lock it for everybody for 15 minutes. Use a long password (a phrase of 3 to 4 words plus a number).
 - The tables are locked in Supabase (row level security with no public rules). Only the website's server, which holds the secret key, can read or write them.
 - Fact submissions are checked: 20 to 280 characters, no links, a hidden field that catches simple bots, at most 5 facts an hour from one sender (the IP address is stored only as a one-way hash), and the same fact twice is ignored. Nothing a visitor writes is shown until you approve it.
 - Analytics are anonymous: a random ID stored in the visitor's browser, no name, no IP address. Salary and rent typed into Your Life are never sent.

@@ -72,6 +72,7 @@ const FILE = path.join(process.cwd(), '.data', 'db.json');
 interface Db {
   facts: Fact[];
   events: EventRow[];
+  attempts?: { ip_hash: string; ts: string }[];
 }
 async function readDb(): Promise<Db> {
   try {
@@ -199,6 +200,67 @@ export async function listEvents(sinceIso: string, cap = 20000): Promise<EventRo
     if (rows.length < page) break;
   }
   return out;
+}
+
+/* --------------------------- Sign-in lockout --------------------------- */
+
+/** Failed sign-ins are remembered for this long. */
+export const LOCK_MINUTES = 15;
+/** Wrong passwords allowed from one sender inside the window. */
+export const MAX_TRIES_PER_SENDER = 5;
+/** Wrong passwords allowed from everyone together inside the window (stops spread-out guessing). */
+export const MAX_TRIES_TOTAL = 30;
+
+const memAttempts: { ip_hash: string; ts: string }[] = [];
+
+/** Record one wrong password. */
+export async function recordFailedLogin(ipHash: string) {
+  const row = { ip_hash: ipHash, ts: new Date().toISOString() };
+  try {
+    if (useSupabase) return void (await sb('admin_attempts', { method: 'POST', body: JSON.stringify(row) }, 'return=minimal'));
+    if (canUseFile)
+      return void (await locked(async () => {
+        const db = await readDb();
+        const since = new Date(Date.now() - LOCK_MINUTES * 6e4).toISOString();
+        db.attempts = [...(db.attempts || []).filter((a) => a.ts >= since), row];
+        await writeDb(db);
+      }));
+  } catch {
+    /* fall through to memory */
+  }
+  memAttempts.push(row);
+}
+
+/** Wrong passwords in the last LOCK_MINUTES: from this sender, and from everyone. */
+export async function failedLogins(ipHash: string): Promise<{ mine: number; all: number }> {
+  const since = new Date(Date.now() - LOCK_MINUTES * 6e4).toISOString();
+  let rows: { ip_hash: string; ts: string }[] = [];
+  try {
+    if (useSupabase) {
+      const q = new URLSearchParams({ select: 'ip_hash,ts', ts: `gte.${since}`, limit: String(MAX_TRIES_TOTAL + 5) });
+      rows = await sb<{ ip_hash: string; ts: string }[]>(`admin_attempts?${q}`);
+    } else if (canUseFile) rows = ((await readDb()).attempts || []).filter((a) => a.ts >= since);
+  } catch {
+    rows = [];
+  }
+  rows = [...rows, ...memAttempts.filter((a) => a.ts >= since)];
+  return { mine: rows.filter((a) => a.ip_hash === ipHash).length, all: rows.length };
+}
+
+/** Forget this sender's failures after a correct password. */
+export async function clearFailedLogins(ipHash: string) {
+  try {
+    if (useSupabase) await sb(`admin_attempts?ip_hash=eq.${encodeURIComponent(ipHash)}`, { method: 'DELETE' }, 'return=minimal');
+    else if (canUseFile)
+      await locked(async () => {
+        const db = await readDb();
+        db.attempts = (db.attempts || []).filter((a) => a.ip_hash !== ipHash);
+        await writeDb(db);
+      });
+  } catch {
+    /* ignore */
+  }
+  for (let i = memAttempts.length - 1; i >= 0; i--) if (memAttempts[i].ip_hash === ipHash) memAttempts.splice(i, 1);
 }
 
 /* ------------------------------ Admin sign-in ------------------------------ */

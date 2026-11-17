@@ -30,7 +30,16 @@ create table if not exists events (
 create index if not exists events_ts_idx on events (ts);
 create index if not exists events_event_idx on events (event, ts);
 
+-- Wrong admin passwords, used for the 15-minute sign-in lockout.
+create table if not exists admin_attempts (
+  id bigint generated always as identity primary key,
+  ip_hash text not null,
+  ts timestamptz not null default now()
+);
+create index if not exists admin_attempts_ts_idx on admin_attempts (ts);
+
 -- Lock both tables. The website's server uses the secret key, which bypasses
 -- these locks; nobody can read or write the tables directly from a browser.
 alter table facts enable row level security;
 alter table events enable row level security;
+alter table admin_attempts enable row level security;
