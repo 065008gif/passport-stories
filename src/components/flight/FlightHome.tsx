@@ -63,6 +63,9 @@ export default function FlightHome({
   const [flat, setFlat] = useState(false);
   const flatRef = useRef(false);
   flatRef.current = flat;
+  // Where the flat map may go: the free space between the title block and the buttons.
+  const [flatBox, setFlatBox] = useState<{ top: number; height: number; w: number } | null>(null);
+  const flatScroll = useRef<HTMLDivElement>(null);
   // The Globe / Flat map buttons live in the page text (MapToggle) and talk to us by event.
   useEffect(() => {
     const on = (e: Event) => setFlat(Boolean((e as CustomEvent<boolean>).detail));
@@ -157,6 +160,8 @@ export default function FlightHome({
         const base = last.getBoundingClientRect().top;
         gap.top = cards[0].getBoundingClientRect().bottom - base;
         gap.bottom = cards[cards.length - 1].getBoundingClientRect().top - base;
+        const box = { top: Math.round(gap.top + 12), height: Math.max(140, Math.round(gap.bottom - gap.top - 24)), w: Math.round(w || window.innerWidth) };
+        setFlatBox((b) => (b && b.top === box.top && b.height === box.height && b.w === box.w ? b : box));
       }
     };
     const measure = () => {
@@ -417,25 +422,53 @@ export default function FlightHome({
         </ul>
 
         {/* Flat map: the same Earth unrolled, with the same flag pins */}
-        {free && flat && (
-          <div className="pointer-events-auto absolute inset-x-0 top-1/2 z-[5] mx-auto w-[min(94vw,980px)] -translate-y-[46%] px-2">
-            <div className="flat-map relative overflow-hidden rounded-3xl border-2 border-cream/25 shadow-ticket">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/textures/earth-day.jpg" alt="" className="block aspect-[2/1] w-full object-cover" draggable={false} />
-              <ul aria-label="Countries on the map">
-                {countries.map((c) => (
-                  <li key={c.slug}>
-                    <button onClick={() => board(`/countries/${c.slug}`, { name: c.name, code: c.airport })} className="globe-pin flat-pin group absolute" style={{ left: `${((c.lng + 180) / 360) * 100}%`, top: `${((90 - c.lat) / 180) * 100}%` }}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={flagSrc(c.slug)} alt="" width={26} height={26} draggable={false} />
-                      <span className="globe-pin-label">{c.name}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
+        {free && flat && flatBox && (() => {
+          // Laptops: the whole map fits the free space. Phones: the map fills the
+          // free height and is wider than the screen, so you swipe it sideways
+          // and the flags never pile on top of each other.
+          // The map is cropped to 75°N to 45°S (no empty polar ice), so it is 3:1
+          // and the flags sit further apart than on the full 2:1 world.
+          const N = 75;
+          const S = -45;
+          const phone = flatBox.w < 768;
+          const mapH = phone ? Math.min(flatBox.height - 26, 420) : Math.min(flatBox.height - 20, Math.min(flatBox.w * 0.94, 1240) / 3);
+          const mapW = mapH * 3;
+          const fullH = (mapH * 180) / (N - S); // height of the whole uncropped picture
+          return (
+            <div className="pointer-events-auto absolute inset-x-0 z-[5]" style={{ top: flatBox.top + (flatBox.height - mapH) / 2, height: mapH }}>
+              <div
+                ref={(el) => {
+                  flatScroll.current = el;
+                  // Phones: start centred on Europe, Africa and Asia.
+                  if (el && phone && !el.dataset.started) {
+                    el.dataset.started = '1';
+                    el.scrollLeft = mapW * (215 / 360) - el.clientWidth / 2;
+                  }
+                }}
+                className={phone ? 'h-full overflow-x-auto overscroll-x-contain px-3 [scrollbar-width:none]' : 'flex h-full justify-center'}
+              >
+                <div className="flat-map relative h-full shrink-0 overflow-hidden rounded-3xl border-2 border-cream/25 shadow-ticket" style={{ width: mapW }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <div className="absolute inset-x-0" style={{ top: (-fullH * (90 - N)) / 180, height: fullH }}>
+                  <img src="/textures/earth-day.jpg" alt="" className="block h-full w-full" draggable={false} />
+                  <ul aria-label="Countries on the map">
+                    {countries.map((c) => (
+                      <li key={c.slug}>
+                        <button onClick={() => board(`/countries/${c.slug}`, { name: c.name, code: c.airport })} className="globe-pin flat-pin group absolute" style={{ left: `${((c.lng + 180) / 360) * 100}%`, top: `${((90 - c.lat) / 180) * 100}%` }}>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={flagSrc(c.slug)} alt="" width={26} height={26} draggable={false} />
+                          <span className="globe-pin-label">{c.name}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                  </div>
+                </div>
+              </div>
+              {phone && <p className="mt-2 text-center font-mono text-[10px] font-bold uppercase tracking-widest text-cream/70">← Swipe the map →</p>}
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Flight tracker: where you are on the route, and a way to jump */}
         <nav aria-label="Flight route" className="pointer-events-auto absolute inset-x-0 bottom-3 z-10 flex justify-center px-2 sm:bottom-5 lg:justify-end lg:pr-[4vw]">
