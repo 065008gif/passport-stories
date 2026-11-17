@@ -69,9 +69,20 @@ async function sb<T>(pathAndQuery: string, init: RequestInit = {}, prefer = ''):
 /* ------------------------------ Local file ------------------------------ */
 
 const FILE = path.join(process.cwd(), '.data', 'db.json');
+export interface Suggestion {
+  id: string;
+  kind: 'country' | 'topic';
+  suggestion: string;
+  reason: string;
+  email: string;
+  status: 'new' | 'done';
+  created_at: string;
+}
+
 interface Db {
   facts: Fact[];
   events: EventRow[];
+  suggestions?: Suggestion[];
   attempts?: { ip_hash: string; ts: string }[];
 }
 async function readDb(): Promise<Db> {
@@ -198,6 +209,92 @@ export async function listEvents(sinceIso: string, cap = 20000): Promise<EventRo
     const rows = await sb<EventRow[]>(`events?${q}`);
     out.push(...rows);
     if (rows.length < page) break;
+  }
+  return out;
+}
+
+/* ------------------------- Ask the Map suggestions ------------------------- */
+
+export async function addSuggestion(input: Omit<Suggestion, 'id' | 'status' | 'created_at'> & { ip_hash?: string }) {
+  need();
+  const row = { id: randomUUID(), ...input, status: 'new' as const, created_at: new Date().toISOString() };
+  if (useSupabase) return void (await sb('suggestions', { method: 'POST', body: JSON.stringify(row) }, 'return=minimal'));
+  await locked(async () => {
+    const db = await readDb();
+    db.suggestions = [...(db.suggestions || []), row];
+    await writeDb(db);
+  });
+}
+
+export async function recentSuggestionsFrom(ipHash: string): Promise<number> {
+  need();
+  const since = new Date(Date.now() - 36e5).toISOString();
+  if (useSupabase) {
+    const q = new URLSearchParams({ select: 'id', ip_hash: `eq.${ipHash}`, created_at: `gte.${since}`, limit: '20' });
+    return (await sb<{ id: string }[]>(`suggestions?${q}`)).length;
+  }
+  return ((await readDb()).suggestions || []).filter((x) => (x as Suggestion & { ip_hash?: string }).ip_hash === ipHash && x.created_at >= since).length;
+}
+
+export async function listSuggestions(limit = 300): Promise<Suggestion[]> {
+  need();
+  if (useSupabase) {
+    const q = new URLSearchParams({ select: 'id,kind,suggestion,reason,email,status,created_at', order: 'created_at.desc', limit: String(limit) });
+    return sb<Suggestion[]>(`suggestions?${q}`);
+  }
+  return ((await readDb()).suggestions || [])
+    .slice()
+    .sort((a, b) => b.created_at.localeCompare(a.created_at))
+    .slice(0, limit)
+    .map(({ id, kind, suggestion, reason, email, status, created_at }) => ({ id, kind, suggestion, reason, email, status, created_at }));
+}
+
+export async function setSuggestionStatus(id: string, status: Suggestion['status']) {
+  need();
+  if (useSupabase) return void (await sb(`suggestions?id=eq.${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify({ status }) }, 'return=minimal'));
+  await locked(async () => {
+    const db = await readDb();
+    const x = (db.suggestions || []).find((y) => y.id === id);
+    if (x) x.status = status;
+    await writeDb(db);
+  });
+}
+
+export async function deleteSuggestion(id: string) {
+  need();
+  if (useSupabase) return void (await sb(`suggestions?id=eq.${encodeURIComponent(id)}`, { method: 'DELETE' }, 'return=minimal'));
+  await locked(async () => {
+    const db = await readDb();
+    db.suggestions = (db.suggestions || []).filter((y) => y.id !== id);
+    await writeDb(db);
+  });
+}
+
+/* ------------------------------ Housekeeping ------------------------------ */
+
+/** Delete analytics events older than `days` days, to stay well inside the free database. */
+export async function pruneEvents(days: number) {
+  need();
+  const before = new Date(Date.now() - days * 864e5).toISOString();
+  if (useSupabase) return void (await sb(`events?ts=lt.${before}`, { method: 'DELETE' }, 'return=minimal'));
+  await locked(async () => {
+    const db = await readDb();
+    db.events = db.events.filter((e) => e.ts >= before);
+    await writeDb(db);
+  });
+}
+
+/** Can the server reach the database and all its tables? Used by the setup check. */
+export async function storageCheck(): Promise<Record<string, boolean>> {
+  if (!useSupabase) return { facts: storeMode() === 'file', events: storeMode() === 'file', suggestions: storeMode() === 'file', admin_attempts: storeMode() === 'file' };
+  const out: Record<string, boolean> = {};
+  for (const t of ['facts', 'events', 'suggestions', 'admin_attempts']) {
+    try {
+      await sb(`${t}?select=*&limit=1`);
+      out[t] = true;
+    } catch {
+      out[t] = false;
+    }
   }
   return out;
 }

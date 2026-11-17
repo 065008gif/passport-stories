@@ -70,11 +70,33 @@ export default function AdminClient({ names }: { names: Record<string, string> }
   const [status, setStatus] = useState<{ signedIn: boolean; storage: string; passwordSet: boolean; usingDefaultPassword: boolean } | null>(null);
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [tab, setTab] = useState<'facts' | 'analytics'>('facts');
+  const [tab, setTab] = useState<'facts' | 'suggestions' | 'analytics' | 'setup'>('facts');
+  const [sugs, setSugs] = useState<{ id: string; kind: string; suggestion: string; reason: string; email: string; status: 'new' | 'done'; created_at: string }[] | null>(null);
+  const [setup, setSetup] = useState<{ storage: string; tables: Record<string, boolean>; adminPassword: boolean; ga4: boolean; clarity: boolean; siteUrl: string } | null>(null);
   const [facts, setFacts] = useState<{ pending: Fact[]; approved: Fact[]; rejected: Fact[] } | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
   const [days, setDays] = useState(7);
   const [note, setNote] = useState('');
+
+  const loadSugs = useCallback(async () => {
+    const r = await fetch('/api/admin/suggestions');
+    const d = await r.json().catch(() => ({}));
+    if (r.ok) setSugs(d.suggestions);
+    else setNote(d.error || 'Could not load suggestions.');
+  }, []);
+  const loadSetup = useCallback(async () => {
+    const r = await fetch('/api/admin/setup');
+    if (r.ok) setSetup(await r.json());
+  }, []);
+  const sugAction = async (id: string, status?: 'new' | 'done') => {
+    await fetch(status ? '/api/admin/suggestions' : `/api/admin/suggestions?id=${encodeURIComponent(id)}`, status ? { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, status }) } : { method: 'DELETE' });
+    loadSugs();
+  };
+  const prune = async () => {
+    if (!window.confirm('Delete analytics events older than 180 days? This cannot be undone.')) return;
+    const r = await fetch('/api/admin/prune?days=180', { method: 'POST' });
+    setNote(r.ok ? 'Old events deleted.' : 'Could not delete old events.');
+  };
 
   const check = useCallback(() => fetch('/api/admin/login').then((r) => r.json()).then(setStatus), []);
   useEffect(() => {
@@ -99,7 +121,9 @@ export default function AdminClient({ names }: { names: Record<string, string> }
     if (!status?.signedIn) return;
     loadFacts();
     loadStats(days);
-  }, [status?.signedIn, days, loadFacts, loadStats]);
+    loadSugs();
+    loadSetup();
+  }, [status?.signedIn, days, loadFacts, loadStats, loadSugs, loadSetup]);
 
   const signIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -168,7 +192,9 @@ export default function AdminClient({ names }: { names: Record<string, string> }
         {(
           [
             ['facts', `Facts${facts ? ` · ${facts.pending.length} waiting` : ''}`],
+            ['suggestions', `Suggestions${sugs ? ` · ${sugs.filter((x) => x.status === 'new').length} new` : ''}`],
             ['analytics', 'Analytics'],
+            ['setup', 'Setup check'],
           ] as const
         ).map(([id, label]) => (
           <button key={id} role="tab" aria-selected={tab === id} onClick={() => setTab(id)} className={`rounded-full px-5 py-2.5 text-sm font-extrabold transition-colors ${tab === id ? 'bg-sun text-ink' : 'border-2 border-cream/25 text-cream hover:border-sun'}`}>
@@ -224,6 +250,76 @@ export default function AdminClient({ names }: { names: Record<string, string> }
               {facts && facts[key].length === 0 && <p className="mt-3 font-mono text-sm text-cream/50">Nothing here.</p>}
             </section>
           ))}
+        </div>
+      )}
+
+      {/* ------------------------------- Suggestions ------------------------------- */}
+      {tab === 'suggestions' && (
+        <div className="mt-6">
+          <h2 className="h-display text-2xl">Ask the Map</h2>
+          <p className="text-sm text-cream/65">Countries and topics visitors want next. Mark them done once covered.</p>
+          {sugs && sugs.length === 0 && <p className="mt-4 font-mono text-sm text-cream/60">No suggestions yet.</p>}
+          <ul className="mt-4 grid gap-3 md:grid-cols-2">
+            {sugs?.map((x) => (
+              <li key={x.id} className={`${CARD} ${x.status === 'done' ? 'opacity-60' : ''}`}>
+                <p className="font-mono text-[11px] font-bold uppercase tracking-wider text-cream/70">
+                  {x.kind} · {new Date(x.created_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })} {x.status === 'done' && '· done'}
+                </p>
+                <p className="mt-1 text-lg font-bold">{x.suggestion}</p>
+                {x.reason && <p className="mt-1 text-sm text-cream/80">{x.reason}</p>}
+                {x.email && (
+                  <a href={`mailto:${x.email}`} className="mt-1 inline-block text-sm text-sky underline">
+                    {x.email}
+                  </a>
+                )}
+                <div className="mt-3 flex gap-2">
+                  <button onClick={() => sugAction(x.id, x.status === 'new' ? 'done' : 'new')} className="rounded-full bg-sun px-3 py-1.5 text-sm font-bold text-ink">
+                    {x.status === 'new' ? 'Mark done' : 'Mark new'}
+                  </button>
+                  <button onClick={() => sugAction(x.id)} className="rounded-full border-2 border-cream/25 px-3 py-1.5 text-sm font-bold">
+                    Delete
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* --------------------------------- Setup ---------------------------------- */}
+      {tab === 'setup' && (
+        <div className="mt-6 max-w-2xl">
+          <h2 className="h-display text-2xl">Setup check</h2>
+          <p className="text-sm text-cream/65">Everything should be green before you share the site.</p>
+          <ul className="mt-4 space-y-2">
+            {(
+              [
+                ['Database connected (Supabase)', setup?.storage === 'supabase', 'Add SUPABASE_URL and SUPABASE_SECRET_KEY in Vercel, then redeploy.'],
+                ['Table: facts', setup?.tables.facts, 'Run supabase/schema.sql in the Supabase SQL Editor.'],
+                ['Table: events (analytics)', setup?.tables.events, 'Run supabase/schema.sql in the Supabase SQL Editor.'],
+                ['Table: suggestions', setup?.tables.suggestions, 'Run supabase/schema.sql again (it only adds what is missing).'],
+                ['Table: admin_attempts (sign-in lockout)', setup?.tables.admin_attempts, 'Run supabase/schema.sql again (it only adds what is missing).'],
+                ['Admin password set', setup?.adminPassword, 'Add ADMIN_PASSWORD in Vercel.'],
+                ['Google Analytics 4', setup?.ga4, 'Add NEXT_PUBLIC_GA_ID (G-XXXXXXXXXX) in Vercel, then redeploy.'],
+                ['Microsoft Clarity (optional)', setup?.clarity, 'Optional: add NEXT_PUBLIC_CLARITY_ID for heatmaps.'],
+              ] as const
+            ).map(([label, ok, fix]) => (
+              <li key={label} className={`${CARD} flex items-start gap-3`}>
+                <span className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-sm font-bold ${ok ? 'bg-teal text-ink' : 'bg-tang text-ink'}`}>{ok ? '✓' : '!'}</span>
+                <span>
+                  <span className="font-bold">{label}</span>
+                  {!ok && <span className="block text-sm text-cream/75">{fix}</span>}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <div className={`${CARD} mt-6`}>
+            <h3 className="h-display text-xl">Housekeeping</h3>
+            <p className="mt-1 text-sm text-cream/75">The free database holds 500 MB. Analytics events are small, but you can clear anything older than 180 days.</p>
+            <button onClick={prune} className="mt-3 rounded-full border-2 border-cream/25 px-4 py-2 text-sm font-bold hover:border-sun">
+              Delete events older than 180 days
+            </button>
+          </div>
         </div>
       )}
 

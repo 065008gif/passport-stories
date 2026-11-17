@@ -1,9 +1,10 @@
 # Back end: community facts and your own analytics
 
-The site has a small back end with two jobs:
+The site has a small back end with three jobs:
 
 1. **Community facts.** A visitor sends a fact, sees "We will review and publish your fact within 24 hours", and the fact waits in a queue. You approve or reject it on the `/admin` page. Only approved facts appear on the site (the Community page and the country's own page).
-2. **Your own analytics.** Every event the site tracks (page views, clicks, scroll depth, time on page, games, guesses) is also saved to your database, and `/admin` turns it into a dashboard: visitors, sessions, time per page, returning visitors, bounce rate, top clicks, sources, devices and a funnel. This works alongside Google Analytics, not instead of it.
+2. **Ask the Map suggestions.** Countries and topics visitors want next land in `/admin` > Suggestions (no Formspree needed).
+3. **Your own analytics.** Every event the site tracks (page views, clicks, scroll depth, time on page, games, guesses) is also saved to your database, and `/admin` turns it into a dashboard: visitors, sessions, time per page, returning visitors, bounce rate, top clicks, sources, devices and a funnel. This works alongside Google Analytics, not instead of it.
 
 ## Try it on your computer first (no account needed)
 
@@ -44,6 +45,10 @@ Run the whole of `supabase/schema.sql` again. It only adds what is missing (the 
 ## Export for analysis
 
 On `/admin` > Analytics, **Export CSV** downloads every event for the last 30 days (or the period picked). The **Features** panel shows boarding passes printed, home page gates, globe spins, comparisons, games and story cards.
+
+## Check everything is working
+
+Sign in at `/admin` and open **Setup check**. Every line should be green: database connected, the four tables (facts, events, suggestions, admin_attempts), admin password and Google Analytics. Any orange line says exactly what to add.
 
 ## How it is protected
 

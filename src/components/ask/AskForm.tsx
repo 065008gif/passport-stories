@@ -2,11 +2,10 @@
 
 /**
  * Ask the Map: suggest a country or topic.
- * Submissions go to Formspree (free tier). Set NEXT_PUBLIC_FORMSPREE_ID.
- * Without an ID the form runs in preview mode and sends nothing.
+ * Submissions go to the site's own back end (/api/suggest) and are read in
+ * /admin > Suggestions.
  */
 import { useState } from 'react';
-import { site } from '@/data/site';
 import { track } from '@/lib/analytics';
 
 const FIELD = 'w-full rounded-xl border-2 border-cream/25 bg-white/[0.06] px-3 py-3 text-lg text-cream placeholder:text-cream/45 focus:border-cream/40';
@@ -14,7 +13,7 @@ const FIELD = 'w-full rounded-xl border-2 border-cream/25 bg-white/[0.06] px-3 p
 export default function AskForm() {
   const [kind, setKind] = useState<'country' | 'topic'>('country');
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
-  const preview = !site.formspreeId;
+  const [message, setMessage] = useState('');
 
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -24,11 +23,17 @@ export default function AskForm() {
     if (!suggestion) return;
     setStatus('sending');
     try {
-      if (!preview) {
-        const res = await fetch(`https://formspree.io/f/${site.formspreeId}`, { method: 'POST', body: data, headers: { Accept: 'application/json' } });
-        if (!res.ok) throw new Error('Form service rejected the submission');
+      const res = await fetch('/api/suggest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kind, suggestion, reason: data.get('reason'), email: data.get('email'), website: data.get('_gotcha') }),
+      });
+      const out = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setMessage(out.error || 'Could not send. Please try again.');
+        throw new Error('rejected');
       }
-      track('suggestion_submitted', { suggestion_type: kind, suggestion: suggestion.slice(0, 60), delivered: !preview });
+      track('suggestion_submitted', { suggestion_type: kind, suggestion: suggestion.slice(0, 60), delivered: true });
       setStatus('sent');
     } catch {
       setStatus('error');
@@ -43,7 +48,6 @@ export default function AskForm() {
         </p>
         <h2 className="h-display mt-3 text-3xl">Postcard received</h2>
         <p className="mt-2 text-lg text-cream/85">Thank you. If it makes the map, you will see it as a Country of the Week.</p>
-        {preview && <p className="mt-3 font-mono text-sm text-cream/70">Preview mode: no form ID is configured yet, so nothing was sent.</p>}
         <button onClick={() => setStatus('idle')} className="btn btn-sun mt-6">
           Send another
         </button>
@@ -93,7 +97,7 @@ export default function AskForm() {
           </button>
           {status === 'error' && (
             <p role="alert" className="font-semibold text-coral">
-              That did not go through. Please try again in a moment.
+              {message || 'That did not go through. Please try again in a moment.'}
             </p>
           )}
         </div>
