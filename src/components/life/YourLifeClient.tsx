@@ -38,7 +38,7 @@ function Slider({ label, unit, min, max, step = 1, value, onChange, mood }: { la
         </span>
       </div>
       <div className="mt-2 flex items-center gap-3 sm:gap-4">
-        <p className="chunk w-[4.6ch] shrink-0 text-[2rem] leading-none tabular-nums text-ink sm:w-[5.2ch] sm:text-5xl">
+        <p className="chunk w-[4.6ch] shrink-0 text-[2rem] leading-none tabular-nums text-ink sm:w-[5ch] sm:text-[2.4rem]">
           {n}
           <span className="ml-1 font-sans text-base font-bold text-ink/70">{unit}</span>
         </p>
@@ -62,9 +62,9 @@ function Money({ label, value, onChange, placeholder }: { label: string; value: 
     <label className="group block min-w-0">
       <span className="font-mono text-xs font-bold uppercase tracking-[0.18em] text-ink/75">{label}</span>
       <span className="mt-1.5 flex items-baseline gap-2 rounded-2xl border-[3px] border-ink bg-cream px-3 py-1 sm:mt-2 sm:px-4 sm:py-2 shadow-[0_5px_0_#1B1F5E] transition-transform group-focus-within:-translate-y-0.5">
-        <span className="chunk text-2xl text-tang sm:text-4xl">₹</span>
+        <span className="chunk text-2xl text-tang sm:text-3xl">₹</span>
         <input
-          className="chunk h-11 min-w-0 flex-1 bg-transparent text-[1.7rem] tabular-nums text-ink placeholder:text-ink/25 focus:outline-none sm:h-14 sm:text-5xl"
+          className="chunk h-11 min-w-0 flex-1 bg-transparent text-[1.7rem] tabular-nums text-ink placeholder:text-ink/25 focus:outline-none sm:h-12 sm:text-[2.2rem]"
           inputMode="numeric"
           size={1}
           type="text"
@@ -82,11 +82,11 @@ function Money({ label, value, onChange, placeholder }: { label: string; value: 
 /** One lane of the check-in desk: a bright coloured counter with dark ink text. */
 function Lane({ n, title, sub, color, children, tilt = 0 }: { n: number; title: string; sub: string; color: string; children: React.ReactNode; tilt?: number }) {
   return (
-    <section className="lane relative rounded-[22px] border-[3px] border-ink p-4 text-ink sm:rounded-[26px] sm:p-7" style={{ background: color, transform: `rotate(${tilt}deg)` }}>
+    <section className="lane relative rounded-[22px] border-[3px] border-ink p-4 text-ink sm:rounded-[24px] sm:p-5" style={{ background: color, transform: `rotate(${tilt}deg)` }}>
       <div className="flex items-center gap-3">
-        <span className="chunk flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-ink text-base text-sun sm:h-11 sm:w-11 sm:text-xl">{n}</span>
+        <span className="chunk flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-ink text-base text-sun sm:h-10 sm:w-10 sm:text-lg">{n}</span>
         <div>
-          <h2 className="chunk text-xl leading-none sm:text-3xl">{title}</h2>
+          <h2 className="chunk text-xl leading-none sm:text-2xl">{title}</h2>
           <p className="mt-1 text-xs font-semibold text-ink/70 sm:text-sm">{sub}</p>
         </div>
       </div>
@@ -302,16 +302,16 @@ export default function YourLifeClient({ countries, slug }: { countries: LifeCou
   return (
     <>
     <PrintingOverlay show={printing} dest={destC && { slug: destC.slug, name: destC.name, airport: destC.airport }} />
-    <form onSubmit={submit} className="checkin mx-auto max-w-4xl overflow-hidden rounded-[30px] border-[3px] border-ink" noValidate data-rv="up" data-section="life-form">
+    <form onSubmit={submit} className="checkin mx-auto max-w-3xl overflow-hidden rounded-[30px] border-[3px] border-ink" noValidate data-rv="up" data-section="life-form">
       <div className="checkin-head flex items-center justify-between gap-3 px-5 py-4 text-ink sm:px-8">
-        <p className="chunk text-2xl sm:text-4xl">Check-in desk</p>
+        <p className="chunk text-2xl sm:text-3xl">Check-in desk</p>
         <p className="hidden items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-[0.18em] sm:flex">
           <span className="rounded-full bg-sun px-2 py-1 ring-2 ring-ink">1 Money</span>
           <span className="rounded-full bg-sky px-2 py-1 ring-2 ring-ink">2 Time</span>
           <span className="rounded-full bg-violet px-2 py-1 ring-2 ring-ink">3 Where</span>
         </p>
       </div>
-      <div className="space-y-4 p-3 sm:space-y-6 sm:p-8">
+      <div className="space-y-4 p-3 sm:space-y-5 sm:p-6">
         <Lane n={1} title="Your money" sub="Your monthly pay and rent. Put 0 if you pay no rent." color="linear-gradient(135deg,#FFB703,#FFC93C)" tilt={-0.4}>
           <div className="grid gap-4 sm:grid-cols-2 sm:gap-8">
             <Money label="I earn" placeholder="60,000" value={form.salary} onChange={(v) => setForm({ ...form, salary: v })} />
@@ -331,12 +331,12 @@ export default function YourLifeClient({ countries, slug }: { countries: LifeCou
           </div>
         </Lane>
 
-        <fieldset className="lane rounded-[22px] border-[3px] border-ink p-4 text-ink sm:rounded-[26px] sm:p-7" style={{ background: 'linear-gradient(135deg,#B693FF,#CDB4FF)', transform: 'rotate(-0.3deg)' }}>
+        <fieldset className="lane rounded-[22px] border-[3px] border-ink p-4 text-ink sm:rounded-[24px] sm:p-5" style={{ background: 'linear-gradient(135deg,#B693FF,#CDB4FF)', transform: 'rotate(-0.3deg)' }}>
           <legend className="sr-only">Where to?</legend>
           <div className="flex items-center gap-3">
-            <span className="chunk flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-ink text-base text-sun sm:h-11 sm:w-11 sm:text-xl">3</span>
+            <span className="chunk flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-ink text-base text-sun sm:h-10 sm:w-10 sm:text-lg">3</span>
             <div>
-              <p className="chunk text-xl leading-none sm:text-3xl">Where to?</p>
+              <p className="chunk text-xl leading-none sm:text-2xl">Where to?</p>
               <p className="mt-1 text-xs font-semibold text-ink/70 sm:text-sm">Pick a destination.</p>
             </div>
           </div>
@@ -363,7 +363,7 @@ export default function YourLifeClient({ countries, slug }: { countries: LifeCou
 
       <div className="perforation" style={{ ['--notch' as string]: '#0D0F3A' }} />
       <div className="flex flex-wrap items-center gap-4 p-5 sm:px-8">
-        <button type="submit" className="print-btn chunk w-full rounded-2xl border-[3px] border-ink px-6 py-3.5 text-lg text-ink sm:w-auto sm:px-8 sm:py-4 transition-transform hover:-translate-y-1 active:translate-y-0.5 sm:text-2xl">
+        <button type="submit" className="print-btn chunk w-full rounded-2xl border-[3px] border-ink px-6 py-3.5 text-lg text-ink sm:w-auto sm:px-7 sm:py-3 sm:text-xl transition-transform hover:-translate-y-1 active:translate-y-0.5 sm:text-2xl">
           Print my boarding pass ✈
         </button>
         <p role="alert" className="font-semibold text-coral">

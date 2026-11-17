@@ -130,13 +130,19 @@ export function PrintReveal({ play, children }: { play: boolean; children: React
   useEffect(() => {
     if (!play) return;
     // Bring the printer into view first (on phones it starts below the fold).
-    const el = box.current;
-    if (el) {
+    // Runs a moment after the page loads, so it is not undone by the
+    // "new page starts at the top" reset, on laptops as well as phones.
+    const go = setTimeout(() => {
+      const el = box.current;
+      if (!el) return;
       const header = document.querySelector('header')?.getBoundingClientRect().height || 0;
-      window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - header - 12, behavior: 'smooth' });
-    }
-    const t = setTimeout(() => setDone(true), 2300);
-    return () => clearTimeout(t);
+      window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - header - 16, behavior: 'smooth' });
+    }, 120);
+    const t = setTimeout(() => setDone(true), 2600);
+    return () => {
+      clearTimeout(t);
+      clearTimeout(go);
+    };
   }, [play]);
 
   if (!play) return <>{children}</>;
