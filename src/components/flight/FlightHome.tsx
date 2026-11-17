@@ -159,8 +159,24 @@ export default function FlightHome({
       if (last && cards && cards.length >= 2) {
         const base = last.getBoundingClientRect().top;
         gap.top = cards[0].getBoundingClientRect().bottom - base;
-        gap.bottom = cards[cards.length - 1].getBoundingClientRect().top - base;
-        const box = { top: Math.round(gap.top + 12), height: Math.max(140, Math.round(gap.bottom - gap.top - 24)), w: Math.round(w || window.innerWidth) };
+        const lastCard = cards[cards.length - 1].getBoundingClientRect();
+        // When the bottom buttons are hidden (laptops), the globe may use the space down to the flight tracker.
+        let flatBottom = 0;
+        if (lastCard.height > 0) gap.bottom = lastCard.top - base;
+        else {
+          const tr = root.current?.querySelector('nav[aria-label="Flight route"] > *')?.getBoundingClientRect();
+          const stageTop = stage.current?.getBoundingClientRect().top ?? base;
+          const sw = stage.current?.clientWidth || window.innerWidth;
+          // The tracker sits bottom right. If a globe filling the full height
+          // would still clear it, use the full height; otherwise stop above it.
+          const fullBottom = (stage.current?.clientHeight || h) - 18;
+          const aboveTracker = tr ? tr.top - stageTop : fullBottom;
+          const rMax = tr ? tr.left - 16 - sw / 2 : Infinity; // largest globe that clears the tracker sideways
+          gap.bottom = Math.max(aboveTracker, Math.min(fullBottom, gap.top + 2 * rMax));
+          flatBottom = aboveTracker; // the flat map is wide, so it always stops above the tracker
+        }
+        const fb = flatBottom || gap.bottom;
+        const box = { top: Math.round(gap.top + 12), height: Math.max(140, Math.round(fb - gap.top - 24)), w: Math.round(w || window.innerWidth) };
         setFlatBox((b) => (b && b.top === box.top && b.height === box.height && b.w === box.w ? b : box));
       }
     };
