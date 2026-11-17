@@ -29,6 +29,16 @@ export default function Header() {
   const clicks = useRef<number[]>([]);
 
   useEffect(() => setOpen(false), [pathname]);
+  // Every new page starts at the top. The home page's swipe-snapping is
+  // switched off as soon as you leave it, so phones cannot snap you down
+  // to the footer of the next page.
+  useEffect(() => {
+    if (pathname !== '/') document.documentElement.classList.remove('snap-page');
+    if (!window.location.hash) {
+      window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+      requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }));
+    }
+  }, [pathname]);
   // While the phone menu is open, the page behind it stays still.
   useEffect(() => {
     document.documentElement.style.overflow = open ? 'hidden' : '';

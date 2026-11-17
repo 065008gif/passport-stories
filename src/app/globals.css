@@ -307,8 +307,7 @@ a.flap-row:focus-visible {
   html.snap-page {
     scroll-snap-type: y mandatory;
   }
-  html.snap-page .after-flight,
-  html.snap-page footer {
+  html.snap-page .after-flight {
     scroll-snap-align: start;
   }
 }

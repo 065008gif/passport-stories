@@ -81,7 +81,8 @@ export default function FlightHome({
   const lastStop = countries[route[legs]];
 
   useEffect(() => {
-    document.documentElement.classList.add('snap-page');
+    // Swipe-snapping is only for the home page, and only while it is the page on screen.
+    if (window.location.pathname === '/') document.documentElement.classList.add('snap-page');
     return () => document.documentElement.classList.remove('snap-page');
   }, []);
 
