@@ -27,7 +27,7 @@ export default function HomePage() {
     <>
       <FlightHome countries={countries} route={route}>
         {/* ------------------------------ Take-off ------------------------------ */}
-        <section className={`${SCREEN} is-here md:!pb-40`} aria-labelledby="hero-title">
+        <section className={`${SCREEN} is-here md:!pb-36 lg:!pb-12`} aria-labelledby="hero-title">
           <div className="hero-card stop-card max-w-xl md:max-w-[36rem]">
             <p className="kicker text-sun">Flight PS 001 · Departing {INDIA.airport}</p>
             <h1 id="hero-title" className="hero-h1 sign mt-1.5 text-[2.5rem] leading-[0.95] sm:mt-2 sm:text-7xl">

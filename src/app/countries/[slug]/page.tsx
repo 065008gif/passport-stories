@@ -43,7 +43,7 @@ export default async function CountryPage({ params }: Props) {
       {/* Cover */}
       <header className="relative">
         <CountryScene slug={c.slug} code={c.airport} />
-        <div className="container-x relative pb-24 pt-2 sm:pb-28">
+        <div className="container-x relative pb-[46vw] pt-2 sm:pb-28">
           <Breadcrumbs
             items={[
               { label: 'Countries', href: '/countries' },
@@ -51,19 +51,21 @@ export default async function CountryPage({ params }: Props) {
               { label: c.name },
             ]}
           />
-          <p className="kicker mt-8 text-sun">
-            Flight {INDIA.airport} → {c.airport} · {c.region} · six topics, each compared with India
+          <p className="kicker mt-5 text-sun sm:mt-8">
+            Flight {INDIA.airport} → {c.airport} · {c.region}
+            <span className="hidden sm:inline"> · six topics, each compared with India</span>
           </p>
-          <h1 className="chunk mt-3 flex items-center gap-4 text-5xl sm:text-7xl" data-rv="left">
-            <Flag slug={c.slug} size={84} className="bob shadow-[0_0_0_6px_rgba(255,244,224,.15)]" />
+          <h1 className="chunk mt-2 flex items-center gap-3 text-[2.6rem] leading-none sm:mt-3 sm:gap-4 sm:text-7xl" data-rv="left">
+            <Flag slug={c.slug} size={84} className="bob hidden shadow-[0_0_0_6px_rgba(255,244,224,.15)] sm:inline-block" />
+            <Flag slug={c.slug} size={52} className="bob shadow-[0_0_0_4px_rgba(255,244,224,.15)] sm:hidden" />
             {c.name}
           </h1>
-          <p className="mt-4 max-w-xl text-xl font-medium text-cream sm:text-2xl" data-rv="up" style={{ ['--d' as string]: '120ms' }}>
+          <p className="mt-3 max-w-xl text-base font-medium leading-snug text-cream sm:mt-4 sm:text-2xl" data-rv="up" style={{ ['--d' as string]: '120ms' }}>
             {c.tagline}
           </p>
 
           {/* Quick facts strip */}
-          <dl className="mt-8 grid max-w-xl grid-cols-2 gap-3">
+          <dl className="mt-5 grid max-w-xl grid-cols-2 gap-2 sm:mt-8 sm:gap-3">
             {(
               [
                 ['Population', c.quickFacts.population],
@@ -72,13 +74,13 @@ export default async function CountryPage({ params }: Props) {
                 ['Language', c.quickFacts.language],
               ] as const
             ).map(([label, value], i) => (
-              <div key={label} data-rv="pop" style={{ ['--d' as string]: `${200 + i * 80}ms` }} className="rounded-2xl border border-cream/25 bg-night/55 p-4 text-cream backdrop-blur transition-transform hover:-translate-y-1 hover:rotate-1">
+              <div key={label} data-rv="pop" style={{ ['--d' as string]: `${200 + i * 80}ms` }} className="rounded-xl border border-cream/25 bg-night/55 px-3 py-2 text-cream backdrop-blur sm:rounded-2xl sm:p-4 transition-transform hover:-translate-y-1 hover:rotate-1">
                 <dt className="font-mono text-[11px] uppercase tracking-wider text-cream/70">{label}</dt>
-                <dd className="mt-0.5 font-bold leading-snug">{value}</dd>
+                <dd className="mt-0.5 text-sm font-bold leading-snug sm:text-base">{value}</dd>
               </div>
             ))}
           </dl>
-          <p className="nudge mt-8 font-mono text-xs font-semibold uppercase tracking-widest text-cream/70" aria-hidden>
+          <p className="nudge mt-5 font-mono text-[10px] font-semibold sm:mt-8 sm:text-xs uppercase tracking-widest text-cream/70" aria-hidden>
             ↓ Six stops on this page
           </p>
         </div>
