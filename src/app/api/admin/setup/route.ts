@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { ADMIN_COOKIE, isAdmin, storageCheck, storeMode } from '@/lib/server/store';
+import { instagramStatus } from '@/lib/server/instagram';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,6 +14,7 @@ export async function GET() {
     tables,
     adminPassword: Boolean(process.env.ADMIN_PASSWORD),
     ga4: Boolean(process.env.NEXT_PUBLIC_GA_ID),
+    instagram: await instagramStatus(),
     siteUrl: process.env.NEXT_PUBLIC_SITE_URL || '',
   });
 }

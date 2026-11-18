@@ -72,7 +72,7 @@ export default function AdminClient({ names }: { names: Record<string, string> }
   const [error, setError] = useState('');
   const [tab, setTab] = useState<'facts' | 'suggestions' | 'analytics' | 'setup'>('facts');
   const [sugs, setSugs] = useState<{ id: string; kind: string; suggestion: string; reason: string; email: string; status: 'new' | 'done'; created_at: string }[] | null>(null);
-  const [setup, setSetup] = useState<{ storage: string; tables: Record<string, boolean>; adminPassword: boolean; ga4: boolean; siteUrl: string } | null>(null);
+  const [setup, setSetup] = useState<{ storage: string; tables: Record<string, boolean>; adminPassword: boolean; ga4: boolean; instagram: { connected: boolean; posts: number; note: string }; siteUrl: string } | null>(null);
   const [facts, setFacts] = useState<{ pending: Fact[]; approved: Fact[]; rejected: Fact[] } | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
   const [days, setDays] = useState(7);
@@ -299,8 +299,10 @@ export default function AdminClient({ names }: { names: Record<string, string> }
                 ['Table: events (analytics)', setup?.tables.events, 'Run supabase/schema.sql in the Supabase SQL Editor.'],
                 ['Table: suggestions', setup?.tables.suggestions, 'Run supabase/schema.sql again (it only adds what is missing).'],
                 ['Table: admin_attempts (sign-in lockout)', setup?.tables.admin_attempts, 'Run supabase/schema.sql again (it only adds what is missing).'],
+                ['Table: settings (Instagram token renewal)', setup?.tables.settings, 'Run supabase/schema.sql again (it only adds what is missing).'],
                 ['Admin password set', setup?.adminPassword, 'Add ADMIN_PASSWORD in Vercel.'],
                 ['Google Analytics 4', setup?.ga4, 'Add NEXT_PUBLIC_GA_ID (G-XXXXXXXXXX) in Vercel, then redeploy.'],
+                [`Instagram feed${setup?.instagram.connected ? ` (${setup.instagram.posts} latest posts)` : ''}`, setup?.instagram.connected, setup?.instagram.note || 'Add INSTAGRAM_TOKEN in Vercel, then redeploy.'],
               ] as const
             ).map(([label, ok, fix]) => (
               <li key={label} className={`${CARD} flex items-start gap-3`}>

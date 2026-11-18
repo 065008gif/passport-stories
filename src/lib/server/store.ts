@@ -84,6 +84,7 @@ interface Db {
   events: EventRow[];
   suggestions?: Suggestion[];
   attempts?: { ip_hash: string; ts: string }[];
+  settings?: Record<string, { value: string; updated_at: string }>;
 }
 async function readDb(): Promise<Db> {
   try {
@@ -284,11 +285,42 @@ export async function pruneEvents(days: number) {
   });
 }
 
+/* ------------------------------- Settings ------------------------------- */
+
+/** Read one saved setting, or null. Never throws (used while rendering pages). */
+export async function getSetting(key: string): Promise<{ value: string; updated_at: string } | null> {
+  try {
+    if (useSupabase) {
+      const rows = await sb<{ value: string; updated_at: string }[]>(`settings?key=eq.${encodeURIComponent(key)}&select=value,updated_at`);
+      return rows[0] || null;
+    }
+    if (storeMode() === 'file') return (await readDb()).settings?.[key] || null;
+  } catch {
+    /* table missing or offline: behave as if unset */
+  }
+  return null;
+}
+
+export async function setSetting(key: string, value: string) {
+  need();
+  const updated_at = new Date().toISOString();
+  if (useSupabase) {
+    await sb('settings?on_conflict=key', { method: 'POST', body: JSON.stringify({ key, value, updated_at }) }, 'resolution=merge-duplicates,return=minimal');
+    return;
+  }
+  await locked(async () => {
+    const db = await readDb();
+    db.settings = { ...(db.settings || {}), [key]: { value, updated_at } };
+    await writeDb(db);
+  });
+}
+
 /** Can the server reach the database and all its tables? Used by the setup check. */
 export async function storageCheck(): Promise<Record<string, boolean>> {
-  if (!useSupabase) return { facts: storeMode() === 'file', events: storeMode() === 'file', suggestions: storeMode() === 'file', admin_attempts: storeMode() === 'file' };
+  const tables = ['facts', 'events', 'suggestions', 'admin_attempts', 'settings'];
+  if (!useSupabase) return Object.fromEntries(tables.map((t) => [t, storeMode() === 'file']));
   const out: Record<string, boolean> = {};
-  for (const t of ['facts', 'events', 'suggestions', 'admin_attempts']) {
+  for (const t of tables) {
     try {
       await sb(`${t}?select=*&limit=1`);
       out[t] = true;

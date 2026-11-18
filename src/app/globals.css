@@ -310,6 +310,10 @@ a.flap-row:focus-visible {
   html.snap-page .after-flight {
     scroll-snap-align: start;
   }
+  /* The footer is a resting point too, so a swipe can always reach the bottom. */
+  html.snap-page footer {
+    scroll-snap-align: end;
+  }
 }
 html.snap-page {
   scroll-behavior: auto; /* the script chooses when to animate */
@@ -1526,4 +1530,30 @@ html.js [data-rv].rv-in {
     transform: scale(0.72);
     transform-origin: bottom right;
   }
+}
+
+/* Instagram / YouTube buttons above Latest Reels: chunky, pressable. */
+.social-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  height: 3.25rem;
+  padding: 0 1.1rem 0 0.6rem;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 1.05rem;
+  transition: transform 0.18s cubic-bezier(0.3, 1.6, 0.5, 1), box-shadow 0.18s ease;
+}
+.social-btn:hover {
+  transform: translateY(-3px) rotate(0deg) scale(1.04);
+}
+.social-btn:active {
+  transform: translateY(3px);
+  box-shadow: none;
+}
+.social-btn .social-arrow {
+  transition: transform 0.18s ease;
+}
+.social-btn:hover .social-arrow {
+  transform: translate(2px, -2px);
 }

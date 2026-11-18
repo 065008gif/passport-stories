@@ -6,7 +6,7 @@ import { METRICS, formatMetric } from '@/data/topics';
 import { MapToggle, TeleportButton } from '@/components/Bits';
 import Flag from '@/components/Flag';
 import FlightHome from '@/components/flight/FlightHome';
-import { Reels } from '@/components/Visuals';
+import Reels from '@/components/home/Reels';
 import BoardingGates from '@/components/home/BoardingGates';
 
 /**

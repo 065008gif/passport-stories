@@ -51,9 +51,17 @@ create table if not exists admin_attempts (
 );
 create index if not exists admin_attempts_ts_idx on admin_attempts (ts);
 
+-- Small key/value settings, e.g. the Instagram access token after it is renewed.
+create table if not exists settings (
+  key text primary key,
+  value text not null,
+  updated_at timestamptz not null default now()
+);
+
 -- Lock both tables. The website's server uses the secret key, which bypasses
 -- these locks; nobody can read or write the tables directly from a browser.
 alter table facts enable row level security;
 alter table events enable row level security;
 alter table admin_attempts enable row level security;
 alter table suggestions enable row level security;
+alter table settings enable row level security;
