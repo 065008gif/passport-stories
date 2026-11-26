@@ -1,15 +1,16 @@
 import { COUNTRIES, INDIA } from '@/data/countries';
 import { PLACES, formatArea } from '@/data/places';
-import HeroCollage from '@/components/home/HeroCollage';
-import GlobeExplorer, { type ExploreCountry } from '@/components/home/GlobeExplorer';
+import HomeAtlas from '@/components/home/HomeAtlas';
+import type { ExploreCountry } from '@/components/home/GlobeExplorer';
 import BoardingGates from '@/components/home/BoardingGates';
 import Reels from '@/components/home/Reels';
 
 /**
- * HOME (v10)
- *  1. Hero: real places from many countries in one moving, layered picture.
- *  2. Explore: the v8 globe, brighter, with zoom, hover facts, a country
- *     slider and a flat map toggle.
+ * HOME (v11)
+ *  1. Hero: a living postcard portal. Real places float on three depth
+ *     planes over a sunlit wash; picking one flies you to it on the globe.
+ *  2. Explore: the globe and flat map, hover facts and a country slider,
+ *     all kept in step with the hero (see HomeAtlas).
  *  3. Your turn to take off (unchanged)
  *  4. Latest reels (unchanged)
  *  5. Footer (in the layout, unchanged)
@@ -35,20 +36,7 @@ export default function HomePage() {
 
   return (
     <>
-      <HeroCollage
-        headline={
-          <>
-            Same planet. <span className="hero-accent">Different lives.</span>
-          </>
-        }
-        tagline="Step into the streets, festivals, kitchens and everyday moments of twenty countries."
-      />
-
-      <section id="explore" className="explore-section relative scroll-mt-[var(--header)] py-16 sm:py-24" aria-labelledby="explore-title">
-        <div className="container-x">
-          <GlobeExplorer countries={countries} startIndex={COUNTRIES.indexOf(INDIA)} />
-        </div>
-      </section>
+      <HomeAtlas countries={countries} startIndex={COUNTRIES.indexOf(INDIA)} />
 
       <div className="relative z-10 bg-night">
         <BoardingGates />

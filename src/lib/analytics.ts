@@ -38,7 +38,9 @@ export type EventName =
   | 'pass_print_started'
   | 'fact_surprise'
   | 'hero_explore'
-  | 'map_country_opened';
+  | 'map_country_opened'
+  | 'hero_country_picked'
+  | 'explore_country_clicked';
 
 type Params = Record<string, string | number | boolean | undefined>;
 
