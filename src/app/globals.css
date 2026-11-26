@@ -1,13 +1,3 @@
-/* Hallmark · v2.0.0 · redesign: full (home sections 1 and 2 only) · theme: custom · idea: "every postcard is a door to the globe" · vibe: "sunlit, whimsical, cinematic, real places, playful depth" · genre: playful · job: explore a country · hero: Stage, a three plane postcard collage around a centred head · nav: kept (Header.tsx unchanged) · footer: kept (Footer.tsx unchanged) · signature: a hero postcard that flies you to its country on the globe · posture: light/grotesk-heavy/warm · built: the project */
-/* Hallmark · pre-emit critique: P4 H5 E4 S5 R3 V4 · weakest: R, the hero carries props, a plane and eleven postcards; kept because the brief asks for a kinetic collage, trimmed to two props on phones */
-/* Hallmark · waive 29 · sunlit radial wash behind the hero head · the brief asks for a coral, peach, sun, sky and turquoise wash over real scenes */
-/* Hallmark · waive 6b · centred head and tagline on one axis in the hero · the brief fixes the hero to a centred headline and tagline with no actions */
-/* Hallmark · dismissed 62 · .postcard-pill is revealed by CSS hover and focus, not by a script; touch screens show it at rest */
-/* Hallmark · waive 59 · 50px between hero and atlas · the hero foot fades into the atlas ivory on purpose, one continuous stage */
-/* Hallmark · dismissed 81 · .explore-halo sits behind the WebGL globe canvas, which the linter cannot see */
-/* Hallmark · dismissed 39b · the tall controls are hero postcards, photographs that open the globe */
-/* Hallmark · dismissed 28a · the lazy hero images are faded background scenes; the largest paint is the headline */
-/* Hallmark · user override 12, 54 · the brief forbids hero buttons and asks for a section kicker; both are the owner's call and noted in the handoff */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -1633,8 +1623,8 @@ footer.bg-ink {
 }
 
 /* ==================================================================
-   HOME v11 · Hero: the living postcard portal
-   Tokens first; everything below reads them.
+   HOME v11 · Hero: the sunlit 3D postcard flight tunnel
+   Tokens first; the atlas below reads them too.
    ================================================================== */
 :root {
   --ps-coral: #ff6b5b;
@@ -1651,231 +1641,158 @@ footer.bg-ink {
   --ps-font-display: 'Bricolage Grotesque Variable', system-ui, sans-serif;
   --ps-font-body: 'DM Sans Variable', system-ui, sans-serif;
 }
-.hero-portal {
-  min-height: max(40rem, calc(100svh - var(--header)));
+
+.hero-tunnel {
+  height: calc(100svh - var(--header));
+  min-height: 34rem;
   touch-action: pan-y;
   cursor: grab;
   user-select: none;
   -webkit-user-select: none;
-  background: var(--ps-peach);
-}
-.hero-portal:active { cursor: grabbing; }
-
-/* Real scenes, cross-fading slowly, graded bright and soft */
-.portal-scene {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  animation: portal-xfade 36s linear infinite;
-}
-.portal-scene:nth-child(1) { animation-delay: 0s; }
-.portal-scene:nth-child(2) { animation-delay: -27s; }
-.portal-scene:nth-child(3) { animation-delay: -18s; }
-.portal-scene:nth-child(4) { animation-delay: -9s; }
-.portal-scene img,
-.portal-scene > div {
-  position: absolute;
-  inset: -2%;
-  width: 104%;
-  height: 104%;
-  object-fit: cover;
-}
-.portal-scenes {
-  filter: saturate(1.15) brightness(1.12) contrast(0.88) blur(2px);
-}
-@keyframes portal-xfade {
-  0% { opacity: 0; transform: scale(1.08); }
-  8% { opacity: 1; }
-  25% { opacity: 1; }
-  33% { opacity: 0; transform: scale(1); }
-  100% { opacity: 0; transform: scale(1); }
-}
-
-/* The sunlit wash over the scenes */
-.portal-wash {
+  /* The sky before WebGL wakes up, or without it */
   background:
-    radial-gradient(ellipse 55% 60% at 0% 0%, color-mix(in srgb, var(--ps-coral) 78%, transparent), transparent 70%),
-    radial-gradient(ellipse 50% 55% at 100% 0%, color-mix(in srgb, var(--ps-sun) 80%, transparent), transparent 70%),
-    radial-gradient(ellipse 55% 55% at 0% 100%, color-mix(in srgb, var(--ps-teal) 70%, transparent), transparent 72%),
-    radial-gradient(ellipse 60% 55% at 100% 100%, color-mix(in srgb, var(--ps-sky) 70%, transparent), transparent 72%),
-    linear-gradient(180deg, color-mix(in srgb, var(--ps-peach) 55%, transparent), color-mix(in srgb, var(--ps-tang) 30%, transparent));
+    radial-gradient(ellipse 60% 45% at 80% 8%, color-mix(in srgb, var(--ps-sun) 85%, transparent), transparent 70%),
+    radial-gradient(ellipse 55% 40% at 10% 6%, color-mix(in srgb, var(--ps-coral) 80%, transparent), transparent 70%),
+    linear-gradient(180deg, #ff9b6e 0%, #4fb8de 42%, #2aa6cf 58%, #5cc9c0 82%, var(--ps-ivory) 100%);
 }
-/* Country colour, echoed when a postcard is hovered */
-.portal-glow {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  transition: opacity 0.9s var(--ps-ease);
-}
-.glow-coral { background: radial-gradient(ellipse 70% 65% at 50% 50%, color-mix(in srgb, var(--ps-coral) 70%, transparent), transparent 75%); }
-.glow-tang { background: radial-gradient(ellipse 70% 65% at 50% 50%, color-mix(in srgb, var(--ps-tang) 70%, transparent), transparent 75%); }
-.glow-sun { background: radial-gradient(ellipse 70% 65% at 50% 50%, color-mix(in srgb, var(--ps-sun) 75%, transparent), transparent 75%); }
-.glow-teal { background: radial-gradient(ellipse 70% 65% at 50% 50%, color-mix(in srgb, var(--ps-teal) 65%, transparent), transparent 75%); }
-.glow-sky { background: radial-gradient(ellipse 70% 65% at 50% 50%, color-mix(in srgb, var(--ps-sky) 65%, transparent), transparent 75%); }
-.hero-portal[data-tone='coral'] .glow-coral,
-.hero-portal[data-tone='tang'] .glow-tang,
-.hero-portal[data-tone='sun'] .glow-sun,
-.hero-portal[data-tone='teal'] .glow-teal,
-.hero-portal[data-tone='sky'] .glow-sky { opacity: 1; }
-/* Warm light behind the words, so they stay crisp */
-.portal-bloom {
-  background: radial-gradient(ellipse 40% 30% at 50% 50%, color-mix(in srgb, var(--ps-ivory) 94%, transparent) 0%, color-mix(in srgb, var(--ps-ivory) 70%, transparent) 45%, transparent 80%);
-}
-.portal-grain {
-  opacity: 0.16;
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.9'/></svg>");
-}
+.hero-tunnel:active { cursor: grabbing; }
+.tunnel-canvas { opacity: 0; transition: opacity 0.6s var(--ps-ease); }
+.hero-tunnel[data-ready='true'] .tunnel-canvas { opacity: 1; }
 
-/* Postcards on three depth planes */
-.postcard {
-  --w: clamp(110px, 11vw, 190px);
-  position: absolute;
-  left: var(--x);
-  top: var(--y);
-  width: var(--w);
-  padding: 8px;
-  border-radius: 14px;
-  background: var(--ps-frame);
-  box-shadow:
-    0 26px 44px -22px color-mix(in srgb, var(--ps-shadow) 55%, transparent),
-    0 8px 16px -10px color-mix(in srgb, var(--ps-shadow) 35%, transparent);
-  will-change: transform, opacity;
-  cursor: pointer;
-  z-index: 4;
-}
-.postcard.plane-near { --w: clamp(150px, 14.5vw, 250px); z-index: 8; }
-.postcard.plane-far { --w: clamp(84px, 7.6vw, 132px); padding: 4px; border-radius: 11px; z-index: 2; }
-.postcard:hover,
-.postcard:focus-visible { z-index: 60; }
-.postcard:focus-visible { outline: 3px solid var(--ps-ink); outline-offset: 3px; border-radius: 14px; }
-.postcard-photo {
-  position: relative;
-  display: block;
-  overflow: hidden;
-  border-radius: 9px;
-  aspect-ratio: 3 / 4;
-  background: var(--ps-peach);
-}
-.postcard.is-wide .postcard-photo { aspect-ratio: 16 / 10; }
-.postcard.plane-far .postcard-photo { border-radius: 7px; }
-.postcard-photo img,
-.postcard-photo > div { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.postcard.plane-far .postcard-photo img { filter: saturate(0.92); }
-.postcard-pill {
-  position: absolute;
-  left: 50%;
-  top: calc(100% + 8px);
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  width: max-content;
-  max-width: 15rem;
-  border-radius: 9999px;
-  background: var(--ps-ivory);
-  padding: 0.28rem 0.7rem 0.28rem 0.3rem;
-  font-family: var(--ps-font-body);
-  font-size: 0.85rem;
-  font-weight: 700;
-  line-height: 1.2;
-  color: var(--ps-ink);
-  box-shadow: 0 10px 22px -12px color-mix(in srgb, var(--ps-ink) 60%, transparent);
-  opacity: 0;
-  transform: translate(-50%, -4px);
-  transition: opacity 0.25s var(--ps-ease), transform 0.35s var(--ps-ease);
-  pointer-events: none;
-}
-.postcard-pill img { width: 16px; height: 16px; border-radius: 9999px; object-fit: cover; }
-.postcard:hover .postcard-pill,
-.postcard:focus-visible .postcard-pill { opacity: 1; transform: translate(-50%, 0); }
-@media (hover: none) {
-  .postcard.plane-near .postcard-pill { opacity: 1; transform: translate(-50%, 0); }
-}
-
-/* 3D props and the plane */
-.portal-prop {
-  position: absolute;
-  left: var(--x);
-  top: var(--y);
-  pointer-events: none;
-  user-select: none;
-  max-width: none;
-  filter: drop-shadow(0 18px 18px color-mix(in srgb, var(--ps-shadow) 28%, transparent));
-  will-change: transform;
-  transform: translate(-50%, -50%);
-}
-.prop-balloons { width: clamp(64px, 7.5vw, 132px); z-index: 5; }
-.prop-pin { width: clamp(48px, 4.8vw, 86px); z-index: 3; }
-.prop-suitcase { width: clamp(56px, 6vw, 104px); z-index: 9; }
-.prop-camera { width: clamp(60px, 6.5vw, 116px); z-index: 7; }
-.portal-plane {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: clamp(78px, 8.5vw, 148px);
-  max-width: none;
-  height: auto;
-  pointer-events: none;
-  filter: drop-shadow(0 16px 16px color-mix(in srgb, var(--ps-shadow) 30%, transparent));
-  will-change: transform, opacity;
-  transform: translate(-50%, -50%) translate3d(72vw, 22vh, 0) scale(0.8);
-}
-.portal-puff {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 22px;
-  height: 22px;
-  border-radius: 9999px;
-  background: radial-gradient(circle, var(--ps-frame) 0%, color-mix(in srgb, var(--ps-peach) 70%, transparent) 45%, transparent 72%);
-  opacity: 0;
-  pointer-events: none;
-  will-change: transform, opacity;
-}
-
-/* The words */
-.portal-copy { min-height: max(40rem, calc(100svh - var(--header))); padding-bottom: 4vh; }
-.portal-title {
+/* The words: white and sunlit, readable without a box behind them */
+.tunnel-copy { padding-bottom: 3vh; will-change: transform, opacity; }
+.tunnel-title {
   font-family: var(--ps-font-display);
   font-weight: 800;
-  font-size: clamp(3rem, 7.4vw, 7rem);
-  line-height: 0.98;
-  letter-spacing: -0.04em;
-  color: var(--ps-ink);
-  max-width: 11ch;
+  font-size: clamp(3rem, 7.6vw, 7.4rem);
+  line-height: 0.96;
+  letter-spacing: -0.045em;
+  color: #fffdf8;
   text-wrap: balance;
   overflow-wrap: break-word;
   min-width: 0;
-  text-shadow: 0 0 28px color-mix(in srgb, var(--ps-ivory) 85%, transparent), 0 2px 0 color-mix(in srgb, var(--ps-sun) 45%, transparent);
-  animation: rise-in 1.1s var(--ps-ease) both 0.1s;
+  -webkit-font-smoothing: antialiased;
+  text-shadow:
+    0 1px 0 rgba(31, 42, 68, 0.12),
+    0 4px 14px rgba(20, 60, 90, 0.28),
+    0 18px 48px rgba(20, 60, 90, 0.32);
+  animation: tunnel-rise 0.9s cubic-bezier(0.23, 1, 0.32, 1) both 0.15s;
 }
-.portal-tagline {
-  margin-top: 1.4rem;
-  max-width: 32ch;
+.tunnel-gold {
+  background: linear-gradient(180deg, #fff4c2 0%, #ffd45c 55%, #ffb13b 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: none;
+  filter: drop-shadow(0 4px 12px rgba(150, 70, 10, 0.35)) drop-shadow(0 1px 0 rgba(120, 50, 0, 0.25));
+}
+.tunnel-tagline {
+  margin-top: 1.3rem;
+  max-width: 34ch;
   font-family: var(--ps-font-body);
-  font-size: clamp(1.08rem, 1.5vw, 1.35rem);
+  font-size: clamp(1.05rem, 1.5vw, 1.35rem);
   font-weight: 600;
   line-height: 1.45;
-  color: var(--ps-ink);
+  color: #fffdf8;
   text-wrap: pretty;
-  text-shadow: 0 0 18px color-mix(in srgb, var(--ps-ivory) 90%, transparent);
-  animation: rise-in 1.1s var(--ps-ease) both 0.3s;
+  text-shadow: 0 1px 2px rgba(20, 60, 90, 0.35), 0 6px 22px rgba(20, 60, 90, 0.4);
+  animation: tunnel-rise 0.9s cubic-bezier(0.23, 1, 0.32, 1) both 0.3s;
 }
-@keyframes rise-in {
-  from { opacity: 0; transform: translateY(24px); }
+@keyframes tunnel-rise {
+  from { opacity: 0; transform: translateY(18px); }
 }
 
-/* Into the atlas: an ivory veil while scrolling, and a soft foot */
-.portal-veil { background: var(--ps-ivory); opacity: 0; }
-.portal-foot { height: 16%; background: linear-gradient(180deg, transparent, var(--ps-ivory)); }
-.portal-cue {
+/* Passport stamp tag under the focused postcard */
+.tunnel-tag-anchor { will-change: transform; }
+.tunnel-tag {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: max-content;
+  max-width: min(24rem, calc(100vw - 2rem));
+  border-radius: 1.25rem;
+  padding: 0.5rem 0.5rem 0.5rem 0.6rem;
+  background: color-mix(in srgb, var(--ps-frame) 86%, transparent);
+  backdrop-filter: blur(14px) saturate(1.4);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  box-shadow:
+    0 0 0 1px rgba(31, 42, 68, 0.06),
+    0 2px 4px rgba(31, 42, 68, 0.06),
+    0 12px 24px -8px rgba(31, 42, 68, 0.22),
+    0 28px 48px -20px rgba(122, 52, 32, 0.35);
+  transform-origin: 50% 0%;
+}
+.tunnel-tag.is-kbd { outline: 3px solid var(--ps-ink); outline-offset: 3px; }
+.tunnel-tag-flag {
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border-radius: 9999px;
+  object-fit: cover;
+  outline: 1px solid rgba(0, 0, 0, 0.1);
+  outline-offset: -1px;
+}
+.tunnel-tag-label {
+  font-family: var(--ps-font-body);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ps-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tunnel-fly {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex: none;
+  border-radius: 0.85rem; /* concentric with the tag: outer radius minus the inset */
+  padding: 0.5rem 0.8rem 0.5rem 0.9rem;
+  background: var(--ps-coral);
+  font-family: var(--ps-font-body);
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--ps-ink);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.35) inset, 0 6px 14px -6px rgba(255, 107, 91, 0.9);
+  transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.tunnel-fly::after { content: ''; position: absolute; inset: -6px; } /* 44px touch target */
+.tunnel-fly:active { transform: scale(0.96); }
+@media (hover: hover) and (pointer: fine) {
+  .tunnel-fly:hover { transform: translateY(-1px); }
+}
+.tunnel-fly:focus-visible { outline: 3px solid var(--ps-ink); outline-offset: 2px; }
+
+/* Hint, scroll cue and the wash into the atlas */
+.tunnel-hint-wrap { bottom: 4.6rem; }
+.tunnel-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border-radius: 9999px;
+  padding: 0.45rem 0.9rem 0.45rem 0.75rem;
+  background: color-mix(in srgb, var(--ps-frame) 80%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  font-family: var(--ps-font-body);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--ps-ink);
+  box-shadow: 0 0 0 1px rgba(31, 42, 68, 0.06), 0 8px 20px -10px rgba(31, 42, 68, 0.35);
+  transition: opacity 300ms cubic-bezier(0.23, 1, 0.32, 1), transform 300ms cubic-bezier(0.23, 1, 0.32, 1);
+  animation: tunnel-rise 0.7s cubic-bezier(0.23, 1, 0.32, 1) both 1.2s;
+}
+.tunnel-hint.is-gone { opacity: 0; transform: translateY(6px) scale(0.97); }
+.tunnel-cue {
   width: 24px;
   height: 38px;
   margin-left: -12px;
   border-radius: 9999px;
-  border: 2px solid color-mix(in srgb, var(--ps-ink) 55%, transparent);
+  border: 2px solid rgba(255, 253, 248, 0.85);
+  box-shadow: 0 4px 14px rgba(20, 60, 90, 0.25);
 }
-.portal-cue-dot {
+.tunnel-cue-dot {
   position: absolute;
   left: 50%;
   top: 7px;
@@ -1883,29 +1800,31 @@ footer.bg-ink {
   height: 8px;
   margin-left: -2px;
   border-radius: 9999px;
-  background: var(--ps-coral);
-  animation: portal-cue 1.8s var(--ps-ease) infinite;
+  background: var(--ps-frame);
+  animation: tunnel-cue 1.8s var(--ps-ease) infinite;
 }
-@keyframes portal-cue {
+@keyframes tunnel-cue {
   from { opacity: 1; transform: translateY(0); }
   to { opacity: 0; transform: translateY(13px); }
 }
-
-@media (max-width: 767px) {
-  .postcard { left: var(--mx); top: var(--my); --w: 30vw; padding: 4px; }
-  .postcard.plane-near { --w: 33vw; }
-  .postcard.plane-far { --w: 23vw; padding: 4px; }
-  .postcard-pill { font-size: 0.8rem; }
-  .portal-prop { left: var(--mx); top: var(--my); }
-  .no-phone { display: none; }
-  .portal-bloom { background: radial-gradient(ellipse 75% 26% at 50% 50%, color-mix(in srgb, var(--ps-ivory) 94%, transparent) 0%, color-mix(in srgb, var(--ps-ivory) 70%, transparent) 50%, transparent 85%); }
+/* A soft ivory foot, so the sky never meets the atlas in a hard line */
+.tunnel-foot { height: 14%; background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--ps-ivory) 85%, transparent)); }
+.tunnel-wash {
+  opacity: 0;
+  background:
+    radial-gradient(ellipse 55% 40% at 50% 42%, color-mix(in srgb, var(--ps-teal) 16%, transparent), transparent 75%),
+    linear-gradient(180deg, color-mix(in srgb, var(--ps-ivory) 75%, transparent) 0%, var(--ps-ivory) 60%);
 }
 
+.tunnel-copy-inner { transition: opacity 250ms cubic-bezier(0.23, 1, 0.32, 1); }
+@media (max-width: 767px) {
+  .tunnel-copy-inner.is-dim { opacity: 0.2; }
+  .tunnel-hint-wrap { bottom: 4.2rem; }
+  .tunnel-tag-label { font-size: 0.88rem; }
+}
 @media (prefers-reduced-motion: reduce) {
-  .portal-scene { animation: none; }
-  .portal-scene:first-child { opacity: 1; }
-  .portal-title, .portal-tagline, .portal-cue-dot { animation: none; }
-  .portal-glow, .postcard-pill { transition: none; }
+  .tunnel-title, .tunnel-tagline, .tunnel-hint, .tunnel-cue-dot { animation: none; }
+  .tunnel-hint, .tunnel-canvas { transition: opacity 0.2s ease; }
 }
 
 /* ==================================================================

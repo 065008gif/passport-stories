@@ -1,85 +1,52 @@
 'use client';
 
 /**
- * HERO: the living postcard portal.
+ * HERO: the sunlit 3D postcard flight tunnel.
  *
- *  - Background: a sunlit wash (coral, peach, sunshine, sky, turquoise) with
- *    real footage and photos cross-fading slowly underneath, graded bright,
- *    plus film grain and a warm bloom behind the words. Hovering a postcard
- *    tints the ambient glow with that country's colour.
- *  - Real places float on three depth planes (far, mid, near) that follow
- *    the pointer, drift on their own and can be dragged sideways.
- *  - Hover lifts a postcard, pauses it and shows where it is. Click flies
- *    you down to the globe with that country picked (see HomeAtlas).
- *  - A 3D plane loops through the planes, leaving a soft contrail. The 3D
- *    props (Icons8 "3D Casual Life") spring away from the pointer.
- *  - Scrolling away fans the postcards out and fades into the atlas below.
+ * The 3D world lives in heroTunnelScene.ts (plain three.js). This shell owns
+ * the DOM: the words, the passport stamp tag under a focused postcard, the
+ * drag hint, pointer input and the GSAP ScrollTrigger fly-through.
  *
- * Every frame touches only transform and opacity. Reduced motion: nothing
- * moves on its own; the postcards still lift and still work.
+ *  - Drag or flick sideways to orbit the tunnel; it coasts and settles.
+ *  - Hover (or tap on a phone) a postcard: it leaps forward, the sky takes
+ *    its colour and a tag offers "Fly there". Clicking it (or a second tap)
+ *    scrolls to the globe with that country picked (see HomeAtlas).
+ *  - Scrolling pins the hero on laptops and flies the camera down the
+ *    tunnel, then washes into the atlas. Scrolling back reverses it.
+ *
+ * Native scrolling is never touched: the wheel and touch scroll the page as
+ * usual, ScrollTrigger only reads the position. Reduced motion: a still,
+ * layered scene, no flight, hover still works.
  */
-import { useEffect, useRef } from 'react';
-import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { flagSrc } from '@/components/Flag';
-import LiveMedia from '@/components/home/LiveMedia';
 import { PLACES, MOMENTS, pexels } from '@/data/places';
 import { COUNTRY_CLIPS, HERO_CLIP } from '@/data/media';
+import type { Flight, HeroTunnelScene, Tone, TunnelCard } from '@/components/home/heroTunnelScene';
 
-type Plane = 'far' | 'mid' | 'near';
-type Tone = 'coral' | 'tang' | 'sun' | 'teal' | 'sky';
-type Spot = { x: number; y: number };
+type Spec = { key: string; slug: string; spot: string; photo?: number; poster?: string; video?: string; shape: 'tall' | 'wide'; tone: Tone; phone?: boolean };
 
-interface Postcard {
-  key: string;
-  /** Country the postcard opens on the globe. */
-  slug: string;
-  spot: string;
-  photo?: number;
-  alt?: string;
-  clip?: keyof typeof COUNTRY_CLIPS;
-  shape: 'tall' | 'wide';
-  plane: Plane;
-  /** Centre on laptops, in % of the hero. */
-  at: Spot;
-  /** Centre on phones; left out = not shown on phones. */
-  m?: Spot;
-  r: number;
-  tone: Tone;
-}
+const poster = (url: string, w: number) => url.replace(/w=\d+/, `w=${w}`);
+const place = (slug: string) => ({ slug, spot: PLACES[slug].spot, photo: PLACES[slug].photo });
 
-const place = (slug: string) => ({ slug, spot: PLACES[slug].spot, photo: PLACES[slug].photo, alt: PLACES[slug].alt });
-
-const POSTCARDS: Postcard[] = [
-  // near: the big, crisp ones
-  { key: 'japan', ...place('japan'), shape: 'tall', plane: 'near', at: { x: 13, y: 50 }, m: { x: 25, y: 17 }, r: -4, tone: 'coral' },
-  { key: 'canada', ...place('canada'), shape: 'wide', plane: 'near', at: { x: 87, y: 47 }, r: 3, tone: 'teal' },
-  { key: 'holi', slug: 'india', spot: 'Holi', photo: MOMENTS.holi.photo, alt: MOMENTS.holi.alt, shape: 'wide', plane: 'near', at: { x: 29, y: 83 }, m: { x: 30, y: 77 }, r: -2, tone: 'coral' },
-  // mid: the interactive arc
-  { key: 'italy', ...place('italy'), shape: 'wide', plane: 'mid', at: { x: 30, y: 17 }, m: { x: 73, y: 10 }, r: 3, tone: 'sky' },
-  { key: 'tokyo', slug: 'japan', spot: 'Shibuya', clip: 'japan', alt: COUNTRY_CLIPS.japan.alt, shape: 'tall', plane: 'mid', at: { x: 71, y: 19 }, r: -3, tone: 'sky' },
-  { key: 'hawker', slug: 'singapore', spot: 'Hawker stall', photo: MOMENTS.hawker.photo, alt: MOMENTS.hawker.alt, shape: 'tall', plane: 'mid', at: { x: 87, y: 82 }, m: { x: 76, y: 81 }, r: 4, tone: 'sun' },
-  { key: 'egypt', ...place('egypt'), shape: 'wide', plane: 'mid', at: { x: 67, y: 88 }, r: -3, tone: 'sun' },
-  { key: 'mexico', ...place('mexico'), shape: 'wide', plane: 'mid', at: { x: 10, y: 87 }, r: 2, tone: 'tang' },
-  // far: small, drifting slowly
-  { key: 'uk', ...place('united-kingdom'), shape: 'wide', plane: 'far', at: { x: 9, y: 13 }, m: { x: 56, y: 27 }, r: -3, tone: 'coral' },
-  { key: 'korea', ...place('south-korea'), shape: 'tall', plane: 'far', at: { x: 50, y: 10 }, r: 2, tone: 'sky' },
-  { key: 'australia', ...place('australia'), shape: 'wide', plane: 'far', at: { x: 93, y: 15 }, m: { x: 81, y: 29 }, r: 3, tone: 'teal' },
+/** Nearest first. `phone` marks the seven kept on small screens. */
+const SPECS: Spec[] = [
+  { key: 'japan', ...place('japan'), shape: 'tall', tone: 'coral', phone: true },
+  { key: 'italy', ...place('italy'), shape: 'wide', tone: 'sky', phone: true },
+  { key: 'holi', slug: 'india', spot: 'Holi', photo: MOMENTS.holi.photo, shape: 'wide', tone: 'coral', phone: true },
+  { key: 'tokyo', slug: 'japan', spot: 'Shibuya', poster: COUNTRY_CLIPS.japan.poster, video: COUNTRY_CLIPS.japan.video, shape: 'wide', tone: 'sky' },
+  { key: 'egypt', ...place('egypt'), shape: 'wide', tone: 'sun', phone: true },
+  { key: 'mexico', ...place('mexico'), shape: 'tall', tone: 'tang', phone: true },
+  { key: 'hawker', slug: 'singapore', spot: 'Hawker stall', photo: MOMENTS.hawker.photo, shape: 'tall', tone: 'sun', phone: true },
+  { key: 'market', slug: 'india', spot: 'Street market', poster: COUNTRY_CLIPS.india.poster, video: COUNTRY_CLIPS.india.video, shape: 'wide', tone: 'tang' },
+  { key: 'canada', ...place('canada'), shape: 'wide', tone: 'teal', phone: true },
+  { key: 'korea', ...place('south-korea'), shape: 'tall', tone: 'sky' },
+  { key: 'rome', slug: 'italy', spot: 'Piazza Navona', poster: COUNTRY_CLIPS.italy.poster, video: COUNTRY_CLIPS.italy.video, shape: 'wide', tone: 'sun' },
+  { key: 'australia', ...place('australia'), shape: 'wide', tone: 'teal' },
 ];
-
-const DEPTH: Record<Plane, number> = { far: 0.35, mid: 0.7, near: 1.1 };
-const TONES: Tone[] = ['coral', 'tang', 'sun', 'teal', 'sky'];
-
-const PROPS = [
-  { src: '/hero3d/balloons.webp', cls: 'prop-balloons', d: 0.9, at: { x: 4, y: 33 }, m: { x: 90, y: 66 } },
-  { src: '/hero3d/pin.webp', cls: 'prop-pin', d: 0.6, at: { x: 79, y: 31 } },
-  { src: '/hero3d/suitcase.webp', cls: 'prop-suitcase', d: 1.2, at: { x: 21, y: 71 }, m: { x: 13, y: 67 } },
-  { src: '/hero3d/camera.webp', cls: 'prop-camera', d: 1.0, at: { x: 95, y: 65 } },
-];
-
-/** Background layers that cross-fade under the wash. */
-const SCENES = [PLACES.canada.photo, PLACES.italy.photo, PLACES.australia.photo];
-
-const PUFFS = 14;
 
 export default function HeroCollage({
   headline,
@@ -93,331 +60,280 @@ export default function HeroCollage({
   onPick: (slug: string) => void;
 }) {
   const root = useRef<HTMLElement>(null);
-  const cards = useRef<(HTMLButtonElement | null)[]>([]);
-  const props = useRef<(HTMLImageElement | null)[]>([]);
-  const plane = useRef<HTMLImageElement>(null);
-  const puffs = useRef<(HTMLSpanElement | null)[]>([]);
-  const hover = useRef<number | null>(null);
-  const dragged = useRef(0);
+  const canvas = useRef<HTMLCanvasElement>(null);
+  const copy = useRef<HTMLDivElement>(null);
+  const tag = useRef<HTMLDivElement>(null);
+  const wash = useRef<HTMLDivElement>(null);
+  const hint = useRef<HTMLDivElement>(null);
+  const cue = useRef<HTMLDivElement>(null);
+  const sceneRef = useRef<HeroTunnelScene | null>(null);
+  const cardsRef = useRef<TunnelCard[]>([]);
+  const flight = useRef<Flight>({ camZ: 6, bank: 0, dive: 0 });
 
-  const reduce = useReducedMotion();
-  const { scrollYProgress } = useScroll({ target: root, offset: ['start start', 'end start'] });
-  const copyY = useTransform(scrollYProgress, [0, 1], [0, reduce ? 0 : -140]);
-  const copyOpacity = useTransform(scrollYProgress, [0, 0.45], [1, 0]);
-  const veil = useTransform(scrollYProgress, [0.1, 0.85], [0, 1]);
+  const [cards, setCards] = useState<TunnelCard[]>([]);
+  const [focus, setFocus] = useState<number | null>(null);
+  const [kbd, setKbd] = useState(false);
+  const [dragged, setDragged] = useState(false);
 
+  // "Same planet. Different lives." The second sentence gets the sunshine highlight.
+  const [lead, glow] = useMemo(() => {
+    const at = headline.indexOf('. ');
+    return at > 0 ? [headline.slice(0, at + 1), headline.slice(at + 2)] : [headline, ''];
+  }, [headline]);
+
+  const pick = useCallback(
+    (i: number) => {
+      const c = cardsRef.current[i];
+      if (c) onPick(c.slug);
+    },
+    [onPick],
+  );
+
+  /* --------------------------- The 3D scene --------------------------- */
+  useEffect(() => {
+    const el = root.current;
+    const cv = canvas.current;
+    if (!el || !cv) return;
+    const phone = window.innerWidth < 768;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const list: TunnelCard[] = SPECS.filter((s) => !phone || s.phone).map((s) => ({
+      key: s.key,
+      slug: s.slug,
+      label: `${s.spot}, ${names[s.slug] ?? s.slug}`,
+      image: s.photo ? pexels(s.photo, phone ? 640 : 960) : poster(s.poster!, phone ? 640 : 960),
+      video: s.video,
+      shape: s.shape,
+      tone: s.tone,
+    }));
+    cardsRef.current = list;
+    setCards(list);
+
+    let scene: HeroTunnelScene | null = null;
+    let disposed = false;
+    let io: IntersectionObserver | null = null;
+    let ro: ResizeObserver | null = null;
+    let burst: gsap.core.Tween | null = null;
+    let videoTimer = 0;
+
+    import('@/components/home/heroTunnelScene')
+      .then((mod) => {
+        if (disposed) return;
+        try {
+          scene = new mod.HeroTunnelScene(cv, list, { phone, reduce, heroImage: poster(HERO_CLIP.poster, phone ? 900 : 1600), flight: flight.current });
+        } catch {
+          return; // no WebGL: the CSS sky and the words still stand on their own
+        }
+        sceneRef.current = scene;
+        scene.onFocus = (i) => setFocus(i);
+        scene.setTag(tag.current);
+        scene.resize(el.clientWidth, el.clientHeight);
+        el.dataset.ready = 'true';
+        // Opening burst: from a tight cluster behind the centre out to the tunnel.
+        if (!reduce) {
+          burst = gsap.to(scene.bursts, { b: 1, duration: 1.15, ease: 'back.out(1.35)', stagger: 0.045, delay: 0.1 });
+          videoTimer = window.setTimeout(() => scene?.startVideos(), 1800);
+        }
+        ro = new ResizeObserver(() => scene?.resize(el.clientWidth, el.clientHeight));
+        ro.observe(el);
+        // Draw only while the hero (or its pinned flight) is on screen.
+        io = new IntersectionObserver(([e]) => (e.isIntersecting ? scene?.start() : scene?.stop()));
+        io.observe(el);
+      })
+      .catch(() => {});
+
+    return () => {
+      disposed = true;
+      window.clearTimeout(videoTimer);
+      burst?.kill();
+      io?.disconnect();
+      ro?.disconnect();
+      scene?.dispose();
+      sceneRef.current = null;
+    };
+  }, [names]);
+
+  /* ------------------------------ Pointer ------------------------------ */
   useEffect(() => {
     const el = root.current;
     if (!el) return;
-    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const st = { px: 0, py: 0, tx: 0, ty: 0, dx: 0, dv: 0, drag: false, lastX: 0, downX: 0 };
-    const clock = POSTCARDS.map(() => 0);
-    const lift = POSTCARDS.map(() => 0);
-    const phase = POSTCARDS.map((_, i) => i * 1.7);
-    const kick = PROPS.map(() => ({ x: 0, y: 0, vx: 0, vy: 0 }));
-    const trail: { x: number; y: number }[] = [];
-    let raf = 0;
-    let visible = true;
-    let last = performance.now();
-    let flight = 0;
-    let pointerIn = false;
-
-    const frame = (now: number) => {
-      raf = 0;
-      const dt = Math.min(0.05, (now - last) / 1000);
-      last = now;
-      const W = el.clientWidth;
-      const H = el.clientHeight;
-      const phone = W < 768;
-      const p = scrollYProgress.get();
-
-      st.px += (st.tx - st.px) * Math.min(1, dt * 4);
-      st.py += (st.ty - st.py) * Math.min(1, dt * 4);
-      // Drag: follow the finger, then glide and spring home.
-      if (!st.drag) {
-        st.dv += -st.dx * 9 * dt;
-        st.dv *= Math.exp(-dt * 4.2);
-        st.dx += st.dv * dt;
-      }
-
-      for (let i = 0; i < POSTCARDS.length; i++) {
-        const c = cards.current[i];
-        if (!c) continue;
-        const pc = POSTCARDS[i];
-        const at = phone ? pc.m : pc.at;
-        if (!at) continue;
-        const d = DEPTH[pc.plane];
-        const on = hover.current === i;
-        if (!on && !still) clock[i] += dt;
-        lift[i] += ((on ? 1 : 0) - lift[i]) * Math.min(1, dt * 10);
-        const t = clock[i] + phase[i];
-        const driftX = still ? 0 : Math.sin(t * 0.32) * 7 * d;
-        const driftY = still ? 0 : Math.cos(t * 0.27) * 9 * d;
-        const parX = still ? 0 : -st.px * 28 * d;
-        const parY = still ? 0 : -st.py * 18 * d;
-        // Fan out from the centre as the page scrolls.
-        const vx = at.x - 50;
-        const vy = at.y - 50;
-        const len = Math.hypot(vx, vy) || 1;
-        const fan = p * (phone ? 160 : 300) * (0.6 + d * 0.5);
-        const x = driftX + parX + st.dx * d + (vx / len) * fan;
-        const y = driftY + parY + (vy / len) * fan - lift[i] * 10;
-        const s = 1 + lift[i] * 0.1 + p * 0.12 * d;
-        const r = pc.r * (1 - lift[i]);
-        c.style.transform = `translate(-50%, -50%) translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) rotate(${r.toFixed(2)}deg) scale(${s.toFixed(3)})`;
-        c.style.opacity = String(Math.max(0, 1 - p * 1.6));
-      }
-
-      // Props bob gently and spring away from the pointer.
-      const mx = ((st.tx + 1) / 2) * W;
-      const my = ((st.ty + 1) / 2) * H;
-      PROPS.forEach((pr, i) => {
-        const img = props.current[i];
-        const at = phone ? pr.m : pr.at;
-        if (!img || !at) return;
-        const k = kick[i];
-        const cx = (at.x / 100) * W + k.x;
-        const cy = (at.y / 100) * H + k.y;
-        const dist = Math.hypot(cx - mx, cy - my);
-        if (!still && pointerIn && dist < 140) {
-          const push = (1 - dist / 140) * 900 * dt;
-          k.vx += ((cx - mx) / (dist || 1)) * push;
-          k.vy += ((cy - my) / (dist || 1)) * push;
-        }
-        k.vx += -k.x * 60 * dt;
-        k.vy += -k.y * 60 * dt;
-        k.vx *= Math.exp(-dt * 6);
-        k.vy *= Math.exp(-dt * 6);
-        k.x += k.vx * dt;
-        k.y += k.vy * dt;
-        const bob = still ? 0 : Math.sin(now / 1000 * 0.9 + i * 1.3) * 10;
-        const x = k.x - st.px * 22 * pr.d;
-        const y = k.y + bob - st.py * 16 * pr.d - p * 220 * pr.d;
-        img.style.transform = `translate(-50%, -50%) translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) rotate(${(k.vx * 0.04 + Math.sin(now / 1400 + i) * (still ? 0 : 4)).toFixed(2)}deg)`;
-        img.style.opacity = String(Math.max(0, 1 - p * 1.5));
-      });
-
-      // The plane: a whimsical loop through the depth planes.
-      const pl = plane.current;
-      if (pl) {
-        if (!still) flight += dt * (Math.PI * 2) / 26;
-        const th = flight;
-        // Reduced motion: parked in open sky, clear of the words and the postcards.
-        const x = still ? W * (phone ? 0.5 : 0.59) : W * (0.5 + 0.46 * Math.sin(th));
-        const y = still ? H * (phone ? 0.31 : 0.27) : H * ((phone ? 0.36 : 0.28) + (phone ? 0.04 : 0.12) * Math.sin(2 * th) - 0.03 * Math.cos(th));
-        const depth = Math.cos(th); // 1 in front, -1 behind
-        const vx = Math.cos(th);
-        const vy = 2 * (phone ? 0.04 : 0.12) * Math.cos(2 * th) * (H / W) + 0.03 * Math.sin(th) * (H / W);
-        const ang = Math.max(-24, Math.min(24, (Math.atan2(vy, Math.abs(vx) * 0.92) * 180) / Math.PI));
-        const sc = (phone ? 0.62 : 0.78) + 0.3 * depth;
-        const face = vx >= 0 ? 1 : -1;
-        pl.style.transform = `translate(-50%, -50%) translate3d(${x.toFixed(1)}px, ${(y - p * 200).toFixed(1)}px, 0) scale(${(sc * face).toFixed(3)}, ${sc.toFixed(3)}) rotate(${(ang * face).toFixed(2)}deg)`;
-        pl.style.zIndex = depth > 0.2 ? '30' : '6';
-        pl.style.opacity = String(Math.max(0, 1 - p * 1.4));
-        if (!still) {
-          trail.unshift({ x: x - face * 46 * sc, y: y + 8 * sc - p * 200 });
-          if (trail.length > PUFFS * 3) trail.length = PUFFS * 3;
-        }
-        puffs.current.forEach((pf, k) => {
-          const pt = trail[k * 3];
-          if (!pf) return;
-          if (!pt) {
-            pf.style.opacity = '0';
-            return;
-          }
-          const age = k / PUFFS;
-          pf.style.transform = `translate(-50%, -50%) translate3d(${pt.x.toFixed(1)}px, ${pt.y.toFixed(1)}px, 0) scale(${(0.35 + age * 1.1).toFixed(3)})`;
-          pf.style.opacity = String(((1 - age) * 0.55 * Math.max(0, 1 - p * 1.4)).toFixed(3));
-          pf.style.zIndex = pl.style.zIndex;
-        });
-      }
-
-      if (visible) raf = requestAnimationFrame(frame);
+    const local = (e: PointerEvent) => {
+      const r = el.getBoundingClientRect();
+      return [e.clientX - r.left, e.clientY - r.top] as const;
     };
-
-    const onMove = (e: PointerEvent) => {
+    const onTag = (e: Event) => !!(e.target as Element | null)?.closest?.('.tunnel-tag-anchor');
+    const move = (e: PointerEvent) => {
+      const s = sceneRef.current;
+      if (!s || onTag(e)) return;
+      const [x, y] = local(e);
+      s.pointerMove(x, y, e.pointerType);
+      if (s.dragDistance > 10) setDragged(true);
+    };
+    const down = (e: PointerEvent) => {
+      const s = sceneRef.current;
+      if (!s || onTag(e) || e.button > 0) return;
+      setKbd(false);
+      const [x, y] = local(e);
+      s.pointerMove(x, y, e.pointerType);
+      s.pointerDown(x, y);
+    };
+    const up = (e: PointerEvent) => {
+      const s = sceneRef.current;
+      if (!s) return;
+      const { tap, hit } = s.pointerUp(e.type === 'pointercancel');
+      if (!tap || onTag(e)) return;
       if (e.pointerType === 'mouse') {
-        const r = el.getBoundingClientRect();
-        st.tx = ((e.clientX - r.left) / r.width) * 2 - 1;
-        st.ty = ((e.clientY - r.top) / r.height) * 2 - 1;
-        pointerIn = true;
-      }
-      if (st.drag) {
-        const dx = e.clientX - st.lastX;
-        st.lastX = e.clientX;
-        st.dx = Math.max(-220, Math.min(220, st.dx + dx * 0.8));
-        st.dv = dx / 0.016;
-        dragged.current = Math.max(dragged.current, Math.abs(e.clientX - st.downX));
-      }
+        if (hit !== null) pick(hit);
+      } else if (hit === null) s.setFocus(null);
+      else if (hit === s.focus) pick(hit);
+      else s.setFocus(hit);
     };
-    const onDown = (e: PointerEvent) => {
-      st.drag = true;
-      st.lastX = e.clientX;
-      st.downX = e.clientX;
-      dragged.current = 0;
-    };
-    const onUp = () => {
-      st.drag = false;
-      st.dv = Math.max(-1600, Math.min(1600, st.dv));
-    };
-    const onLeave = () => {
-      st.tx = 0;
-      st.ty = 0;
-      pointerIn = false;
-    };
-
-    const io = new IntersectionObserver(([e]) => {
-      visible = e.isIntersecting;
-      if (visible && !raf) {
-        last = performance.now();
-        raf = requestAnimationFrame(frame);
-      }
-    });
-    io.observe(el);
-    el.addEventListener('pointermove', onMove);
-    el.addEventListener('pointerdown', onDown);
-    window.addEventListener('pointerup', onUp);
-    window.addEventListener('pointercancel', onUp);
-    el.addEventListener('pointerleave', onLeave);
-    raf = requestAnimationFrame(frame);
+    const leave = () => sceneRef.current?.pointerLeave();
+    el.addEventListener('pointermove', move);
+    el.addEventListener('pointerdown', down);
+    window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', up);
+    el.addEventListener('pointerleave', leave);
     return () => {
-      io.disconnect();
-      cancelAnimationFrame(raf);
-      el.removeEventListener('pointermove', onMove);
-      el.removeEventListener('pointerdown', onDown);
-      window.removeEventListener('pointerup', onUp);
-      window.removeEventListener('pointercancel', onUp);
-      el.removeEventListener('pointerleave', onLeave);
+      el.removeEventListener('pointermove', move);
+      el.removeEventListener('pointerdown', down);
+      window.removeEventListener('pointerup', up);
+      window.removeEventListener('pointercancel', up);
+      el.removeEventListener('pointerleave', leave);
     };
-  }, [scrollYProgress]);
+  }, [pick]);
 
-  const enter = (i: number) => {
-    hover.current = i;
-    if (root.current) root.current.dataset.tone = POSTCARDS[i].tone;
-  };
-  const leave = (i: number) => {
-    if (hover.current === i) hover.current = null;
-    if (root.current) root.current.dataset.tone = '';
-  };
+  /* ------------------------ Scroll: the fly-through ------------------------ */
+  useEffect(() => {
+    const el = root.current;
+    if (!el) return;
+    gsap.registerPlugin(ScrollTrigger);
+    // The header is sticky, so the hero starts right under it.
+    const header = () => {
+      const cs = getComputedStyle(document.documentElement);
+      return parseFloat(cs.getPropertyValue('--header')) * parseFloat(cs.fontSize) || 0;
+    };
+    const ctx = gsap.context(() => {
+      const mm = gsap.matchMedia();
+      const build = (desktop: boolean) => {
+        const f = flight.current;
+        const tl = gsap.timeline({
+          defaults: { ease: 'none' },
+          scrollTrigger: {
+            trigger: el,
+            start: () => `top top+=${header()}`,
+            end: desktop ? '+=145%' : '+=95%',
+            scrub: 0.75,
+            pin: desktop,
+            anticipatePin: 1,
+            invalidateOnRefresh: true,
+          },
+        });
+        tl.to(copy.current, { scale: 1.16, yPercent: -14, opacity: 0, duration: 0.28, ease: 'power2.in' }, 0)
+          .to([hint.current, cue.current], { opacity: 0, duration: 0.08 }, 0)
+          .to(f, { dive: 1, duration: 0.4, ease: 'power2.inOut' }, 0)
+          .to(f, { camZ: -14, duration: 0.75, ease: 'power2.inOut' }, 0.15)
+          .to(f, { bank: 0.14, duration: 0.37, ease: 'sine.inOut' }, 0.15)
+          .to(f, { bank: 0, duration: 0.38, ease: 'sine.inOut' }, 0.52)
+          .to(wash.current, { opacity: 1, duration: 0.22, ease: 'power1.in' }, 0.78);
+        return () => {
+          f.camZ = 6;
+          f.bank = 0;
+          f.dive = 0;
+        };
+      };
+      mm.add('(min-width: 768px) and (prefers-reduced-motion: no-preference)', () => build(true));
+      mm.add('(max-width: 767px) and (prefers-reduced-motion: no-preference)', () => build(false));
+    }, el);
+    return () => ctx.revert();
+  }, []);
+
+  const focused = focus !== null ? cards[focus] : null;
 
   return (
-    <section ref={root} className="hero-portal relative isolate overflow-hidden" aria-labelledby="hero-title" data-tone="">
-      {/* Sunlit stage: real scenes under a warm wash, bloom and grain */}
-      <div aria-hidden className="portal-scenes absolute inset-0 -z-30">
-        <div className="portal-scene">
-          <LiveMedia clip={{ ...HERO_CLIP, alt: '' }} className="absolute inset-0" eager />
+    <section ref={root} className="hero-tunnel relative isolate overflow-hidden" aria-labelledby="hero-title">
+      <canvas ref={canvas} aria-hidden className="tunnel-canvas absolute inset-0 h-full w-full" />
+
+      {/* The words, in the open corridor of the tunnel */}
+      <div ref={copy} className="tunnel-copy pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center px-5 text-center">
+        {/* GSAP owns the outer opacity; this inner layer dims on phones while a postcard is spotlighted. */}
+        <div className={`tunnel-copy-inner ${focused ? 'is-dim' : ''}`}>
+          <h1 id="hero-title" className="tunnel-title">
+            <span className="block">{lead}</span>
+            {glow && <span className="tunnel-gold block">{glow}</span>}
+          </h1>
+          <p className="tunnel-tagline mx-auto">{tagline}</p>
         </div>
-        {SCENES.map((id) => (
-          <div key={id} className="portal-scene">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={pexels(id, 1600)} alt="" loading="lazy" decoding="async" />
-          </div>
-        ))}
       </div>
-      <div aria-hidden className="portal-wash absolute inset-0 -z-20" />
-      <div aria-hidden className="portal-glows absolute inset-0 -z-10">
-        {TONES.map((t) => (
-          <span key={t} className={`portal-glow glow-${t}`} />
-        ))}
-      </div>
-      <div aria-hidden className="portal-bloom absolute inset-0 -z-10" />
-      <div aria-hidden className="portal-grain absolute inset-0 -z-10" />
 
-      {/* Three depth planes of postcards */}
-      <div className="portal-stage absolute inset-0">
-        {POSTCARDS.map((pc, i) => {
-          const label = `${pc.spot}, ${names[pc.slug] ?? pc.slug}`;
-          return (
-            <button
-              key={pc.key}
-              ref={(n) => {
-                cards.current[i] = n;
-              }}
-              type="button"
-              className={`postcard plane-${pc.plane} is-${pc.shape} ${pc.m ? '' : 'no-phone'}`}
-              style={
-                {
-                  '--x': `${pc.at.x}%`,
-                  '--y': `${pc.at.y}%`,
-                  '--mx': pc.m ? `${pc.m.x}%` : undefined,
-                  '--my': pc.m ? `${pc.m.y}%` : undefined,
-                  transform: `translate(-50%, -50%) rotate(${pc.r}deg)`,
-                } as React.CSSProperties
-              }
-              aria-label={`${label}. Show it on the globe`}
-              onPointerEnter={(e) => e.pointerType === 'mouse' && enter(i)}
-              onPointerLeave={() => leave(i)}
-              onFocus={() => enter(i)}
-              onBlur={() => leave(i)}
-              onClick={(e) => {
-                if (dragged.current > 8) {
-                  e.preventDefault();
-                  return;
-                }
-                onPick(pc.slug);
-              }}
+      {/* Passport stamp tag, pinned under the focused postcard by the scene */}
+      <div
+        ref={tag}
+        className="tunnel-tag-anchor absolute left-0 top-0 z-30"
+        style={{ transform: 'translate3d(-999px, -999px, 0)', pointerEvents: focused ? 'auto' : 'none' }}
+        onPointerEnter={() => {
+          if (sceneRef.current) sceneRef.current.holdFocus = true;
+        }}
+        onPointerLeave={() => {
+          if (sceneRef.current) sceneRef.current.holdFocus = false;
+        }}
+      >
+        <AnimatePresence initial={false}>
+          {focused && (
+            <motion.div
+              key={focused.key}
+              className={`tunnel-tag ${kbd ? 'is-kbd' : ''}`}
+              initial={{ opacity: 0, y: 10, scale: 0.94 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 4, scale: 0.97, transition: { duration: 0.12, ease: [0.23, 1, 0.32, 1] } }}
+              transition={{ type: 'spring', duration: 0.38, bounce: 0.22 }}
             >
-              <span className="postcard-photo">
-                {pc.clip ? (
-                  <LiveMedia clip={COUNTRY_CLIPS[pc.clip]} className="absolute inset-0" eager />
-                ) : (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={pexels(pc.photo!, pc.plane === 'near' ? 640 : 420)} alt={pc.alt} loading={pc.plane === 'far' ? 'lazy' : 'eager'} decoding="async" draggable={false} />
-                )}
-              </span>
-              <span className="postcard-pill" aria-hidden>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={flagSrc(pc.slug)} alt="" width={16} height={16} />
-                {label}
-              </span>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={flagSrc(focused.slug)} alt="" width={28} height={28} className="tunnel-tag-flag" />
+              <span className="tunnel-tag-label">{focused.label}</span>
+              <button type="button" className="tunnel-fly" onClick={() => focus !== null && pick(focus)} tabIndex={-1}>
+                Fly there
+                <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden>
+                  <path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Keyboard and screen reader route to every postcard */}
+      <ul className="sr-only">
+        {cards.map((c, i) => (
+          <li key={c.key}>
+            <button
+              type="button"
+              onFocus={() => {
+                setKbd(true);
+                sceneRef.current?.setFocus(i);
+              }}
+              onBlur={() => sceneRef.current?.setFocus(null)}
+              onClick={() => pick(i)}
+            >
+              Fly to {c.label} on the globe
             </button>
-          );
-        })}
-
-        {PROPS.map((pr, i) => (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            key={pr.cls}
-            ref={(n) => {
-              props.current[i] = n;
-            }}
-            src={pr.src}
-            alt=""
-            aria-hidden
-            draggable={false}
-            className={`portal-prop ${pr.cls} ${pr.m ? '' : 'no-phone'}`}
-            style={{ '--x': `${pr.at.x}%`, '--y': `${pr.at.y}%`, '--mx': pr.m ? `${pr.m.x}%` : undefined, '--my': pr.m ? `${pr.m.y}%` : undefined } as React.CSSProperties}
-          />
+          </li>
         ))}
+      </ul>
 
-        {Array.from({ length: PUFFS }, (_, k) => (
-          <span
-            key={k}
-            aria-hidden
-            className="portal-puff"
-            ref={(n) => {
-              puffs.current[k] = n;
-            }}
-          />
-        ))}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img ref={plane} src="/hero3d/plane.webp" alt="" aria-hidden draggable={false} className="portal-plane" />
+      {/* GSAP fades the wrapper on scroll; the pill itself fades on the first drag. */}
+      <div ref={hint} aria-hidden className="tunnel-hint-wrap pointer-events-none absolute inset-x-0 z-20 flex justify-center">
+        <p className={`tunnel-hint ${dragged || focused ? 'is-gone' : ''}`}>
+          <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden>
+            <path d="M8 9l-4 3 4 3M16 9l4 3-4 3M4 12h16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          Drag to explore the sky
+        </p>
       </div>
-
-      {/* The words */}
-      <motion.div style={{ y: copyY, opacity: copyOpacity }} className="portal-copy pointer-events-none relative z-20 mx-auto flex flex-col items-center justify-center px-5 text-center">
-        <h1 id="hero-title" className="portal-title">
-          {headline}
-        </h1>
-        <p className="portal-tagline">{tagline}</p>
-      </motion.div>
-
-      {/* Into the atlas */}
-      <motion.div aria-hidden style={{ opacity: veil }} className="portal-veil pointer-events-none absolute inset-0 z-40" />
-      <div aria-hidden className="portal-foot pointer-events-none absolute inset-x-0 bottom-0 z-40" />
-      <div aria-hidden className="portal-cue pointer-events-none absolute bottom-5 left-1/2 z-40">
-        <span className="portal-cue-dot" />
+      <div ref={cue} aria-hidden className="tunnel-cue pointer-events-none absolute bottom-5 left-1/2 z-20">
+        <span className="tunnel-cue-dot" />
       </div>
+      <div aria-hidden className="tunnel-foot pointer-events-none absolute inset-x-0 bottom-0 z-[5]" />
+      <div ref={wash} aria-hidden className="tunnel-wash pointer-events-none absolute inset-0 z-40" />
     </section>
   );
 }
