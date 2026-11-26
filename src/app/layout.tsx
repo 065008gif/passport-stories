@@ -14,7 +14,6 @@ import Analytics from '@/components/Analytics';
 import { Analytics as VercelAnalytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import FlightProvider from '@/components/FlightProvider';
-import StampToast from '@/components/StampToast';
 import SearchPalette from '@/components/SearchPalette';
 import { RevealRoot, ScrollPlane } from '@/components/Fx';
 
@@ -41,7 +40,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Header />
           <main id="main">{children}</main>
           <Footer />
-          <StampToast />
           <SearchPalette />
         </FlightProvider>
         <Analytics />

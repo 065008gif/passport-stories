@@ -33,7 +33,7 @@ export default function Header() {
   // switched off as soon as you leave it, so phones cannot snap you down
   // to the footer of the next page.
   useEffect(() => {
-    if (pathname !== '/') document.documentElement.classList.remove('snap-page');
+    if (pathname !== '/fly') document.documentElement.classList.remove('snap-page');
     if (!window.location.hash) {
       window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
       requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }));
@@ -81,7 +81,7 @@ export default function Header() {
               key={n.href}
               href={n.href}
               aria-current={isActive(n.href) ? 'page' : undefined}
-              className={`whitespace-nowrap rounded-full px-2.5 py-2 text-[0.98rem] font-extrabold transition-colors xl:px-4 xl:text-[1.05rem] ${isActive(n.href) ? 'bg-sun text-ink shadow-[0_3px_0_#FF7A1A]' : 'text-cream hover:bg-cream/15 hover:text-sun'}`}
+              className={`whitespace-nowrap rounded-full px-2 py-2 text-[0.92rem] font-extrabold transition-colors xl:px-2.5 xl:text-[0.95rem] ${n.href === "/facts" ? "hidden 2xl:block" : n.href === "/your-life" ? "hidden xl:block" : n.href === "/did-you-know" ? "hidden lg:block" : ""} ${isActive(n.href) ? 'bg-sun text-ink shadow-[0_3px_0_#FF7A1A]' : 'text-cream hover:bg-cream/15 hover:text-sun'}`}
             >
               {n.label}
             </Link>

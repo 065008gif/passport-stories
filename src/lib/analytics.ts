@@ -35,7 +35,10 @@ export type EventName =
   | 'page_view'
   | 'home_gate_click'
   | 'globe_spun'
-  | 'pass_print_started';
+  | 'pass_print_started'
+  | 'fact_surprise'
+  | 'hero_explore'
+  | 'map_country_opened';
 
 type Params = Record<string, string | number | boolean | undefined>;
 

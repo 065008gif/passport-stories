@@ -13,6 +13,8 @@ import { GuessCard, GuessScore } from '@/components/Guess';
 import TopicNav from '@/components/TopicNav';
 import CountryScene from '@/components/Scene';
 import CommunityFacts from '@/components/CommunityFacts';
+import CultureBlock from '@/components/culture/CultureBlock';
+import { getCulture } from '@/data/culture';
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -34,6 +36,7 @@ export default async function CountryPage({ params }: Props) {
   const isHome = c.slug === HOME_SLUG;
   const index = COUNTRIES.indexOf(c);
   const next = COUNTRIES[(index + 1) % COUNTRIES.length];
+  const culture = getCulture(c.slug);
 
   return (
     <article>
@@ -203,6 +206,9 @@ export default async function CountryPage({ params }: Props) {
             </section>
           );
         })}
+
+        {/* Culture Map: everyday life, festivals, customs, lesser-known facts */}
+        {culture && <CultureBlock culture={culture} name={c.name} />}
 
         {/* Facts from visitors */}
         <div className="container-x border-b-2 border-dashed border-cream/15 py-14">

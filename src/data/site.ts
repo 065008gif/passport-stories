@@ -37,10 +37,12 @@ export const site = {
  * visitor always knows what a page is for.
  */
 export const NAV = [
-  { href: '/', label: 'Home', purpose: 'The flight: five stops, then spin the globe yourself.' },
-  { href: '/countries', label: 'Countries', purpose: 'One country, six topics: work, school, weddings, food, housing and transport.' },
-  { href: '/compare', label: 'Compare', purpose: 'Two countries, side by side, on all six topics.' },
+  { href: '/', label: 'Home', purpose: 'Live footage, illustrated countries and the globe.' },
+  { href: '/countries', label: 'Countries', purpose: 'Explore a country: everyday life, festivals, customs and lesser-known facts.' },
+  { href: '/compare', label: 'Compare', purpose: 'Two countries, the same question, side by side.' },
+  { href: '/journal', label: 'Journal', purpose: 'The Culture Journal: longer stories about ordinary life.' },
+  { href: '/did-you-know', label: 'Did You Know?', purpose: 'Short, sourced facts you can read in 30 seconds.' },
   { href: '/your-life', label: 'Your Life', purpose: 'Your salary, rent, hours and commute, moved to another country.' },
-  { href: '/quiz', label: 'Play Zone', purpose: 'Three quick games: Clue Chase, Higher or Lower and Flag Run.' },
+  { href: '/quiz', label: 'Play Zone', purpose: 'Guess the country, Higher or Lower and Flag Run.' },
   { href: '/facts', label: 'Community', purpose: 'Facts sent in by visitors. Add one of your own.' },
 ];

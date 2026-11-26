@@ -120,7 +120,7 @@ export function ScrollPlane() {
   const pathname = usePathname();
   const bar = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (pathname === '/') return;
+    if (pathname === '/fly') return;
     let raf = 0;
     const update = () => {
       raf = 0;
@@ -140,7 +140,7 @@ export function ScrollPlane() {
       cancelAnimationFrame(raf);
     };
   }, [pathname]);
-  if (pathname === '/') return null;
+  if (pathname === '/fly') return null;
   return (
     <div ref={bar} aria-hidden className="scroll-plane">
       <span className="scroll-plane-fill" />

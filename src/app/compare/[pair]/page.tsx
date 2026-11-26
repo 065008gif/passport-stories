@@ -102,7 +102,7 @@ export default async function ComparePage({ params }: Props) {
 
         {/* All six topics */}
         {TOPICS.map((t, i) => (
-          <section key={t.slug} data-section={`compare:${t.slug}`} className="container-x relative mt-16 border-t-2 border-dashed border-cream/15 pt-12" aria-labelledby={`cmp-${t.slug}`} style={{ ['--accent' as string]: TOPIC_ACCENT[t.slug] }}>
+          <section key={t.slug} id={t.slug} data-section={`compare:${t.slug}`} className="container-x relative mt-16 scroll-mt-28 border-t-2 border-dashed border-cream/15 pt-12" aria-labelledby={`cmp-${t.slug}`} style={{ ['--accent' as string]: TOPIC_ACCENT[t.slug] }}>
             <span aria-hidden className="big-no pointer-events-none absolute right-4 top-6 select-none text-[7rem] sm:text-[11rem]">
               {String(i + 1).padStart(2, '0')}
             </span>
