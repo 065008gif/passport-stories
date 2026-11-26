@@ -38,7 +38,7 @@ export default function HomePage() {
       <HeroCollage
         headline={
           <>
-            Same planet. <span className="text-[#EE5541]">Different lives.</span>
+            Same planet. <span className="hero-accent">Different lives.</span>
           </>
         }
         tagline="Step into the streets, festivals, kitchens and everyday moments of twenty countries."

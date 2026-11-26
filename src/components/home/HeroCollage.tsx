@@ -1,212 +1,323 @@
 'use client';
 
 /**
- * HERO: one connected picture of the world.
+ * HERO: the world, orbiting.
  *
- * Real photos and live clips from many countries float at different depths
- * around the headline. A dotted flight route links them and a small plane
- * flies along it. The whole scene tilts gently with the pointer (3D depth),
- * and as you scroll away the cards drift apart like a camera pulling back.
+ *  - Background: a live mesh gradient (WebGL) in coral, orange, sunshine,
+ *    turquoise, sky and pink, flowing slowly.
+ *  - A 3D ring of real photos and live clips from around the world circles
+ *    the headline. Drag to spin it; it tilts with the pointer.
+ *  - 3D travel objects (Icons8, "3D Casual Life") float at different depths,
+ *    and a plane flies its own lap around the ring.
+ *  - Scrolling away opens the ring up and fades it, like a camera pulling back.
  *
- * Everything moves with transform and opacity only. Reduced motion: a still
- * collage, no plane, no tilt.
+ * Reduced motion: still gradient, still ring, nothing moves on its own.
  */
 import { useEffect, useRef } from 'react';
 import { flagSrc } from '@/components/Flag';
 import LiveMedia from '@/components/home/LiveMedia';
-import { PLACES, MOMENTS, pexels, pexelsSet } from '@/data/places';
+import { PLACES, MOMENTS, pexels } from '@/data/places';
 import { COUNTRY_CLIPS } from '@/data/media';
 
-type Card = {
-  key: string;
-  flag: string;
-  label: string;
-  /** desktop: left %, top %, width (vw); phone: left %, top %, width (vw) */
-  d: [number, number, number];
-  m?: [number, number, number];
-  ratio: string;
-  depth: number;
-  tilt: number;
-  /** which way it drifts when you scroll away */
-  dir: [number, number];
-  photo?: { id: number; alt: string };
-  clip?: keyof typeof COUNTRY_CLIPS;
-};
+type Item = { key: string; flag: string; label: string; photo?: number; alt?: string; clip?: keyof typeof COUNTRY_CLIPS };
 
-const CARDS: Card[] = [
-  { key: 'japan', flag: 'japan', label: 'Fujiyoshida, Japan', d: [2.5, 9, 15], m: [-4, 47, 38], ratio: '3/4', depth: 0.7, tilt: -6, dir: [-1, -0.4], photo: { id: PLACES.japan.photo, alt: PLACES.japan.alt } },
-  { key: 'italy', flag: 'italy', label: 'Amalfi, Italy', d: [21, 4, 11], ratio: '1/1', depth: 1.25, tilt: -3, dir: [-0.6, -1], photo: { id: PLACES.italy.photo, alt: PLACES.italy.alt } },
-  { key: 'tokyo', flag: 'japan', label: 'Shibuya, Tokyo', d: [69, 3, 12.5], ratio: '4/3', depth: 0.9, tilt: 3, dir: [0.5, -1], clip: 'japan' },
-  { key: 'egypt', flag: 'egypt', label: 'Giza, Egypt', d: [83, 11, 15.5], m: [64, 45, 38], ratio: '4/5', depth: 0.55, tilt: 5, dir: [1, -0.3], photo: { id: PLACES.egypt.photo, alt: PLACES.egypt.alt } },
-  { key: 'holi', flag: 'india', label: 'Holi, India', d: [6, 57, 14], m: [29, 57, 42], ratio: '4/5', depth: 1.05, tilt: 4, dir: [-1, 0.6], photo: { id: MOMENTS.holi.photo, alt: MOMENTS.holi.alt } },
-  { key: 'market', flag: 'india', label: 'Street market, India', d: [24, 70, 19], ratio: '16/10', depth: 0.45, tilt: -2, dir: [-0.4, 1], clip: 'india' },
-  { key: 'hawker', flag: 'singapore', label: 'Hawker stall, Singapore', d: [57, 72, 13], ratio: '1/1', depth: 0.95, tilt: -4, dir: [0.4, 1], photo: { id: MOMENTS.hawker.photo, alt: MOMENTS.hawker.alt } },
-  { key: 'mexico', flag: 'mexico', label: 'Guanajuato, Mexico', d: [78, 56, 15], m: [1, 76, 34], ratio: '3/4', depth: 0.75, tilt: 6, dir: [1, 0.6], photo: { id: PLACES.mexico.photo, alt: PLACES.mexico.alt } },
-  { key: 'canada', flag: 'canada', label: 'Banff, Canada', m: [63, 78, 36], d: [-50, -50, 0], ratio: '1/1', depth: 0.8, tilt: -5, dir: [1, 1], photo: { id: PLACES.canada.photo, alt: PLACES.canada.alt } },
+const p = (slug: string): Item => ({ key: slug, flag: slug, label: PLACES[slug].spot, photo: PLACES[slug].photo, alt: PLACES[slug].alt });
+
+const RING: Item[] = [
+  p('japan'),
+  { key: 'holi', flag: 'india', label: 'Holi', photo: MOMENTS.holi.photo, alt: MOMENTS.holi.alt },
+  p('italy'),
+  p('egypt'),
+  { key: 'tokyo', flag: 'japan', label: 'Shibuya', clip: 'japan' },
+  p('mexico'),
+  p('india'),
+  p('canada'),
+  { key: 'hawker', flag: 'singapore', label: 'Hawker stall', photo: MOMENTS.hawker.photo, alt: MOMENTS.hawker.alt },
+  { key: 'market', flag: 'india', label: 'Street market', clip: 'india' },
+  p('united-kingdom'),
+  p('australia'),
 ];
 
-// The flight route, in the same 0 to 100 space as the card positions (desktop).
-const ROUTE = 'M 10 30 C 20 12, 28 8, 27 13 S 50 2, 75 9 S 98 30, 90 40 S 92 78, 85 74 S 66 96, 63 85 S 44 98, 33 86 S 4 90, 13 74 S 2 50, 10 30';
+const OBJECTS = [
+  { src: '/hero3d/balloons.webp', cls: 'obj-balloons', d: 1.3 },
+  { src: '/hero3d/suitcase.webp', cls: 'obj-suitcase', d: 1.1 },
+  { src: '/hero3d/camera.webp', cls: 'obj-camera', d: 0.9 },
+  { src: '/hero3d/pin.webp', cls: 'obj-pin', d: 0.7 },
+];
 
+/* ---------------------------- Mesh gradient ---------------------------- */
+const FRAG = `precision highp float;
+uniform vec2 uR; uniform float uT; uniform vec2 uM;
+float h(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float n(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.0-2.0*f);
+  return mix(mix(h(i), h(i+vec2(1,0)), f.x), mix(h(i+vec2(0,1)), h(i+vec2(1,1)), f.x), f.y); }
+float fbm(vec2 p){ float v = 0.0, a = 0.5; for (int i = 0; i < 4; i++){ v += a*n(p); p *= 2.02; a *= 0.5; } return v; }
+vec3 blob(vec2 q, vec2 c, vec3 col, float s, inout float w){ float k = exp(-dot(q-c, q-c) / s); w += k; return col * k; }
+void main(){
+  vec2 uv = gl_FragCoord.xy / uR; float asp = uR.x / uR.y;
+  vec2 q = vec2(uv.x * asp, uv.y);
+  float t = uT * 0.07;
+  q += 0.22 * vec2(fbm(q*1.6 + t), fbm(q*1.6 - t + 4.0)) - 0.11;
+  vec2 m = uM * 0.06;
+  float w = 0.0; vec3 c = vec3(0.0);
+  c += blob(q, vec2(0.12*asp + 0.10*sin(t*1.3), 0.86 + 0.08*cos(t)), vec3(1.0, 0.36, 0.38), 0.10, w);
+  c += blob(q, vec2(0.52*asp + 0.12*cos(t*0.9) + m.x, 0.96), vec3(1.0, 0.60, 0.20), 0.09, w);
+  c += blob(q, vec2(0.90*asp + 0.08*sin(t*1.1), 0.80 + 0.1*sin(t*0.7)), vec3(1.0, 0.80, 0.20), 0.10, w);
+  c += blob(q, vec2(0.08*asp + 0.10*cos(t*0.8), 0.16 + 0.08*sin(t*1.2)), vec3(0.05, 0.76, 0.70), 0.11, w);
+  c += blob(q, vec2(0.60*asp + 0.14*sin(t*0.6) - m.x, 0.06 + m.y), vec3(0.12, 0.58, 0.95), 0.12, w);
+  c += blob(q, vec2(0.94*asp + 0.06*cos(t*1.4), 0.28 + 0.1*cos(t*0.9)), vec3(1.0, 0.42, 0.64), 0.08, w);
+  c += blob(q, vec2(0.45*asp + 0.1*sin(t*0.5), 0.50 + 0.06*cos(t*1.1)), vec3(1.0, 0.52, 0.38), 0.06, w);
+  vec3 col = c / max(w, 1e-4);
+  col += (h(gl_FragCoord.xy + fract(uT)) - 0.5) * 0.03;
+  gl_FragColor = vec4(col, 1.0);
+}`;
+
+function startGradient(canvas: HTMLCanvasElement, reduce: boolean, pointer: { x: number; y: number }) {
+  const gl = canvas.getContext('webgl', { antialias: false });
+  if (!gl) return () => {};
+  const sh = (type: number, src: string) => {
+    const s = gl.createShader(type)!;
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    return s;
+  };
+  const prog = gl.createProgram()!;
+  gl.attachShader(prog, sh(gl.VERTEX_SHADER, 'attribute vec2 a; void main(){ gl_Position = vec4(a, 0.0, 1.0); }'));
+  gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FRAG));
+  gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return () => {};
+  gl.useProgram(prog);
+  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  const loc = gl.getAttribLocation(prog, 'a');
+  gl.enableVertexAttribArray(loc);
+  gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+  const uR = gl.getUniformLocation(prog, 'uR');
+  const uT = gl.getUniformLocation(prog, 'uT');
+  const uM = gl.getUniformLocation(prog, 'uM');
+  let raf = 0;
+  let on = true;
+  const size = () => {
+    // Half resolution: it is a soft gradient, and it keeps phones cool.
+    canvas.width = Math.max(2, Math.round(canvas.clientWidth * 0.5));
+    canvas.height = Math.max(2, Math.round(canvas.clientHeight * 0.5));
+    gl.viewport(0, 0, canvas.width, canvas.height);
+  };
+  size();
+  const t0 = performance.now() - 20000;
+  const draw = (now: number) => {
+    raf = 0;
+    gl.uniform2f(uR, canvas.width, canvas.height);
+    gl.uniform1f(uT, (now - t0) / 1000);
+    gl.uniform2f(uM, pointer.x, pointer.y);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    canvas.classList.add('is-on');
+    if (on && !reduce) raf = requestAnimationFrame(draw);
+  };
+  raf = requestAnimationFrame(draw);
+  const ro = new ResizeObserver(() => {
+    size();
+    if (!raf) raf = requestAnimationFrame(draw);
+  });
+  ro.observe(canvas);
+  const io = new IntersectionObserver(([e]) => {
+    on = e.isIntersecting;
+    if (on && !raf && !reduce) raf = requestAnimationFrame(draw);
+  });
+  io.observe(canvas);
+  return () => {
+    on = false;
+    cancelAnimationFrame(raf);
+    ro.disconnect();
+    io.disconnect();
+  };
+}
+
+/* ------------------------------- Hero ------------------------------- */
 export default function HeroCollage({ headline, tagline }: { headline: React.ReactNode; tagline: string }) {
   const root = useRef<HTMLElement>(null);
-  const plane = useRef<HTMLDivElement>(null);
-  const path = useRef<SVGPathElement>(null);
+  const bg = useRef<HTMLCanvasElement>(null);
+  const cards = useRef<(HTMLElement | null)[]>([]);
+  const plane = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
     const el = root.current;
     if (!el) return;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const fine = window.matchMedia('(pointer: fine)').matches;
-    const target = { x: 0, y: 0 };
-    const now = { x: 0, y: 0, s: 0 };
+    const pointer = { x: 0, y: 0 };
+    const stopBg = bg.current ? startGradient(bg.current, reduce, pointer) : () => {};
+
+    const N = RING.length;
+    const phoneStep = () => (el.clientWidth < 768 ? 2 : 1);
+    const IDLE = reduce ? 0 : 0.11;
+    const st = { a: 0.35, v: IDLE, drag: false, lastX: 0, tx: 0, ty: 0, px: 0, py: 0, sp: 0 };
     let raf = 0;
+    let last = performance.now();
     let visible = true;
-    let t0 = performance.now();
-    const len = path.current?.getTotalLength() || 1;
+
+    const layout = (now: number) => {
+      raf = 0;
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      const W = el.clientWidth;
+      const H = el.clientHeight;
+      const phone = W < 768;
+      const r = el.getBoundingClientRect();
+      const s = Math.min(1, Math.max(0, -r.top / Math.max(1, H * 0.8)));
+      st.sp += (s - st.sp) * 0.15;
+      if (!st.drag) {
+        st.v += (IDLE - st.v) * Math.min(1, dt * 1.2);
+        st.a += st.v * dt;
+      }
+      st.px += (st.tx - st.px) * 0.06;
+      st.py += (st.ty - st.py) * 0.06;
+      pointer.x = st.px;
+      pointer.y = st.py;
+
+      const open = 1 + st.sp * 0.9;
+      const Rx = (phone ? W * 0.5 : Math.min(W * 0.45, 760)) * open;
+      const Rz = (phone ? 200 : 300) * open;
+      const Ry = H * (phone ? 0.31 : 0.3) * (1 + st.py * 0.12);
+      const cy = -H * 0.03;
+      const fade = 1 - st.sp * 1.1;
+
+      for (let i = 0; i < N; i++) {
+        const c = cards.current[i];
+        if (!c) continue;
+        const step = phoneStep();
+        if (i % step) continue;
+        const th = st.a + (i / N) * Math.PI * 2;
+        const sin = Math.sin(th);
+        const cos = Math.cos(th);
+        const x = sin * Rx;
+        const z = cos * Rz;
+        const y = cy + cos * Ry;
+        const front = (cos + 1) / 2; // 0 back, 1 front
+        c.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, ${z.toFixed(1)}px) rotateY(${(sin * -34).toFixed(2)}deg) rotateZ(${(sin * 5).toFixed(2)}deg)`;
+        c.style.opacity = String(Math.max(0, (0.62 + front * 0.38) * fade));
+        c.style.zIndex = String(Math.round(z + 2000));
+      }
+
+      // The plane flies its own lap, a little faster and higher.
+      const pl = plane.current;
+      if (pl) {
+        const th = st.a * 1.7 + 1.2;
+        const sin = Math.sin(th);
+        const cos = Math.cos(th);
+        const x = sin * Rx * 0.9;
+        const z = cos * Rz * 1.15;
+        const y = cy + cos * Ry * 0.35 - H * 0.16;
+        const right = cos > 0; // flying right in front, left at the back
+        pl.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, ${z.toFixed(1)}px) scaleX(${right ? 1 : -1}) rotate(${(sin * 14).toFixed(2)}deg)`;
+        pl.style.zIndex = String(Math.round(z + 2000));
+        pl.style.opacity = String(Math.max(0, fade));
+      }
+
+      el.style.setProperty('--px', st.px.toFixed(4));
+      el.style.setProperty('--py', st.py.toFixed(4));
+      el.style.setProperty('--sp', st.sp.toFixed(4));
+      if (visible) raf = requestAnimationFrame(layout);
+    };
 
     const onMove = (e: PointerEvent) => {
       const r = el.getBoundingClientRect();
-      target.x = ((e.clientX - r.left) / r.width) * 2 - 1;
-      target.y = ((e.clientY - r.top) / r.height) * 2 - 1;
+      st.tx = ((e.clientX - r.left) / r.width) * 2 - 1;
+      st.ty = ((e.clientY - r.top) / r.height) * 2 - 1;
+      if (st.drag) {
+        const dx = e.clientX - st.lastX;
+        st.lastX = e.clientX;
+        st.a += dx * 0.004;
+        st.v = Math.max(-2, Math.min(2, dx * 0.2));
+      }
+    };
+    const onDown = (e: PointerEvent) => {
+      if ((e.target as HTMLElement).closest('a, button')) return;
+      st.drag = true;
+      st.lastX = e.clientX;
+    };
+    const onUp = () => {
+      st.drag = false;
     };
     const onLeave = () => {
-      target.x = 0;
-      target.y = 0;
+      st.tx = 0;
+      st.ty = 0;
     };
 
-    const tick = (t: number) => {
-      raf = 0;
-      const r = el.getBoundingClientRect();
-      const s = Math.min(1, Math.max(0, -r.top / Math.max(1, r.height * 0.85)));
-      now.x += (target.x - now.x) * 0.06;
-      now.y += (target.y - now.y) * 0.06;
-      now.s += (s - now.s) * 0.18;
-      el.style.setProperty('--px', now.x.toFixed(4));
-      el.style.setProperty('--py', now.y.toFixed(4));
-      el.style.setProperty('--sp', now.s.toFixed(4));
-      // The plane: one lap of the route every 26 seconds.
-      const p = path.current;
-      const pl = plane.current;
-      if (p && pl) {
-        const k = (((t - t0) / 26000) % 1) * len;
-        const a = p.getPointAtLength(k);
-        const b = p.getPointAtLength((k + 0.6) % len);
-        const ang = (Math.atan2(((b.y - a.y) * r.height) / 100, ((b.x - a.x) * r.width) / 100) * 180) / Math.PI;
-        pl.style.transform = `translate(${(a.x / 100) * r.width}px, ${(a.y / 100) * r.height}px) translate(-50%, -50%) rotate(${ang}deg)`;
-      }
-      if (visible) raf = requestAnimationFrame(tick);
-    };
-
-    if (reduce) {
-      el.classList.add('is-still');
-      return;
-    }
     const io = new IntersectionObserver(([e]) => {
       visible = e.isIntersecting;
       if (visible && !raf) {
-        t0 = performance.now() - 4000;
-        raf = requestAnimationFrame(tick);
+        last = performance.now();
+        raf = requestAnimationFrame(layout);
       }
     });
     io.observe(el);
-    if (fine) {
-      el.addEventListener('pointermove', onMove);
-      el.addEventListener('pointerleave', onLeave);
-    }
-    raf = requestAnimationFrame(tick);
+    el.addEventListener('pointermove', onMove);
+    el.addEventListener('pointerdown', onDown);
+    window.addEventListener('pointerup', onUp);
+    el.addEventListener('pointerleave', onLeave);
+    raf = requestAnimationFrame(layout);
     return () => {
+      stopBg();
       io.disconnect();
       cancelAnimationFrame(raf);
       el.removeEventListener('pointermove', onMove);
+      el.removeEventListener('pointerdown', onDown);
+      window.removeEventListener('pointerup', onUp);
       el.removeEventListener('pointerleave', onLeave);
     };
   }, []);
 
   return (
-    <section ref={root} className="hero-world relative isolate overflow-hidden" aria-labelledby="hero-title">
-      {/* Soft sunlit sky: ivory into peach and a breath of turquoise */}
-      <div aria-hidden className="hero-sky absolute inset-0 -z-20" />
-      <div aria-hidden className="hero-glow hero-glow-a" />
-      <div aria-hidden className="hero-glow hero-glow-b" />
-      <div aria-hidden className="hero-glow hero-glow-c" />
+    <section ref={root} className="hero-orbit relative isolate overflow-hidden" aria-labelledby="hero-title">
+      <div aria-hidden className="hero-orbit-fallback absolute inset-0 -z-30" />
+      <canvas ref={bg} aria-hidden className="hero-orbit-canvas absolute inset-0 -z-20 h-full w-full" />
+      <div aria-hidden className="hero-orbit-grain absolute inset-0 -z-10" />
 
-      <div className="hero-stage absolute inset-0 -z-10">
-        <div className="hero-scene absolute inset-0">
-          {/* The route that links every place (desktop) */}
-          <svg aria-hidden viewBox="0 0 100 100" preserveAspectRatio="none" className="hero-route absolute inset-0 hidden h-full w-full lg:block">
-            <path ref={path} d={ROUTE} fill="none" stroke="#1F2A44" strokeOpacity=".28" strokeWidth="2" strokeDasharray="2 9" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-          </svg>
-          <div ref={plane} aria-hidden className="hero-plane absolute left-0 top-0 hidden lg:block">
-            <svg width="30" height="30" viewBox="0 0 24 24">
-              <path d="M21 12.6v-1.2L13.5 7V2.8a1.5 1.5 0 0 0-3 0V7L3 11.4v1.2l7.5-2.1v4.6l-2 1.5v1.1l3.5-.9 3.5.9v-1.1l-2-1.5v-4.6z" fill="#FF6B5B" transform="rotate(90 12 12)" />
-            </svg>
-          </div>
+      {/* Floating 3D objects */}
+      {OBJECTS.map((o) => (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img key={o.cls} src={o.src} alt="" aria-hidden draggable={false} className={`hero-obj ${o.cls}`} style={{ '--d': o.d } as React.CSSProperties} />
+      ))}
 
-          {CARDS.map((c, i) => (
+      {/* The 3D ring */}
+      <div className="hero-orbit-stage absolute inset-0">
+        <div className="hero-orbit-world">
+          {RING.map((it, i) => (
             <figure
-              key={c.key}
-              className={`hero-card absolute ${c.m ? '' : 'max-lg:hidden'} ${c.d[2] ? '' : 'lg:hidden'}`}
-              style={
-                {
-                  '--x': `${c.d[0]}%`,
-                  '--y': `${c.d[1]}%`,
-                  '--w': `${c.d[2]}vw`,
-                  '--mx': `${c.m?.[0] ?? 0}%`,
-                  '--my': `${c.m?.[1] ?? 0}%`,
-                  '--mw': `${c.m?.[2] ?? 0}vw`,
-                  '--d': c.depth,
-                  '--r': `${c.tilt}deg`,
-                  '--dx': c.dir[0],
-                  '--dy': c.dir[1],
-                  '--i': i,
-                } as React.CSSProperties
-              }
+              key={it.key}
+              ref={(n) => {
+                cards.current[i] = n;
+              }}
+              className="orbit-card"
             >
-              <div className="hero-card-in">
-                <div className="hero-photo" style={{ aspectRatio: c.ratio }}>
-                  {c.clip ? (
-                    <LiveMedia clip={COUNTRY_CLIPS[c.clip]} className="absolute inset-0" eager={i < 4} />
-                  ) : (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={pexels(c.photo!.id, 640)}
-                      srcSet={pexelsSet(c.photo!.id, [400, 640, 960])}
-                      sizes="(min-width: 1024px) 18vw, 40vw"
-                      alt={c.photo!.alt}
-                      loading={i < 4 ? 'eager' : 'lazy'}
-                      decoding="async"
-                      className="absolute inset-0 h-full w-full object-cover"
-                    />
-                  )}
-                  {c.clip && (
-                    <span className="hero-live" aria-hidden>
-                      <i /> Live
-                    </span>
-                  )}
-                </div>
-                <figcaption className="hero-tag">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={flagSrc(c.flag)} alt="" width={16} height={16} />
-                  {c.label}
-                </figcaption>
+              <div className="orbit-photo">
+                {it.clip ? (
+                  <LiveMedia clip={COUNTRY_CLIPS[it.clip]} className="absolute inset-0" eager={i < 6} />
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={pexels(it.photo!, 480)} alt={it.alt} loading={i < 8 ? 'eager' : 'lazy'} decoding="async" draggable={false} />
+                )}
               </div>
+              <figcaption className="orbit-tag">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={flagSrc(it.flag)} alt="" width={16} height={16} />
+                {it.label}
+              </figcaption>
             </figure>
           ))}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img ref={plane} src="/hero3d/plane.webp" alt="" aria-hidden draggable={false} className="orbit-plane" />
         </div>
       </div>
 
-      {/* The words: one line and one short tagline */}
-      <div className="hero-copy relative mx-auto flex min-h-[calc(100svh-var(--header))] max-w-[44rem] flex-col items-center px-5 pb-[52vh] pt-[7vh] text-center sm:pb-[40vh] lg:justify-center lg:pb-[8vh] lg:pt-0">
-        <h1 id="hero-title" className="hero-title h-display text-[2.6rem] leading-[0.98] text-ink sm:text-6xl lg:text-[5.4rem]">
+      {/* The words */}
+      <div className="hero-orbit-copy pointer-events-none relative z-[2000] mx-auto flex min-h-[max(40rem,calc(100svh-var(--header)))] max-w-[54rem] flex-col items-center justify-center px-5 pb-[7vh] text-center">
+        <h1 id="hero-title" className="hero-orbit-title h-display text-[3rem] leading-[0.95] text-white sm:text-7xl lg:text-[6.4rem]">
           {headline}
         </h1>
-        <p className="hero-tagline mt-5 max-w-[34rem] text-[1.05rem] leading-relaxed text-ink/75 sm:text-xl">{tagline}</p>
-        <a href="#explore" className="hero-cue mt-8 hidden items-center gap-2 text-sm font-bold text-ink/60 hover:text-coral lg:inline-flex">
-          <span className="hero-cue-dot" aria-hidden />
-          Scroll to explore the globe
-        </a>
+        <p className="hero-orbit-tagline mt-5 max-w-[34rem] text-[1.05rem] font-semibold leading-relaxed text-white sm:text-xl">{tagline}</p>
       </div>
+
     </section>
   );
 }
