@@ -84,6 +84,9 @@ export class FlightWorld {
   private frameMs = 16.7;
   /** Country to circle with the pulsing ring while free roaming (-1 = none). Home page helper. */
   highlight = -1;
+  private arcGroup: THREE.Group | null = null;
+  private arcCurve: THREE.QuadraticBezierCurve3 | null = null;
+  private arcStart = -1;
   // scratch objects, so the render loop allocates nothing
   private a = new THREE.Vector3();
   private b = new THREE.Vector3();
@@ -303,6 +306,22 @@ export class FlightWorld {
     if (picked) this.ring.scale.multiplyScalar(1.6);
     (this.ring.material as THREE.MeshBasicMaterial).color.set(picked ? 0xff6b5b : 0xfff4e0);
 
+    // The home page flight arc, if one is showing.
+    if (this.arcGroup && this.arcCurve) {
+      if (this.arcStart < 0) this.arcStart = f.time;
+      const k = Math.min(1, (f.time - this.arcStart) / 1.1);
+      const e = 1 - Math.pow(1 - k, 3);
+      this.arcGroup.children.forEach((m, i) => {
+        const mesh = m as THREE.Mesh;
+        if (i < 2) {
+          const total = mesh.geometry.index!.count;
+          mesh.geometry.setDrawRange(0, Math.floor((e * total) / 48) * 48);
+        } else {
+          const u = k < 1 ? e : ((f.time - this.arcStart - 1.1) * 0.45) % 1;
+          mesh.position.copy(this.arcCurve!.getPoint(u));
+        }
+      });
+    }
     this.lights.uniforms.uFree.value = f.free;
     this.lights.uniforms.uTime.value = f.time;
     this.stars.rotation.y = this.rotY * 0.04;
@@ -310,6 +329,34 @@ export class FlightWorld {
   }
 
   /** Screen position of a country (pixels), and whether it is on the near side. */
+  /**
+   * Home page helper: a glowing flight arc from one country to another. It
+   * draws itself over about a second and a pulse keeps travelling along it.
+   */
+  arc(from: number, to: number) {
+    if (this.arcGroup) {
+      this.globe.remove(this.arcGroup);
+      this.arcGroup.traverse((o) => {
+        const m = o as THREE.Mesh;
+        m.geometry?.dispose();
+        (m.material as THREE.Material | undefined)?.dispose();
+      });
+      this.arcGroup = null;
+    }
+    if (from < 0 || to < 0 || from === to) return;
+    const a = this.places[from];
+    const b = this.places[to];
+    const mid = this.a.copy(a).add(b).normalize().multiplyScalar(1.08 + a.distanceTo(b) * 0.28);
+    this.arcCurve = new THREE.QuadraticBezierCurve3(a.clone().multiplyScalar(1.012), mid.clone(), b.clone().multiplyScalar(1.012));
+    const g = new THREE.Group();
+    g.add(new THREE.Mesh(new THREE.TubeGeometry(this.arcCurve, 96, 0.006, 8, false), new THREE.MeshBasicMaterial({ color: 0xffc233, transparent: true, opacity: 0.95, depthWrite: false })));
+    g.add(new THREE.Mesh(new THREE.TubeGeometry(this.arcCurve, 96, 0.018, 8, false), new THREE.MeshBasicMaterial({ color: 0xff8a4c, transparent: true, opacity: 0.28, depthWrite: false, blending: THREE.AdditiveBlending })));
+    g.add(new THREE.Mesh(new THREE.SphereGeometry(0.016, 16, 12), new THREE.MeshBasicMaterial({ color: 0xfff4e0 })));
+    this.arcGroup = g;
+    this.arcStart = -1;
+    this.globe.add(g);
+  }
+
   /**
    * Home page helper: call once a frame with the frame time. If frames stay
    * slow for about a second, draw at a lower pixel ratio (never below 1).

@@ -32,6 +32,7 @@ export default function HomePage() {
       photoAlt: p.alt,
       spot: p.spot,
       language: c.quickFacts.language,
+      airport: c.airport,
       workHours: c.metrics.workHours.value,
     };
   });
