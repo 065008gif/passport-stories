@@ -36,9 +36,9 @@ export interface QuizCountry {
 type Mode = 'clue' | 'hl' | 'flag';
 
 const MODES: Record<Mode, { name: string; emoji: string; line: string; how: string; color: string }> = {
-  clue: { name: 'Clue Chase', emoji: '🕵️', line: 'Name the country from its clues.', how: '5 rounds · fewer clues = more points', color: '#FFB703' },
-  hl: { name: 'Higher or Lower', emoji: '⚖️', line: 'Who has the bigger number?', how: '5 lives · take your time', color: '#FF7A1A' },
-  flag: { name: 'Flag Run', emoji: '🏁', line: 'Ten flags. How many do you know?', how: '10 flags · no clock', color: '#6C4CF5' },
+  clue: { name: 'Clue Chase', emoji: '🕵️', line: 'Name the country from its clues.', how: '5 rounds · fewer clues = more points', color: '#FFC233' },
+  hl: { name: 'Higher or Lower', emoji: '⚖️', line: 'Who has the bigger number?', how: '5 lives · take your time', color: '#FF8A4C' },
+  flag: { name: 'Flag Run', emoji: '🏁', line: 'Ten flags. How many do you know?', how: '10 flags · no clock', color: '#1AA3CF' },
 };
 
 const TITLES = ['Tourist', 'Backpacker', 'Explorer', 'Navigator', 'Globetrotter', 'Captain', 'Legend'];
@@ -112,8 +112,8 @@ function makeQuestion(mode: Mode, countries: QuizCountry[], avoid?: string): Que
     : { kind: 'flag', prompt: 'Whose flag?', flag: answer.slug, options, answer: answer.slug };
 }
 
-const COLORS = ['#FFB703', '#06A77D', '#6C4CF5', '#FF7A1A'];
-const LETTER_COLORS = ['#FFB703', '#6C4CF5', '#06A77D', '#FF7A1A'];
+const COLORS = ['#FFC233', '#12B5A6', '#1AA3CF', '#FF8A4C'];
+const LETTER_COLORS = ['#FFC233', '#1AA3CF', '#12B5A6', '#FF8A4C'];
 function Confetti() {
   return (
     <span aria-hidden className="pointer-events-none fixed inset-0 z-[60] overflow-hidden">
@@ -264,7 +264,7 @@ export default function QuizClient({ countries }: { countries: QuizCountry[] }) 
       <div className="mx-auto max-w-4xl" data-section="arcade-lobby">
         {/* Player card */}
         <div className="flex flex-wrap items-center gap-4 rounded-3xl border border-cream/20 bg-night/70 p-4 backdrop-blur sm:p-5" data-rv="up">
-          <div className="flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-2xl bg-sun text-ink shadow-[0_4px_0_#FF7A1A]">
+          <div className="flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-2xl bg-sun text-ink shadow-[0_4px_0_#FF8A4C]">
             <span className="font-mono text-[9px] font-bold uppercase tracking-widest">Level</span>
             <span className="h-display text-3xl leading-none">{level + 1}</span>
           </div>
@@ -352,7 +352,7 @@ export default function QuizClient({ countries }: { countries: QuizCountry[] }) 
                 <span>
                   Level {level + 1} · {titleOf(save.xp)}
                 </span>
-                <motion.span initial={{ scale: 2, color: '#FFB703' }} animate={{ scale: 1 }} className="font-mono text-sun">
+                <motion.span initial={{ scale: 2, color: '#FFC233' }} animate={{ scale: 1 }} className="font-mono text-sun">
                   +{gained} XP
                 </motion.span>
               </p>

@@ -24,11 +24,6 @@ export default function Footer() {
           <p className="kicker text-sun">More</p>
           <ul className="mt-3 space-y-2 text-cream/90">
             {[
-              ['/journal', 'Culture Journal'],
-              ['/did-you-know', 'Did you know?'],
-              ['/fly', 'The one-minute flight'],
-              ['/facts', 'Community facts'],
-              ['/your-life', 'Your Life abroad'],
               ['/ask', 'Ask the Map'],
               ['/about', 'About'],
               ['/about#sources', 'Sources'],

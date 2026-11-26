@@ -8,7 +8,6 @@ import Flag from '@/components/Flag';
 import FlightHome from '@/components/flight/FlightHome';
 import Reels from '@/components/home/Reels';
 import BoardingGates from '@/components/home/BoardingGates';
-import { PiaSays } from '@/components/Pia';
 
 /**
  * HOME: one flight around the world.
@@ -31,7 +30,7 @@ export default function FlyPage() {
       <FlightHome countries={countries} route={route}>
         {/* ------------------------------ Take-off ------------------------------ */}
         <section className={`${SCREEN} is-here md:!pb-36 lg:!pb-12`} aria-labelledby="hero-title">
-          <div className="hero-card stop-card max-w-xl md:max-w-[34rem] md:rounded-[2rem] md:bg-night/75 md:p-7 md:shadow-[0_20px_50px_-25px_rgba(36,18,61,.35)] md:backdrop-blur-md">
+          <div className="hero-card stop-card max-w-xl md:max-w-[34rem] md:rounded-[2rem] md:bg-night/75 md:p-7 md:shadow-[0_20px_50px_-25px_rgba(31,42,68,.35)] md:backdrop-blur-md">
             <p className="kicker text-sun">Flight PS 001 · Departing {INDIA.airport}</p>
             <h1 id="hero-title" className="hero-h1 sign mt-1.5 text-[2.4rem] leading-[0.98] sm:mt-2 sm:text-[3.9rem]">
               The world is more <em className="text-coral">interesting</em> than you think.
@@ -57,15 +56,6 @@ export default function FlyPage() {
               </a>
               <TeleportButton label="Surprise me" className="btn btn-ghost max-sm:px-4 max-sm:py-2.5 max-sm:text-sm" countries={countries.filter((c) => c.slug !== INDIA.slug).map(({ slug, name, airport }) => ({ slug, name, airport }))} />
             </p>
-            <div className="hero-pia mt-3 hidden items-center gap-3 md:flex">
-              <PiaSays size={64}>
-                Hi, I&apos;m Pia! Scroll down and I&apos;ll fly you through five countries. Or{' '}
-                <Link href="/countries" className="link-u text-coral">
-                  see every country
-                </Link>
-                .
-              </PiaSays>
-            </div>
           </div>
         </section>
 

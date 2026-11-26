@@ -10,8 +10,8 @@
 import type { CSSProperties, ReactNode } from 'react';
 
 const DARK = '#0D0F3A';
-const MID = '#24123D';
-const LIT = '#FFB703';
+const MID = '#1F2A44';
+const LIT = '#FFC233';
 const G = 292; // ground line
 
 type Particle = 'petals' | 'snow' | 'stars' | 'lanterns' | 'leaves' | 'confetti' | 'sand' | 'marigold';
@@ -365,7 +365,7 @@ const SCENES: Record<string, SceneDef> = {
           return (
             <g key={i}>
               <rect x={x} y={G - 16} width={2} height={18} fill={DARK} />
-              <path d={`M${x - 5} ${G - 16} q0 -12 3 -12 l3 6 l3 -6 q3 0 3 12 q-6 6 -12 0`} fill={['#FF4F7B', '#FFB703', '#FF7A1A'][i % 3]} />
+              <path d={`M${x - 5} ${G - 16} q0 -12 3 -12 l3 6 l3 -6 q3 0 3 12 q-6 6 -12 0`} fill={['#FF6B5B', '#FFC233', '#FF8A4C'][i % 3]} />
             </g>
           );
         })}
@@ -392,9 +392,9 @@ const SCENES: Record<string, SceneDef> = {
         {/* Midsummer pole */}
         {R(958, 130, 6, 162)}
         {R(920, 166, 82, 6)}
-        {P('M940 130 Q961 96 982 130 Z', '#06A77D')}
-        <circle cx={928} cy={186} r={11} fill="none" stroke="#06A77D" strokeWidth={5} />
-        <circle cx={994} cy={186} r={11} fill="none" stroke="#06A77D" strokeWidth={5} />
+        {P('M940 130 Q961 96 982 130 Z', '#12B5A6')}
+        <circle cx={928} cy={186} r={11} fill="none" stroke="#12B5A6" strokeWidth={5} />
+        <circle cx={994} cy={186} r={11} fill="none" stroke="#12B5A6" strokeWidth={5} />
         {R(0, G, 1200, 40)}
       </>
     ),
@@ -406,9 +406,9 @@ const SCENES: Record<string, SceneDef> = {
       <>
         {/* Northern lights */}
         <g className="scene-aurora" fill="none" strokeLinecap="round" opacity={0.75}>
-          <path d="M420 120 Q620 30 820 96 T1200 60" stroke="#06A77D" strokeWidth={26} />
-          <path d="M480 160 Q700 80 900 140 T1200 110" stroke="#6C4CF5" strokeWidth={16} />
-          <path d="M560 86 Q760 20 960 70 T1200 30" stroke="#06A77D" strokeWidth={10} opacity={0.7} />
+          <path d="M420 120 Q620 30 820 96 T1200 60" stroke="#12B5A6" strokeWidth={26} />
+          <path d="M480 160 Q700 80 900 140 T1200 110" stroke="#1AA3CF" strokeWidth={16} />
+          <path d="M560 86 Q760 20 960 70 T1200 30" stroke="#12B5A6" strokeWidth={10} opacity={0.7} />
         </g>
         {hills(HILLS_B, 0.6)}
         {[520, 560, 610, 650, 700, 980, 1030, 1080, 1120, 1170].map((x, i) => (
@@ -516,7 +516,7 @@ const SCENES: Record<string, SceneDef> = {
           const t = (i + 0.5) / 12;
           const x = 560 + t * 640;
           const y = 26 + 4 * t * (1 - t) * 46 * 0.98 + (22 - 26) * t;
-          return <path key={i} d={`M${x - 16} ${y} h32 v22 l-8 -6 l-8 6 l-8 -6 l-8 6 Z`} fill={['#FF4F7B', '#FFB703', '#06A77D', '#6C4CF5', '#FF7A1A'][i % 5]} opacity={0.9} />;
+          return <path key={i} d={`M${x - 16} ${y} h32 v22 l-8 -6 l-8 6 l-8 -6 l-8 6 Z`} fill={['#FF6B5B', '#FFC233', '#12B5A6', '#1AA3CF', '#FF8A4C'][i % 5]} opacity={0.9} />;
         })}
         {R(0, G, 1200, 40)}
       </>
@@ -609,14 +609,14 @@ const SCENES: Record<string, SceneDef> = {
 /* ------------------------------- particles ------------------------------- */
 
 const PCOLORS: Record<Particle, string[]> = {
-  petals: ['#FFC2D1', '#FFE5EC', '#FF8FAB'],
-  marigold: ['#FFB703', '#FF7A1A', '#FF4F7B'],
+  petals: ['#FFC9A8', '#FFEDE3', '#FF9C8A'],
+  marigold: ['#FFC233', '#FF8A4C', '#FF6B5B'],
   snow: ['#FFF4E0', '#FFFFFF'],
-  stars: ['#FFF4E0', '#FFB703', '#6C4CF5'],
-  lanterns: ['#FF4F7B', '#FF7A1A'],
-  leaves: ['#FF7A1A', '#FF4F7B', '#FFB703'],
-  confetti: ['#FF4F7B', '#FFB703', '#06A77D', '#6C4CF5', '#FF7A1A'],
-  sand: ['#FFB703', '#FFF4E0'],
+  stars: ['#FFF4E0', '#FFC233', '#1AA3CF'],
+  lanterns: ['#FF6B5B', '#FF8A4C'],
+  leaves: ['#FF8A4C', '#FF6B5B', '#FFC233'],
+  confetti: ['#FF6B5B', '#FFC233', '#12B5A6', '#1AA3CF', '#FF8A4C'],
+  sand: ['#FFC233', '#FFF4E0'],
 };
 
 function Particles({ type, count = 22 }: { type: Particle; count?: number }) {

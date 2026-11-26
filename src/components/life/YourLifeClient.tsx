@@ -28,7 +28,7 @@ function Slider({ label, unit, min, max, step = 1, value, onChange, mood }: { la
   const n = Number(value) || 0;
   const pct = Math.max(0, Math.min(100, ((n - min) / (max - min)) * 100));
   const nudge = (d: number) => onChange(String(Math.max(min, Math.min(max, n + d))));
-  const BTN = 'flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-[3px] border-ink bg-paper text-xl font-bold text-ink shadow-[0_3px_0_#24123D] transition-transform hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none';
+  const BTN = 'flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-[3px] border-ink bg-paper text-xl font-bold text-ink shadow-[0_3px_0_#1F2A44] transition-transform hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none';
   return (
     <div>
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
@@ -61,7 +61,7 @@ function Money({ label, value, onChange, placeholder }: { label: string; value: 
   return (
     <label className="group block min-w-0">
       <span className="font-mono text-xs font-bold uppercase tracking-[0.18em] text-ink/75">{label}</span>
-      <span className="mt-1.5 flex items-baseline gap-2 rounded-2xl border-[3px] border-ink bg-paper px-3 py-1 sm:mt-2 sm:px-4 sm:py-2 shadow-[0_5px_0_#24123D] transition-transform group-focus-within:-translate-y-0.5">
+      <span className="mt-1.5 flex items-baseline gap-2 rounded-2xl border-[3px] border-ink bg-paper px-3 py-1 sm:mt-2 sm:px-4 sm:py-2 shadow-[0_5px_0_#1F2A44] transition-transform group-focus-within:-translate-y-0.5">
         <span className="chunk text-2xl text-tang sm:text-3xl">₹</span>
         <input
           className="chunk h-11 min-w-0 flex-1 bg-transparent text-[1.7rem] tabular-nums text-ink placeholder:text-ink/25 focus:outline-none sm:h-12 sm:text-[2.2rem]"
@@ -312,14 +312,14 @@ export default function YourLifeClient({ countries, slug }: { countries: LifeCou
         </p>
       </div>
       <div className="space-y-4 p-3 sm:space-y-5 sm:p-6">
-        <Lane n={1} title="Your money" sub="Your monthly pay and rent. Put 0 if you pay no rent." color="linear-gradient(135deg,#FFB703,#FFC93C)" tilt={-0.4}>
+        <Lane n={1} title="Your money" sub="Your monthly pay and rent. Put 0 if you pay no rent." color="linear-gradient(135deg,#FFC233,#FFC93C)" tilt={-0.4}>
           <div className="grid gap-4 sm:grid-cols-2 sm:gap-8">
             <Money label="I earn" placeholder="60,000" value={form.salary} onChange={(v) => setForm({ ...form, salary: v })} />
             <Money label="I pay in rent" placeholder="20,000" value={form.rent} onChange={(v) => setForm({ ...form, rent: v })} />
           </div>
         </Lane>
 
-        <Lane n={2} title="Your time" sub="Drag to match your real week." color="linear-gradient(135deg,#6C4CF5,#7BDCF7)" tilt={0.4}>
+        <Lane n={2} title="Your time" sub="Drag to match your real week." color="linear-gradient(135deg,#1AA3CF,#7BDCF7)" tilt={0.4}>
           <div className="space-y-5 sm:space-y-7">
             <Slider label="Work hours a week" unit="hrs" min={10} max={90} value={form.hours} onChange={(v) => setForm({ ...form, hours: v })} mood={hoursMood} />
             <Slider label="Commute a day, both ways" unit="min" min={0} max={240} step={5} value={form.commute} onChange={(v) => setForm({ ...form, commute: v })} mood={commuteMood} />
@@ -331,7 +331,7 @@ export default function YourLifeClient({ countries, slug }: { countries: LifeCou
           </div>
         </Lane>
 
-        <fieldset className="lane rounded-[22px] border-[3px] border-ink p-4 text-ink sm:rounded-[24px] sm:p-5" style={{ background: 'linear-gradient(135deg,#B693FF,#CDB4FF)', transform: 'rotate(-0.3deg)' }}>
+        <fieldset className="lane rounded-[22px] border-[3px] border-ink p-4 text-ink sm:rounded-[24px] sm:p-5" style={{ background: 'linear-gradient(135deg,#FFC9A8,#CDB4FF)', transform: 'rotate(-0.3deg)' }}>
           <legend className="sr-only">Where to?</legend>
           <div className="flex items-center gap-3">
             <span className="chunk flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-ink text-base text-sun sm:h-10 sm:w-10 sm:text-lg">3</span>

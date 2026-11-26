@@ -85,13 +85,17 @@ export class FlightWorld {
   private m = new THREE.Matrix4();
   private rotY = 0;
   private rotX = 0;
+  private bright = false;
+  /** Country to circle with a pulsing ring in free roam (-1 = none). */
+  highlight = -1;
 
   /** Height of the visible area at the globe's depth, in world units. */
   get viewHeight() {
     return 2 * this.camera.position.z * Math.tan((this.camera.fov / 2) * DEG);
   }
 
-  constructor(canvas: HTMLCanvasElement, places: Place[], route: number[], textures: { day: string; night: string }) {
+  constructor(canvas: HTMLCanvasElement, places: Place[], route: number[], textures: { day: string; night: string }, look: 'space' | 'bright' = 'space') {
+    this.bright = look === 'bright';
     this.renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, powerPreference: 'high-performance' });
     this.renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
     this.renderer.setClearColor(0x000000, 0);
@@ -110,13 +114,25 @@ export class FlightWorld {
       return t;
     };
     this.earth = new THREE.ShaderMaterial({
-      uniforms: { uDay: { value: load(textures.day) }, uNight: { value: load(textures.night) }, uSun: { value: SUN } },
+      uniforms: { uDay: { value: load(textures.day) }, uNight: { value: load(textures.night) }, uSun: { value: SUN }, uBright: { value: this.bright ? 1 : 0 } },
       vertexShader: `varying vec2 vUv; varying vec3 vWorld; varying vec3 vView;
         void main(){ vUv = uv; vWorld = normalize(mat3(modelMatrix) * normal); vView = normalize(normalMatrix * normal);
           gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-      fragmentShader: `uniform sampler2D uDay; uniform sampler2D uNight; uniform vec3 uSun; varying vec2 vUv; varying vec3 vWorld; varying vec3 vView;
+      fragmentShader: `uniform sampler2D uDay; uniform sampler2D uNight; uniform vec3 uSun; uniform float uBright; varying vec2 vUv; varying vec3 vWorld; varying vec3 vView;
         void main(){
           float lit = dot(normalize(vWorld), uSun);
+          if (uBright > 0.5) {
+            // Daylight everywhere: richer colour, soft shading, a turquoise rim.
+            vec3 c = texture2D(uDay, vUv).rgb;
+            float l = dot(c, vec3(0.299, 0.587, 0.114));
+            c = mix(vec3(l), c, 1.45) * 1.12;
+            c = mix(c, c * vec3(1.03, 1.0, 0.94), 0.5);
+            c *= 0.86 + 0.26 * max(dot(normalize(vView), vec3(0.0, 0.0, 1.0)), 0.0);
+            float r = pow(1.0 - max(vView.z, 0.0), 2.6);
+            c += vec3(0.45, 0.88, 1.0) * r * 0.55;
+            gl_FragColor = vec4(c, 1.0);
+            return;
+          }
           float day = smoothstep(-0.18, 0.3, lit);
           vec3 dayCol = texture2D(uDay, vUv).rgb * (0.55 + 0.6 * max(lit, 0.0));
           vec3 nightCol = texture2D(uNight, vUv).rgb * vec3(1.9, 1.55, 1.05) + vec3(0.012, 0.016, 0.05);
@@ -136,7 +152,10 @@ export class FlightWorld {
         depthWrite: false,
         vertexShader: `varying vec3 vN; void main(){ vN = normalize(normalMatrix * normal); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
         // Brightest where the halo meets the Earth's edge, fading to nothing at its outer rim.
-        fragmentShader: `varying vec3 vN; void main(){ float g = pow(clamp(-vN.z / 0.5, 0.0, 1.0), 2.2);
+        fragmentShader: this.bright
+          ? `varying vec3 vN; void main(){ float g = pow(clamp(-vN.z / 0.5, 0.0, 1.0), 2.0);
+          gl_FragColor = vec4(0.42, 0.86, 1.0, g * 0.7); }`
+          : `varying vec3 vN; void main(){ float g = pow(clamp(-vN.z / 0.5, 0.0, 1.0), 2.2);
           gl_FragColor = vec4(0.3, 0.72, 1.0, g * 0.85); }`,
       }),
     );
@@ -217,6 +236,10 @@ export class FlightWorld {
     starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
     this.stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xfff4e0, size: 1.6, sizeAttenuation: false, transparent: true, opacity: 0.75 }));
     this.scene.add(this.stars);
+    if (this.bright) {
+      this.stars.visible = false;
+      (this.ring.material as THREE.MeshBasicMaterial).color.set(0xff6b5b);
+    }
   }
 
   resize(width: number, height: number, dpr: number) {
@@ -282,13 +305,14 @@ export class FlightWorld {
     this.plane.scale.setScalar(Math.max(0.0001, planeScale));
     this.plane.visible = planeScale > 0.02;
 
-    // Pulsing ring on the stop we are flying to.
+    // Pulsing ring on the stop we are flying to, or on the picked country.
     const pulse = (f.time * 0.9) % 1;
-    const next = this.stops[Math.min(last, leg + 1)];
+    const picked = this.highlight >= 0 && f.free > 0.5;
+    const next = picked ? this.places[this.highlight] : this.stops[Math.min(last, leg + 1)];
     this.ring.position.copy(next).multiplyScalar(1.014);
     this.ring.quaternion.setFromUnitVectors(this.c.set(0, 0, 1), next);
-    this.ring.scale.setScalar(1 + pulse * 1.8);
-    (this.ring.material as THREE.MeshBasicMaterial).opacity = (1 - pulse) * (1 - f.free);
+    this.ring.scale.setScalar((1 + pulse * 1.8) * (picked ? 1.6 : 1));
+    (this.ring.material as THREE.MeshBasicMaterial).opacity = (1 - pulse) * (picked ? 1 : 1 - f.free);
 
     this.lights.uniforms.uFree.value = f.free;
     this.lights.uniforms.uTime.value = f.time;

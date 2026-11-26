@@ -41,7 +41,7 @@ export function SocialButtons() {
     <div className="flex flex-wrap gap-3">
       {links.map(({ platform, href, label }, i) => {
         const ig = platform === 'instagram';
-        const cls = `social-btn bg-paper text-ink shadow-[0_5px_0_#FF7A1A] ${i ? 'rotate-[1.5deg]' : '-rotate-[1.5deg]'}`;
+        const cls = `social-btn bg-paper text-ink shadow-[0_5px_0_#FF8A4C] ${i ? 'rotate-[1.5deg]' : '-rotate-[1.5deg]'}`;
         const icon = ig ? (
           <span className="flex h-8 w-8 items-center justify-center rounded-[10px]" style={{ background: IG_GRADIENT }}>
             <InstagramLogo className="h-5 w-5" color="#fff" />

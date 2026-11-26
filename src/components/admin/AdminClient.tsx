@@ -41,7 +41,7 @@ interface Stats {
 const clock = (s: number) => (s >= 60 ? `${Math.floor(s / 60)}m ${String(s % 60).padStart(2, '0')}s` : `${s}s`);
 const CARD = 'rounded-3xl border border-cream/15 bg-white/[0.05] p-5';
 
-function BarList({ title, rows, note, color = '#FFB703' }: { title: string; rows: Named[]; note?: string; color?: string }) {
+function BarList({ title, rows, note, color = '#FFC233' }: { title: string; rows: Named[]; note?: string; color?: string }) {
   const max = Math.max(...rows.map((r) => r.count), 1);
   return (
     <div className={CARD}>
@@ -443,22 +443,22 @@ export default function AdminClient({ names }: { names: Record<string, string> }
                   <p className="text-sm text-cream/65">How the interactive parts of the site are used.</p>
                   <div className="mt-3 grid gap-4 md:grid-cols-2">
                     <BarList title="Boarding passes printed" note="Your Life, by destination." rows={stats.features.prints.map((c) => ({ ...c, name: names[c.name] || c.name }))} />
-                    <BarList title="Home page gates" note="Which 'Your turn to take off' gate people picked." rows={stats.features.gates} color="#06A77D" />
-                    <BarList title="Globe spins" note="Drags on the home page globe." rows={stats.features.spins} color="#6C4CF5" />
-                    <BarList title="Comparisons run" rows={stats.features.compares} color="#FF7A1A" />
-                    <BarList title="Play Zone games" rows={stats.features.games} color="#B693FF" />
-                    <BarList title="Story cards downloaded" rows={stats.features.shares} color="#FFB703" />
+                    <BarList title="Home page gates" note="Which 'Your turn to take off' gate people picked." rows={stats.features.gates} color="#12B5A6" />
+                    <BarList title="Globe spins" note="Drags on the home page globe." rows={stats.features.spins} color="#1AA3CF" />
+                    <BarList title="Comparisons run" rows={stats.features.compares} color="#FF8A4C" />
+                    <BarList title="Play Zone games" rows={stats.features.games} color="#FFC9A8" />
+                    <BarList title="Story cards downloaded" rows={stats.features.shares} color="#FFC233" />
                   </div>
                 </>
               )}
 
               <div className="mt-4 grid gap-4 md:grid-cols-2">
                 <BarList title="What people pressed" note="Every button and link, by its label." rows={stats.clicks} />
-                <BarList title="Events" note="Every tracked interaction." rows={stats.events} color="#6C4CF5" />
-                <BarList title="Countries opened" rows={stats.countries.map((c) => ({ ...c, name: names[c.name] || c.name }))} color="#06A77D" />
-                <BarList title="Sections seen" note="Blocks that scrolled into view." rows={stats.sections} color="#FF7A1A" />
-                <BarList title="Where visits came from" note="UTM source, else the referring site, else direct." rows={stats.sources} color="#B693FF" />
-                <BarList title="Devices" rows={stats.devices} color="#6C4CF5" />
+                <BarList title="Events" note="Every tracked interaction." rows={stats.events} color="#1AA3CF" />
+                <BarList title="Countries opened" rows={stats.countries.map((c) => ({ ...c, name: names[c.name] || c.name }))} color="#12B5A6" />
+                <BarList title="Sections seen" note="Blocks that scrolled into view." rows={stats.sections} color="#FF8A4C" />
+                <BarList title="Where visits came from" note="UTM source, else the referring site, else direct." rows={stats.sources} color="#FFC9A8" />
+                <BarList title="Devices" rows={stats.devices} color="#1AA3CF" />
               </div>
             </>
           )}

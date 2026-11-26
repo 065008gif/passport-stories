@@ -85,10 +85,10 @@ export const QUESTIONS: Record<MetricKey, string> = {
 
 /** One accent colour per topic, used on country and compare pages. */
 export const TOPIC_ACCENT: Record<TopicSlug, string> = {
-  'work-life-balance': '#FFB703',
-  'school-day': '#6C4CF5',
-  weddings: '#06A77D',
-  food: '#FF7A1A',
-  housing: '#FFB703',
-  transport: '#6C4CF5',
+  'work-life-balance': '#FFC233',
+  'school-day': '#1AA3CF',
+  weddings: '#12B5A6',
+  food: '#FF8A4C',
+  housing: '#FFC233',
+  transport: '#1AA3CF',
 };

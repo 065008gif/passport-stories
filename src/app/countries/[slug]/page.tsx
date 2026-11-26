@@ -13,8 +13,6 @@ import { GuessCard, GuessScore } from '@/components/Guess';
 import TopicNav from '@/components/TopicNav';
 import CountryScene from '@/components/Scene';
 import CommunityFacts from '@/components/CommunityFacts';
-import CultureBlock from '@/components/culture/CultureBlock';
-import { getCulture } from '@/data/culture';
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -36,7 +34,6 @@ export default async function CountryPage({ params }: Props) {
   const isHome = c.slug === HOME_SLUG;
   const index = COUNTRIES.indexOf(c);
   const next = COUNTRIES[(index + 1) % COUNTRIES.length];
-  const culture = getCulture(c.slug);
 
   return (
     <article>
@@ -99,14 +96,14 @@ export default async function CountryPage({ params }: Props) {
           const accent = TOPIC_ACCENT[t.slug];
           const [first, ...rest] = t.metrics;
           return (
-            <section key={t.slug} id={t.slug} data-topic={t.slug} data-section={`topic:${t.slug}`} className="relative scroll-mt-36 overflow-hidden border-b-2 border-dashed border-cream/15 py-16 sm:py-20" aria-labelledby={`${t.slug}-title`} style={{ ['--accent' as string]: accent, background: i % 2 ? `color-mix(in srgb, ${accent} 10%, #fff1e6)` : undefined }}>
+            <section key={t.slug} id={t.slug} data-topic={t.slug} data-section={`topic:${t.slug}`} className="relative scroll-mt-36 overflow-hidden border-b-2 border-dashed border-cream/15 py-16 sm:py-20" aria-labelledby={`${t.slug}-title`} style={{ ['--accent' as string]: accent, background: i % 2 ? `color-mix(in srgb, ${accent} 10%, #FFF8EF)` : undefined }}>
               <span aria-hidden className={`big-no pointer-events-none absolute top-6 select-none text-[9rem] sm:text-[16rem] ${i % 2 ? 'left-2' : 'right-2'}`}>
                 {String(i + 1).padStart(2, '0')}
               </span>
               <div className={`container-x relative grid gap-8 lg:grid-cols-2 lg:gap-14 ${i % 2 ? 'lg:[&>*:first-child]:order-2' : ''}`}>
                 <div data-rv={i % 2 ? 'right' : 'left'}>
                   <p className="kicker flex items-center gap-2.5 text-cream/70">
-                    <span className="flex h-11 w-11 items-center justify-center rounded-2xl text-ink shadow-[0_4px_0_#24123D]" style={{ background: accent }}>
+                    <span className="flex h-11 w-11 items-center justify-center rounded-2xl text-ink shadow-[0_4px_0_#1F2A44]" style={{ background: accent }}>
                       <TopicIcon topic={t.slug} size={22} />
                     </span>
                     Stop {i + 1} of 6 · {t.title}
@@ -139,7 +136,7 @@ export default async function CountryPage({ params }: Props) {
                     ))}
                   </ul>
                   {content.mustTry && (
-                    <p className="mt-5 -rotate-1 rounded-2xl bg-sun p-4 font-semibold text-ink shadow-[0_5px_0_#FF7A1A] transition-transform hover:rotate-0" data-rv="pop">
+                    <p className="mt-5 -rotate-1 rounded-2xl bg-sun p-4 font-semibold text-ink shadow-[0_5px_0_#FF8A4C] transition-transform hover:rotate-0" data-rv="pop">
                       <span className="kicker block">Must try</span>
                       {content.mustTry}
                     </p>
@@ -206,9 +203,6 @@ export default async function CountryPage({ params }: Props) {
             </section>
           );
         })}
-
-        {/* Culture Map: everyday life, festivals, customs, lesser-known facts */}
-        {culture && <CultureBlock culture={culture} name={c.name} />}
 
         {/* Facts from visitors */}
         <div className="container-x border-b-2 border-dashed border-cream/15 py-14">

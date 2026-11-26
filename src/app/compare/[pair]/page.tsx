@@ -64,7 +64,7 @@ export default async function ComparePage({ params }: Props) {
               <Flag slug={a.slug} size={64} className="bob" />
               {a.name}
             </span>
-            <span className="vs-pop inline-flex h-14 w-14 items-center justify-center rounded-full bg-sun text-2xl text-ink shadow-[0_5px_0_#FF7A1A] sm:h-16 sm:w-16 sm:text-3xl">vs</span>
+            <span className="vs-pop inline-flex h-14 w-14 items-center justify-center rounded-full bg-sun text-2xl text-ink shadow-[0_5px_0_#FF8A4C] sm:h-16 sm:w-16 sm:text-3xl">vs</span>
             <span className="clash-right inline-flex items-center gap-3">
               <Flag slug={b.slug} size={64} className="bob [animation-delay:-2s]" />
               {b.name}
@@ -107,14 +107,14 @@ export default async function ComparePage({ params }: Props) {
               {String(i + 1).padStart(2, '0')}
             </span>
             <h2 id={`cmp-${t.slug}`} className="chunk relative flex items-center gap-3 text-3xl sm:text-5xl" data-rv="up">
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-ink shadow-[0_4px_0_#24123D]" style={{ background: TOPIC_ACCENT[t.slug] }}>
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-ink shadow-[0_4px_0_#1F2A44]" style={{ background: TOPIC_ACCENT[t.slug] }}>
                 <TopicIcon topic={t.slug} size={24} />
               </span>
               {t.title}
             </h2>
             <div className="relative mt-6 grid gap-4 md:grid-cols-2">
               {[a, b].map((c, ci) => (
-                <div key={c.slug} data-rv={ci === 0 ? 'left' : 'right'} className="blk blk-lift p-6" style={{ ['--blk' as string]: ci === 0 ? '#6C4CF5' : '#FFB703' }}>
+                <div key={c.slug} data-rv={ci === 0 ? 'left' : 'right'} className="blk blk-lift p-6" style={{ ['--blk' as string]: ci === 0 ? '#1AA3CF' : '#FFC233' }}>
                   <p className="kicker text-cream/75">
                     <Flag slug={c.slug} size={18} className="mr-1.5 align-text-bottom ring-cream/60" />
                     {c.name}

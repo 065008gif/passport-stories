@@ -20,8 +20,8 @@
     scroll-behavior: smooth;
     --header: 4rem;
     /* Theme colours as R G B, so one block (.deck) can flip them to the bright theme. */
-    --cream: 36 18 61; /* text: deep plum */
-    --night: 255 241 230; /* page: warm cream */
+    --cream: 31 42 68; /* text: deep sea navy */
+    --night: 255 248 239; /* page: warm ivory */
     --panel: 255 255 255; /* cards: white */
   }
   /* Phones: draw everything a little smaller so pages do not feel zoomed in. */
@@ -47,13 +47,13 @@
     @apply bg-night font-sans text-cream antialiased;
   }
   :focus-visible {
-    outline: 3px solid #6c4cf5;
+    outline: 3px solid #1AA3CF;
     outline-offset: 2px;
     border-radius: 4px;
   }
   ::selection {
-    background: #ffb703;
-    color: #24123d;
+    background: #FFC233;
+    color: #1F2A44;
   }
 }
 
@@ -61,16 +61,16 @@
   /* Headings: Bricolage Grotesque. Friendly, a bit quirky, never shouting. */
   .h-display {
     @apply font-display;
-    font-weight: 400;
-    line-height: 1.05;
-    letter-spacing: -0.01em;
+    font-weight: 700;
+    line-height: 1.04;
+    letter-spacing: -0.03em;
   }
   /* Big page titles: the same face, heavier and tighter. Normal case. */
   .sign {
     @apply font-display;
-    font-weight: 400;
+    font-weight: 800;
     line-height: 1;
-    letter-spacing: -0.015em;
+    letter-spacing: -0.035em;
   }
   /* The "Passport Stories" name next to the logo keeps its original face. */
   .wordmark {
@@ -93,7 +93,7 @@
     @apply bg-sun text-ink hover:bg-[#ffc533];
   }
   .btn-ink {
-    @apply bg-ink text-white hover:bg-[#3a1f5e];
+    @apply bg-ink text-white hover:bg-[#2B3A5C];
   }
   .btn-ghost {
     @apply border-2 border-cream/35 text-cream hover:border-cream hover:bg-cream/10;
@@ -125,42 +125,42 @@
 
 .paper {
   background-color: #ffffff;
-  color: #24123d;
+  color: #1F2A44;
 }
 /* Kept as a class name from earlier versions: now simply the dark hall. */
 .stars {
-  background-color: #fff1e6;
+  background-color: #FFF8EF;
   background-image: radial-gradient(1.5px 1.5px at 24px 38px, rgba(255, 244, 224, 0.9), transparent 60%),
     radial-gradient(1px 1px at 120px 90px, rgba(255, 244, 224, 0.7), transparent 60%),
-    radial-gradient(1.5px 1.5px at 200px 20px, rgba(108, 76, 245, 0.8), transparent 60%),
+    radial-gradient(1.5px 1.5px at 200px 20px, rgba(26,163,207, 0.8), transparent 60%),
     radial-gradient(1px 1px at 70px 170px, rgba(255, 244, 224, 0.6), transparent 60%),
-    radial-gradient(1px 1px at 260px 140px, rgba(255, 183, 3, 0.7), transparent 60%),
+    radial-gradient(1px 1px at 260px 140px, rgba(255,194,51, 0.7), transparent 60%),
     radial-gradient(1px 1px at 170px 230px, rgba(255, 244, 224, 0.5), transparent 60%);
   background-size: 300px 280px;
 }
 /* Sunset sky from the first published version: indigo melting into the badge colours. */
 .sunset-sky {
-  background: linear-gradient(180deg, #fff1e6 0%, #24123d 28%, #7b2f6b 52%, #ff4f7b 70%, #ff7a1a 84%, #ffb703 100%);
+  background: linear-gradient(180deg, #FFF8EF 0%, #1F2A44 28%, #7b2f6b 52%, #FF6B5B 70%, #FF8A4C 84%, #FFC233 100%);
 }
 /* The retro sun with horizontal slits, as on the logo. */
 .retro-sun {
   border-radius: 9999px;
-  background: linear-gradient(180deg, #ffb703 0%, #ff7a1a 55%, #ff4f7b 100%);
+  background: linear-gradient(180deg, #FFC233 0%, #FF8A4C 55%, #FF6B5B 100%);
   -webkit-mask-image: linear-gradient(to bottom, #000 0 52%, transparent 52% 55%, #000 55% 64%, transparent 64% 68%, #000 68% 76%, transparent 76% 81%, #000 81% 88%, transparent 88% 94%, #000 94%);
   mask-image: linear-gradient(to bottom, #000 0 52%, transparent 52% 55%, #000 55% 64%, transparent 64% 68%, #000 68% 76%, transparent 76% 81%, #000 81% 88%, transparent 88% 94%, #000 94%);
 }
 /* Page body under every inner-page heading: warm cream with soft colour glows. */
 .deck {
-  color: #24123d;
-  background: radial-gradient(1200px 500px at 85% -10%, rgba(255, 79, 123, 0.12), transparent 60%), radial-gradient(900px 500px at 0% 100%, rgba(255, 183, 3, 0.14), transparent 60%), #fff1e6;
+  color: #1F2A44;
+  background: radial-gradient(1200px 500px at 85% -10%, rgba(255,107,91, 0.12), transparent 60%), radial-gradient(900px 500px at 0% 100%, rgba(255,194,51, 0.14), transparent 60%), #FFF8EF;
 }
 
 .stripes {
   height: 8px;
-  background: linear-gradient(180deg, #ffb703 0 33.3%, #ff7a1a 33.3% 66.6%, #ff4f7b 66.6%);
+  background: linear-gradient(180deg, #FFC233 0 33.3%, #FF8A4C 33.3% 66.6%, #FF6B5B 66.6%);
 }
 .barcode {
-  background-image: repeating-linear-gradient(90deg, #24123d 0 2px, transparent 2px 5px, #24123d 5px 6px, transparent 6px 10px, #24123d 10px 13px, transparent 13px 15px);
+  background-image: repeating-linear-gradient(90deg, #1F2A44 0 2px, transparent 2px 5px, #1F2A44 5px 6px, transparent 6px 10px, #1F2A44 10px 13px, transparent 13px 15px);
 }
 
 /* Yellow wayfinding tile with a gate code, e.g. "A3". */
@@ -182,7 +182,7 @@
   width: 24px;
   height: 24px;
   border-radius: 9999px;
-  background: var(--notch, #fff1e6);
+  background: var(--notch, #FFF8EF);
 }
 .perforation::before {
   left: -12px;
@@ -218,7 +218,7 @@
 }
 a.flap-row:hover,
 a.flap-row:focus-visible {
-  background: rgba(255, 183, 3, 0.14);
+  background: rgba(255,194,51, 0.14);
 }
 .flaps {
   display: inline-flex;
@@ -239,7 +239,7 @@ a.flap-row:focus-visible {
   background: linear-gradient(180deg, #1c2060 0 49%, #0a0c2e 49% 53%, #171a52 53% 100%);
 }
 .flaps[data-tone='sun'] .flap {
-  color: #ffb703;
+  color: #FFC233;
 }
 .flaps[data-tone='teal'] .flap {
   color: #2fd3a6;
@@ -295,12 +295,12 @@ a.flap-row:focus-visible {
 
 /* Deep space behind the globe: brand indigo with a faint glow, no animation. */
 .space {
-  background: radial-gradient(ellipse 80% 70% at 70% 45%, #24123d 0%, #fff1e6 55%, #070824 100%);
+  background: radial-gradient(ellipse 80% 70% at 70% 45%, #1F2A44 0%, #FFF8EF 55%, #070824 100%);
 }
 /* Shown instead of the 3D globe if WebGL is unavailable. */
 .planet-fallback {
-  background: radial-gradient(circle at 32% 30%, #6c4cf5 0%, #24123d 55%, #fff1e6 100%);
-  box-shadow: 0 0 80px rgba(108, 76, 245, 0.35);
+  background: radial-gradient(circle at 32% 30%, #1AA3CF 0%, #1F2A44 55%, #FFF8EF 100%);
+  box-shadow: 0 0 80px rgba(26,163,207, 0.35);
 }
 
 /* One screen per stop. On touch screens a swipe snaps to the next one. */
@@ -369,7 +369,7 @@ html:not(.snap-page) .stop-card > * {
 /* The Earth's edge at the bottom of inner-page headers. */
 .horizon {
   background: radial-gradient(circle at 50% 0%, #1d3a8a 0%, #101a4f 18%, #0a0c2e 40%);
-  box-shadow: 0 0 60px 6px rgba(108, 76, 245, 0.45), 0 0 140px 30px rgba(108, 76, 245, 0.18), inset 0 6px 24px rgba(120, 210, 255, 0.5);
+  box-shadow: 0 0 60px 6px rgba(26,163,207, 0.45), 0 0 140px 30px rgba(26,163,207, 0.18), inset 0 6px 24px rgba(120, 210, 255, 0.5);
 }
 
 /* ------------------- Flag pins on the free-spin globe --------------- */
@@ -386,7 +386,7 @@ html:not(.snap-page) .stop-card > * {
   border-radius: 9999px;
   object-fit: cover;
   border: 2.5px solid #fff4e0;
-  box-shadow: 0 0 0 0 rgba(255, 183, 3, 0.7), 0 4px 10px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 0 0 rgba(255,194,51, 0.7), 0 4px 10px rgba(0, 0, 0, 0.5);
   transition: scale 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
 .globe-pin:hover,
@@ -396,8 +396,8 @@ html:not(.snap-page) .stop-card > * {
 .globe-pin:hover img,
 .globe-pin:focus-visible img {
   scale: 1.45;
-  border-color: #ffb703;
-  box-shadow: 0 0 0 6px rgba(255, 183, 3, 0.35), 0 6px 16px rgba(0, 0, 0, 0.55);
+  border-color: #FFC233;
+  box-shadow: 0 0 0 6px rgba(255,194,51, 0.35), 0 6px 16px rgba(0, 0, 0, 0.55);
 }
 .globe-pin-label {
   position: absolute;
@@ -406,8 +406,8 @@ html:not(.snap-page) .stop-card > * {
   translate: -50% 6px;
   white-space: nowrap;
   border-radius: 9999px;
-  background: #ffb703;
-  color: #24123d;
+  background: #FFC233;
+  color: #1F2A44;
   padding: 3px 12px;
   font-family: 'Bricolage Grotesque Variable', sans-serif;
   font-size: 15px;
@@ -435,7 +435,7 @@ html:not(.snap-page) .stop-card > * {
   border-radius: 22px;
   border: 1px solid rgba(255, 244, 224, 0.18);
   background: rgba(255, 255, 255, 0.88);
-  box-shadow: 0 10px 30px -12px rgba(36, 18, 61, 0.35);
+  box-shadow: 0 10px 30px -12px rgba(31,42,68, 0.35);
   backdrop-filter: blur(10px);
   padding: 20px 18px 8px;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
@@ -447,13 +447,13 @@ html:not(.snap-page) .stop-card > * {
   top: 38px;
   height: 3px;
   border-radius: 3px;
-  background: rgba(36, 18, 61, 0.15);
+  background: rgba(31,42,68, 0.15);
 }
 .tracker-fill {
   position: absolute;
   inset: 0 auto 0 0;
   border-radius: 3px;
-  background: #ffb703;
+  background: #FFC233;
   transition: width 0.35s ease-out;
 }
 .tracker-plane {
@@ -463,8 +463,8 @@ html:not(.snap-page) .stop-card > * {
   z-index: 3;
   font-size: 20px;
   line-height: 1;
-  color: #24123d;
-  text-shadow: 0 0 10px rgba(255, 183, 3, 0.9), 0 2px 4px rgba(0, 0, 0, 0.6);
+  color: #1F2A44;
+  text-shadow: 0 0 10px rgba(255,194,51, 0.9), 0 2px 4px rgba(0, 0, 0, 0.6);
   pointer-events: none;
 }
 .tracker-stop {
@@ -493,12 +493,12 @@ html:not(.snap-page) .stop-card > * {
   border-radius: 9999px;
   object-fit: cover;
   border: 2.5px solid rgba(255, 244, 224, 0.75);
-  background: #6c4cf5;
+  background: #1AA3CF;
 }
 .tracker-stop.is-active img,
 .tracker-stop.is-active .tracker-globe {
-  border-color: #ffb703;
-  box-shadow: 0 0 0 4px rgba(255, 183, 3, 0.3);
+  border-color: #FFC233;
+  box-shadow: 0 0 0 4px rgba(255,194,51, 0.3);
 }
 .tracker-globe {
   display: flex;
@@ -507,17 +507,17 @@ html:not(.snap-page) .stop-card > * {
   font-family: 'Bricolage Grotesque Variable', sans-serif;
   font-weight: 800;
   font-size: 14px;
-  color: #e0306a;
+  color: #E8553F;
 }
 .tracker-code {
   font-family: 'JetBrains Mono Variable', monospace;
   font-size: 10.5px;
   font-weight: 700;
   letter-spacing: 0.06em;
-  color: #24123d;
+  color: #1F2A44;
 }
 .tracker-stop.is-active .tracker-code {
-  color: #e0306a;
+  color: #E8553F;
 }
 
 /* --------------------- "Flying to..." page change ------------------- */
@@ -643,8 +643,8 @@ html.js [data-rv].rv-in {
   inset: 0;
   transform-origin: left;
   transform: scaleX(var(--p, 0));
-  background: linear-gradient(90deg, #ff7a1a, #ffb703, #ffe08a);
-  box-shadow: 0 0 14px rgba(255, 183, 3, 0.9);
+  background: linear-gradient(90deg, #FF8A4C, #FFC233, #ffe08a);
+  box-shadow: 0 0 14px rgba(255,194,51, 0.9);
 }
 .scroll-plane-icon {
   position: absolute;
@@ -678,7 +678,7 @@ html.js [data-rv].rv-in {
   height: 100%;
   overflow: hidden;
   border-radius: 1.4rem;
-  background: linear-gradient(170deg, #262270 0%, #24123d 55%, #2f1f58 100%);
+  background: linear-gradient(170deg, #262270 0%, #1F2A44 55%, #2f1f58 100%);
   color: #fff4e0;
   box-shadow: 0 0 0 1px rgba(255, 244, 224, 0.12), 0 18px 32px -18px rgba(0, 0, 0, 0.7);
   transition: box-shadow 0.2s ease, translate 0.2s ease;
@@ -686,13 +686,13 @@ html.js [data-rv].rv-in {
 .ccard:hover,
 .ccard:focus-visible {
   translate: 0 -6px;
-  box-shadow: 0 0 0 2px var(--accent, #ffb703), 0 26px 40px -18px rgba(0, 0, 0, 0.85);
+  box-shadow: 0 0 0 2px var(--accent, #FFC233), 0 26px 40px -18px rgba(0, 0, 0, 0.85);
 }
 .ccard-cover {
   position: relative;
   height: 7.5rem;
   overflow: hidden;
-  background: #24123d;
+  background: #1F2A44;
 }
 .ccard-wash {
   position: absolute;
@@ -794,15 +794,15 @@ html.js [data-rv].rv-in {
 }
 .pick-flag:hover:not(:disabled),
 .pick-flag:focus-visible {
-  background: rgba(255, 183, 3, 0.16);
+  background: rgba(255,194,51, 0.16);
 }
 .pick-flag:hover:not(:disabled) img,
 .pick-flag:focus-visible img {
   transform: scale(1.22) rotate(-6deg);
 }
 .pick-flag[aria-selected='true'] {
-  background: #ffb703;
-  color: #24123d;
+  background: #FFC233;
+  color: #1F2A44;
 }
 .pick-flag:disabled {
   opacity: 0.3;
@@ -884,8 +884,8 @@ html.js [data-rv].rv-in {
 }
 .guess-btn:hover:not(:disabled) {
   transform: translateY(-4px) scale(1.04);
-  border-color: #ffb703;
-  background: rgba(255, 183, 3, 0.12);
+  border-color: #FFC233;
+  background: rgba(255,194,51, 0.12);
 }
 .guess-btn:hover:not(:disabled) img {
   animation: wiggle 0.5s ease-in-out infinite;
@@ -917,7 +917,7 @@ html.js [data-rv].rv-in {
   font-weight: 800;
   line-height: 0.8;
   color: transparent;
-  -webkit-text-stroke: 2px var(--accent, #24123d);
+  -webkit-text-stroke: 2px var(--accent, #1F2A44);
   opacity: 0.22;
 }
 
@@ -945,7 +945,7 @@ html.js [data-rv].rv-in {
   appearance: none;
   height: 16px;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--c1, #ffb703) 0, var(--c2, #ff7a1a) var(--pct, 50%), rgba(255, 244, 224, 0.14) var(--pct, 50%));
+  background: linear-gradient(90deg, var(--c1, #FFC233) 0, var(--c2, #FF8A4C) var(--pct, 50%), rgba(255, 244, 224, 0.14) var(--pct, 50%));
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.35);
   cursor: pointer;
 }
@@ -954,8 +954,8 @@ html.js [data-rv].rv-in {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #fff4e0 radial-gradient(circle, #24123d 0 4px, transparent 5px);
-  border: 4px solid var(--c1, #ffb703);
+  background: #fff4e0 radial-gradient(circle, #1F2A44 0 4px, transparent 5px);
+  border: 4px solid var(--c1, #FFC233);
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
   transition: transform 0.14s cubic-bezier(0.3, 1.7, 0.5, 1);
 }
@@ -968,7 +968,7 @@ html.js [data-rv].rv-in {
   height: 30px;
   border-radius: 50%;
   background: #fff4e0;
-  border: 4px solid var(--c1, #ffb703);
+  border: 4px solid var(--c1, #FFC233);
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
 }
 /* no browser spinner arrows on the money fields */
@@ -1161,7 +1161,7 @@ html.js [data-rv].rv-in {
   border-radius: 1.5rem;
   padding: 1.4rem;
   color: #fff4e0;
-  background: linear-gradient(165deg, #2a2674 0%, #24123d 48%, #33205a 100%);
+  background: linear-gradient(165deg, #2a2674 0%, #1F2A44 48%, #1F2A44 100%);
   border: 1px solid rgba(255, 244, 224, 0.16);
   border-top: 4px solid var(--accent);
   transition: border-color 0.15s ease, box-shadow 0.2s ease;
@@ -1200,21 +1200,21 @@ html.js [data-rv].rv-in {
 }
 .arcade-option.idle:hover {
   transform: translateY(-3px) scale(1.02);
-  border-color: #ffb703;
-  background: rgba(255, 183, 3, 0.14);
+  border-color: #FFC233;
+  background: rgba(255,194,51, 0.14);
 }
 .arcade-option.idle:active {
   transform: scale(0.96);
 }
 .arcade-option.right {
-  border-color: #06a77d;
-  background: #06a77d;
+  border-color: #12B5A6;
+  background: #12B5A6;
   color: #fff;
   transform: scale(1.03);
 }
 .arcade-option.wrong {
-  border-color: #ff7a1a;
-  background: #ff7a1a;
+  border-color: #FF8A4C;
+  background: #FF8A4C;
   color: #fff;
 }
 .arcade-option.dim {
@@ -1281,12 +1281,12 @@ html.js [data-rv].rv-in {
 /* Dark replacements for the old cream surfaces */
 .panel-dark {
   color: #fff4e0;
-  background: linear-gradient(170deg, #24123d, #14174a 60%);
+  background: linear-gradient(170deg, #1F2A44, #14174a 60%);
   border: 1px solid rgba(255, 244, 224, 0.16);
 }
 .strip-sunset {
-  background: linear-gradient(90deg, #ff7a1a, #ffb703 60%, #ffd24d);
-  color: #24123d;
+  background: linear-gradient(90deg, #FF8A4C, #FFC233 60%, #ffd24d);
+  color: #1F2A44;
 }
 
 /* ------------------------------------------------------------------
@@ -1294,10 +1294,10 @@ html.js [data-rv].rv-in {
    cards of the first published version.
 ------------------------------------------------------------------- */
 .chunk {
-  font-family: 'DM Serif Display', Georgia, serif;
+  font-family: 'Bowlby One', 'Bricolage Grotesque Variable', system-ui, sans-serif;
   font-weight: 400;
   line-height: 1.04;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.005em;
 }
 /* Calm card: deep indigo melting into plum, with a thin line of the accent
    colour along the top. Colour is a hint here, never the whole surface. */
@@ -1306,7 +1306,7 @@ html.js [data-rv].rv-in {
   overflow: hidden;
   color: #fff4e0;
   border-radius: 1.6rem;
-  background: linear-gradient(165deg, #2a2674 0%, #24123d 48%, #33205a 100%);
+  background: linear-gradient(165deg, #2a2674 0%, #1F2A44 48%, #1F2A44 100%);
   border: 1px solid rgba(255, 244, 224, 0.14);
   box-shadow: 0 18px 40px -22px rgba(0, 0, 0, 0.8);
 }
@@ -1315,23 +1315,23 @@ html.js [data-rv].rv-in {
   position: absolute;
   inset: 0 0 auto 0;
   height: 4px;
-  background: var(--blk, #ffb703);
+  background: var(--blk, #FFC233);
 }
 .blk-lift {
   transition: transform 0.2s cubic-bezier(0.3, 1.5, 0.5, 1), box-shadow 0.2s ease;
 }
 .blk-lift:hover {
   transform: translateY(-6px);
-  border-color: var(--blk, #ffb703);
+  border-color: var(--blk, #FFC233);
 }
 .guess-solid .guess-btn {
-  border-color: #24123d;
+  border-color: #1F2A44;
   background: #fff4e0;
-  color: #24123d;
+  color: #1F2A44;
 }
 .guess-solid .guess-btn:hover:not(:disabled) {
-  border-color: #24123d;
-  background: #ffb703;
+  border-color: #1F2A44;
+  background: #FFC233;
 }
 /* Filter chips on the Countries page */
 .fchip {
@@ -1359,13 +1359,13 @@ html.js [data-rv].rv-in {
   background: rgba(255, 244, 224, 0.18);
 }
 .fchip[aria-pressed='true'] {
-  background: #ffb703;
-  color: #24123d;
+  background: #FFC233;
+  color: #1F2A44;
   box-shadow: 0 5px 0 rgba(0, 0, 0, 0.4);
   transform: scale(1.04);
 }
 .fchip[aria-pressed='true'] i {
-  background: #24123d;
+  background: #1F2A44;
 }
 
 /* Arcade play card: a little glow and coloured answer letters */
@@ -1373,8 +1373,8 @@ html.js [data-rv].rv-in {
   position: relative;
   overflow: hidden;
   border-radius: 1.8rem;
-  border: 2px solid rgba(255, 183, 3, 0.55);
-  background: radial-gradient(520px 260px at 100% 0%, rgba(255, 122, 26, 0.28), transparent 70%), radial-gradient(520px 300px at 0% 100%, rgba(108, 76, 245, 0.22), transparent 70%), linear-gradient(165deg, #2a2674, #24123d 55%, #33205a);
+  border: 2px solid rgba(255,194,51, 0.55);
+  background: radial-gradient(520px 260px at 100% 0%, rgba(255, 122, 26, 0.28), transparent 70%), radial-gradient(520px 300px at 0% 100%, rgba(26,163,207, 0.22), transparent 70%), linear-gradient(165deg, #2a2674, #1F2A44 55%, #1F2A44);
   box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.9);
 }
 .arcade-letter {
@@ -1387,11 +1387,11 @@ html.js [data-rv].rv-in {
   border-radius: 0.7rem;
   font-family: 'Bowlby One', system-ui, sans-serif;
   font-size: 0.95rem;
-  color: #24123d;
-  background: var(--l, #ffb703);
+  color: #1F2A44;
+  background: var(--l, #FFC233);
 }
 .arcade-clue {
-  border-left: 5px solid var(--l, #ffb703);
+  border-left: 5px solid var(--l, #FFC233);
   background: linear-gradient(90deg, rgba(255, 244, 224, 0.14), rgba(255, 244, 224, 0.05));
 }
 
@@ -1418,10 +1418,10 @@ html.js [data-rv].rv-in {
 .gates-band {
   background:
     radial-gradient(60% 90% at 88% 105%, rgba(255, 244, 224, 0.55), transparent 60%),
-    linear-gradient(160deg, #ff9e1b 0%, #ffb703 45%, #ffd24d 100%);
-  border-top: 6px solid #24123d;
-  border-bottom: 6px solid #24123d;
-  color: #24123d;
+    linear-gradient(160deg, #ff9e1b 0%, #FFC233 45%, #ffd24d 100%);
+  border-top: 6px solid #1F2A44;
+  border-bottom: 6px solid #1F2A44;
+  color: #1F2A44;
 }
 .gates-glow {
   /* retro sun rays fanning from the bottom right */
@@ -1432,12 +1432,12 @@ html.js [data-rv].rv-in {
 }
 .gate-pass {
   background: #fff4e0;
-  border: 3px solid #24123d;
-  box-shadow: 0 8px 0 #24123d;
+  border: 3px solid #1F2A44;
+  box-shadow: 0 8px 0 #1F2A44;
 }
 .gate-tear {
-  border-top: 2px dashed rgba(36, 18, 61, 0.25);
-  background: rgba(36, 18, 61, 0.06);
+  border-top: 2px dashed rgba(31,42,68, 0.25);
+  background: rgba(31,42,68, 0.06);
 }
 .gate-tear::before,
 .gate-tear::after {
@@ -1448,59 +1448,59 @@ html.js [data-rv].rv-in {
   height: 20px;
   border-radius: 999px;
   background: #ffc52e;
-  border: 3px solid #24123d;
+  border: 3px solid #1F2A44;
 }
 .gate-tear::before { left: -10px; }
 .gate-tear::after { right: -10px; }
 
 /* ---------------- Your Life: bright check-in desk (v8) ---------------- */
 .checkin {
-  background: linear-gradient(160deg, #7f60ff 0%, #6c4cf5 50%, #5733e3 100%);
-  box-shadow: 0 14px 0 #4320c4, 0 30px 60px -20px rgba(36, 18, 61, 0.45);
+  background: linear-gradient(160deg, #13A3A8 0%, #1AA3CF 50%, #136FA8 100%);
+  box-shadow: 0 14px 0 #11688F, 0 30px 60px -20px rgba(31,42,68, 0.45);
 }
 .checkin-head {
-  background: linear-gradient(90deg, #ff7a1a 0%, #ffb703 60%, #ffd24d 100%);
-  border-bottom: 3px solid #24123d;
+  background: linear-gradient(90deg, #FF8A4C 0%, #FFC233 60%, #ffd24d 100%);
+  border-bottom: 3px solid #1F2A44;
 }
 .lane {
-  box-shadow: 0 7px 0 #4320c4;
+  box-shadow: 0 7px 0 #11688F;
 }
 .print-btn {
-  background: linear-gradient(180deg, #ffd24d 0%, #ffb703 55%, #ff7a1a 100%);
-  box-shadow: 0 6px 0 #24123d, 0 0 0 4px rgba(255, 183, 3, 0.25), 0 16px 30px -8px rgba(255, 122, 26, 0.7);
+  background: linear-gradient(180deg, #ffd24d 0%, #FFC233 55%, #FF8A4C 100%);
+  box-shadow: 0 6px 0 #1F2A44, 0 0 0 4px rgba(255,194,51, 0.25), 0 16px 30px -8px rgba(255, 122, 26, 0.7);
 }
 .life-range-ink {
-  background: linear-gradient(90deg, #24123d 0, #24123d var(--pct, 50%), rgba(36, 18, 61, 0.18) var(--pct, 50%)) !important;
+  background: linear-gradient(90deg, #1F2A44 0, #1F2A44 var(--pct, 50%), rgba(31,42,68, 0.18) var(--pct, 50%)) !important;
   box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.2) !important;
 }
 .life-range-ink::-webkit-slider-thumb {
-  border-color: #24123d !important;
-  background: #fff4e0 radial-gradient(circle, #ff7a1a 0 6px, transparent 7px) !important;
+  border-color: #1F2A44 !important;
+  background: #fff4e0 radial-gradient(circle, #FF8A4C 0 6px, transparent 7px) !important;
 }
 .life-range-ink::-moz-range-thumb {
-  border-color: #24123d !important;
+  border-color: #1F2A44 !important;
 }
 
 /* ---------------- Your Life: the bright boarding pass (v8) ---------------- */
 .bright-pass {
-  background: #24123d;
-  box-shadow: 0 12px 0 #4320c4, 0 30px 60px -18px rgba(36, 18, 61, 0.45);
+  background: #1F2A44;
+  box-shadow: 0 12px 0 #11688F, 0 30px 60px -18px rgba(31,42,68, 0.45);
 }
 .bright-pass-route {
   background:
     radial-gradient(40% 120% at 50% 120%, rgba(255, 244, 224, 0.6), transparent 70%),
-    linear-gradient(100deg, #ff7a1a 0%, #ffb703 50%, #ffd24d 100%);
+    linear-gradient(100deg, #FF8A4C 0%, #FFC233 50%, #ffd24d 100%);
 }
 .bright-pass-stub {
-  background: linear-gradient(100deg, #6c4cf5 0%, #7bdcf7 100%);
+  background: linear-gradient(100deg, #1AA3CF 0%, #7bdcf7 100%);
 }
 .printer-body {
-  background: linear-gradient(180deg, #ffd24d 0%, #ffb703 50%, #ff7a1a 100%);
-  box-shadow: 0 8px 0 #24123d, 0 24px 40px -14px rgba(0, 0, 0, 0.7);
+  background: linear-gradient(180deg, #ffd24d 0%, #FFC233 50%, #FF8A4C 100%);
+  box-shadow: 0 8px 0 #1F2A44, 0 24px 40px -14px rgba(0, 0, 0, 0.7);
 }
 .print-overlay {
   background:
-    repeating-conic-gradient(from 0deg at 50% 38%, rgba(255, 183, 3, 0.16) 0deg 8deg, transparent 8deg 20deg),
+    repeating-conic-gradient(from 0deg at 50% 38%, rgba(255,194,51, 0.16) 0deg 8deg, transparent 8deg 20deg),
     radial-gradient(60% 50% at 50% 38%, rgba(255, 122, 26, 0.45), transparent 70%),
     rgba(76, 46, 200, 0.92);
 }
@@ -1566,35 +1566,34 @@ html.js [data-rv].rv-in {
 }
 
 /* ==================================================================
-   Fiesta light theme (v9): bright cream pages, plum text, and vivid
-   violet "islands" wherever the old design had a dark panel.
+   Sunlit theme (v10): warm ivory pages, deep sea navy text, and
+   coral / turquoise / sunshine accents. The former dark panels
+   become deep turquoise "islands" so white text stays readable.
    ================================================================== */
 .stars {
-  background-color: #fff1e6;
-  background-image: radial-gradient(3px 3px at 24px 38px, rgba(255, 79, 123, 0.35), transparent 60%),
-    radial-gradient(2.5px 2.5px at 120px 90px, rgba(108, 76, 245, 0.3), transparent 60%),
-    radial-gradient(3px 3px at 200px 20px, rgba(255, 183, 3, 0.5), transparent 60%),
-    radial-gradient(2px 2px at 70px 170px, rgba(255, 122, 26, 0.35), transparent 60%),
-    radial-gradient(2.5px 2.5px at 260px 140px, rgba(6, 167, 125, 0.3), transparent 60%),
-    radial-gradient(2px 2px at 170px 230px, rgba(255, 79, 123, 0.3), transparent 60%);
+  background-color: #fff8ef;
+  background-image: radial-gradient(3px 3px at 24px 38px, rgba(255, 107, 91, 0.3), transparent 60%),
+    radial-gradient(2.5px 2.5px at 120px 90px, rgba(26, 163, 207, 0.3), transparent 60%),
+    radial-gradient(3px 3px at 200px 20px, rgba(255, 194, 51, 0.5), transparent 60%),
+    radial-gradient(2px 2px at 70px 170px, rgba(255, 138, 76, 0.35), transparent 60%),
+    radial-gradient(2.5px 2.5px at 260px 140px, rgba(18, 181, 166, 0.3), transparent 60%);
   background-size: 300px 280px;
 }
 .space {
-  background: radial-gradient(ellipse 60% 70% at 70% 45%, #ffd9e6 0%, #ffe9dc 45%, #fff1e6 75%),
-    radial-gradient(ellipse 40% 40% at 10% 90%, rgba(255, 183, 3, 0.25), transparent 70%), #fff1e6;
+  background: radial-gradient(ellipse 60% 70% at 70% 45%, #e3f6f8 0%, #fff3e6 50%, #fff8ef 78%),
+    radial-gradient(ellipse 40% 40% at 10% 90%, rgba(255, 194, 51, 0.22), transparent 70%), #fff8ef;
 }
 .sunset-sky {
-  background: linear-gradient(170deg, #6c4cf5 0%, #b04ad8 35%, #ff4f7b 65%, #ff7a1a 85%, #ffb703 100%);
+  background: linear-gradient(170deg, #1aa3cf 0%, #12b5a6 35%, #ffc233 70%, #ff8a4c 88%, #ff6b5b 100%);
 }
 
-/* Former dark panels become vivid violet. */
 .bg-ink,
 .panel-dark,
 .ccard,
 .arcade-card,
 .arcade-mode,
 .board {
-  background: linear-gradient(160deg, #7f60ff 0%, #6c4cf5 50%, #5733e3 100%) !important;
+  background: linear-gradient(160deg, #0f8c93 0%, #11798f 55%, #136fa8 100%) !important;
 }
 .island,
 .bg-ink,
@@ -1607,83 +1606,366 @@ html.js [data-rv].rv-in {
 .arcade-mode,
 .board,
 .sunset-sky {
-  --cream: 255 250 244;
+  --cream: 255 251 245;
   color: rgb(var(--cream));
 }
 
-/* Yellow text needs a dark surface. On the light page "sun" text turns magenta. */
+/* Yellow text needs a deep surface. On the ivory page "sun" text turns deep coral. */
 .text-sun {
-  color: #e0306a;
+  color: #e8553f;
 }
 :is(.island, .bg-ink, .bg-sky, .bg-coral, .bg-teal, .panel-dark, .ccard, .arcade-card, .arcade-mode, .board, .sunset-sky) .text-sun,
 :is(.island, .bg-ink, .bg-sky, .bg-coral, .bg-teal, .panel-dark, .ccard, .arcade-card, .arcade-mode, .board, .sunset-sky).text-sun {
-  color: #ffd23f;
+  color: #ffd54f;
 }
 footer.bg-ink {
-  background: linear-gradient(160deg, #6c4cf5 0%, #5733e3 100%) !important;
+  background: linear-gradient(160deg, #0f8c93 0%, #136fa8 100%) !important;
 }
 
-/* Pia waves hello. */
-.pia-wave {
-  transform-origin: 100px 232px;
-  animation: pia-wave 2.4s ease-in-out infinite;
+/* ==================================================================
+   HOME v10 · Hero: one connected picture of the world
+   ================================================================== */
+.hero-world {
+  --px: 0;
+  --py: 0;
+  --sp: 0;
 }
-@keyframes pia-wave {
-  0%, 60%, 100% { transform: rotate(0deg); }
-  70% { transform: rotate(-14deg); }
-  80% { transform: rotate(8deg); }
-  90% { transform: rotate(-10deg); }
+.hero-sky {
+  background: linear-gradient(180deg, #fff8ef 0%, #fff1e3 42%, #fdeee0 62%, #e3f5f6 100%);
 }
-@media (prefers-reduced-motion: reduce) {
-  .pia-wave { animation: none; }
+.hero-glow {
+  position: absolute;
+  z-index: -15;
+  border-radius: 9999px;
+  filter: blur(70px);
+  opacity: 0.55;
+  animation: glow-drift 18s ease-in-out infinite alternate;
 }
-@media (min-width: 768px) and (max-height: 820px) {
-  .hero-pia { display: none !important; }
+.hero-glow-a { width: 38vw; height: 38vw; left: -8vw; top: -10vw; background: #ffc9a8; }
+.hero-glow-b { width: 30vw; height: 30vw; right: -6vw; top: 4vw; background: #ffe08a; animation-delay: -6s; }
+.hero-glow-c { width: 46vw; height: 30vw; left: 28vw; bottom: -12vw; background: #a8e6ec; animation-delay: -11s; }
+@keyframes glow-drift {
+  to { translate: 3vw 2vw; scale: 1.08; }
 }
-
-/* ================= v9 cinematic home ================= */
-html.has-motion { scroll-behavior: auto; }
-html.lenis, html.lenis body { height: auto; }
-.lenis.lenis-smooth { scroll-behavior: auto !important; }
-.lenis.lenis-stopped { overflow: hidden; }
-.mw-mask { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: 0.08em; margin-bottom: -0.08em; }
-.mw { display: inline-block; will-change: transform; }
-
-.kenburns { animation: kenburns 22s ease-in-out infinite alternate; transform-origin: 60% 40%; }
-@keyframes kenburns { from { transform: scale(1.04) translate(0, 0); } to { transform: scale(1.14) translate(-2%, -1%); } }
-
-.float-a { animation: float-a 6s ease-in-out infinite; }
-.float-b { animation: float-a 7.5s ease-in-out -2s infinite reverse; }
-@keyframes float-a { 0%, 100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-14px) rotate(4deg); } }
-
-.hero-plane { animation: hero-plane 26s linear infinite; }
-@keyframes hero-plane { from { transform: translateX(0) translateY(0); } to { transform: translateX(-140vw) translateY(40px); } }
-
-.clouds-band {
-  background:
-    radial-gradient(60% 50% at 15% 85%, #ffffff 0%, transparent 60%),
-    radial-gradient(50% 40% at 85% 20%, #ffffff 0%, transparent 60%),
-    linear-gradient(180deg, #f8ead9 0%, #fff4e8 50%, #f6e2cc 100%);
+.hero-stage {
+  perspective: 1400px;
 }
-
-.globe-pin {
-  width: 34px; height: 34px; border-radius: 999px; padding: 2px; background: #fff;
-  box-shadow: 0 4px 12px rgba(36, 18, 61, 0.35);
-  transition: box-shadow 0.2s ease;
+.hero-scene {
+  transform-style: preserve-3d;
+  transform: rotateX(calc(var(--py) * -4deg)) rotateY(calc(var(--px) * 5deg));
 }
-.globe-pin img { width: 100%; height: 100%; border-radius: 999px; object-fit: cover; }
-.globe-pin:hover, .globe-pin.is-picked { box-shadow: 0 0 0 4px #e8466f, 0 6px 16px rgba(36, 18, 61, 0.4); }
-
-.pia-wave-flat { transform-origin: 64px 128px; animation: pia-wave 2.6s ease-in-out infinite; }
-
-.explore-bar select:focus-visible { outline: 2px solid #ffc94d; outline-offset: 4px; border-radius: 6px; }
-
-@media (prefers-reduced-motion: reduce) {
-  .kenburns, .float-a, .float-b, .hero-plane, .pia-wave-flat { animation: none; }
+.hero-card {
+  left: var(--mx);
+  top: var(--my);
+  width: var(--mw);
+  transform:
+    translate3d(
+      calc(var(--px) * var(--d) * -26px + var(--sp) * var(--dx) * var(--d) * 280px),
+      calc(var(--py) * var(--d) * -20px + var(--sp) * var(--dy) * var(--d) * 220px),
+      calc(var(--d) * 70px)
+    )
+    rotate(var(--r));
+  opacity: calc(1 - var(--sp) * 1.1);
+  will-change: transform;
 }
-
-/* Without the motion script the country journey simply scrolls sideways. */
 @media (min-width: 1024px) {
-  html:not(.has-motion) .journey [data-journey-track] { width: 100% !important; overflow-x: auto; scroll-snap-type: x mandatory; }
-  html:not(.has-motion) .journey .journey-panel { scroll-snap-align: center; }
+  .hero-card { left: var(--x); top: var(--y); width: var(--w); }
+}
+.hero-card-in {
+  animation: card-in 1.1s cubic-bezier(0.22, 1, 0.36, 1) both, card-float 7s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i) * 90ms + 150ms), calc(var(--i) * -0.9s);
+}
+@keyframes card-in {
+  from { opacity: 0; scale: 0.82; }
+  to { opacity: 1; scale: 1; }
+}
+@keyframes card-float {
+  from { translate: 0 -7px; }
+  to { translate: 0 8px; }
+}
+.hero-photo {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.15rem;
+  border: 5px solid #fff;
+  background: #ffe3d3;
+  box-shadow: 0 28px 50px -22px rgba(31, 42, 68, 0.42), 0 6px 14px -6px rgba(31, 42, 68, 0.18);
+}
+.hero-photo > img {
+  animation: kenburns 22s ease-in-out infinite alternate;
+}
+@keyframes kenburns {
+  from { scale: 1.02; }
+  to { scale: 1.14; translate: -2% -1%; }
+}
+.hero-tag {
+  margin-top: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.88);
+  padding: 0.25rem 0.65rem 0.25rem 0.3rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #1f2a44;
+  box-shadow: 0 6px 16px -8px rgba(31, 42, 68, 0.35);
+  white-space: nowrap;
+}
+.hero-tag img { width: 16px; height: 16px; border-radius: 9999px; object-fit: cover; }
+.hero-live {
+  position: absolute;
+  left: 0.5rem;
+  top: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 0.15rem 0.5rem;
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #1f2a44;
+}
+.hero-live i { width: 6px; height: 6px; border-radius: 9999px; background: #ff6b5b; animation: blink 1.4s steps(2) infinite; }
+.hero-plane { filter: drop-shadow(0 4px 6px rgba(31, 42, 68, 0.25)); will-change: transform; }
+.hero-copy {
+  opacity: calc(1 - var(--sp) * 1.5);
+  transform: translateY(calc(var(--sp) * -70px));
+}
+.hero-title { animation: rise-in 1s cubic-bezier(0.22, 1, 0.36, 1) both 0.1s; text-wrap: balance; }
+.hero-tagline { animation: rise-in 1s cubic-bezier(0.22, 1, 0.36, 1) both 0.3s; text-wrap: balance; }
+.hero-cue { animation: rise-in 1s cubic-bezier(0.22, 1, 0.36, 1) both 0.6s; }
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(24px); }
+}
+.hero-cue-dot {
+  position: relative;
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  background: #ff6b5b;
+}
+.hero-cue-dot::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 9999px;
+  border: 2px solid #ff6b5b;
+  animation: ping-ring 1.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+@keyframes ping-ring {
+  from { opacity: 0.9; scale: 0.5; }
+  to { opacity: 0; scale: 1.6; }
+}
+/* On phones the words need a calm backdrop over the photos below them */
+@media (max-width: 1023px) {
+  .hero-copy::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 40% 0;
+    z-index: -1;
+  }
+}
+.hero-world.is-still .hero-card-in,
+.hero-world.is-still .hero-photo > img,
+.hero-world.is-still .hero-glow { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .hero-card-in, .hero-photo > img, .hero-glow, .hero-title, .hero-tagline, .hero-cue, .hero-cue-dot::after { animation: none !important; }
+}
+
+/* ==================================================================
+   HOME v10 · Explore: globe, info card, slider, flat map
+   ================================================================== */
+.explore-section {
+  background: linear-gradient(180deg, #e3f5f6 0%, #fff8ef 38%, #fff8ef 100%);
+}
+.explore-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  border-radius: 9999px;
+  background: #fff;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #0f8c93;
+  box-shadow: 0 6px 18px -10px rgba(15, 140, 147, 0.5);
+}
+.explore-kicker-dot { width: 8px; height: 8px; border-radius: 9999px; background: #12b5a6; }
+.view-toggle {
+  display: inline-flex;
+  gap: 0.25rem;
+  border-radius: 9999px;
+  background: #fff;
+  padding: 0.3rem;
+  box-shadow: 0 10px 26px -14px rgba(31, 42, 68, 0.4);
+}
+.view-toggle button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border-radius: 9999px;
+  padding: 0.55rem 1.1rem;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: rgba(31, 42, 68, 0.65);
+  transition: background-color 0.3s, color 0.3s;
+}
+.view-toggle button[aria-pressed='true'] { background: linear-gradient(135deg, #ff8a4c, #ff6b5b); color: #fff; }
+.explore-stage {
+  background:
+    radial-gradient(ellipse 55% 60% at 50% 50%, #ffffff 0%, rgba(255, 255, 255, 0) 70%),
+    radial-gradient(ellipse 50% 50% at 15% 85%, rgba(255, 194, 51, 0.25), transparent 70%),
+    radial-gradient(ellipse 45% 50% at 88% 12%, rgba(255, 107, 91, 0.16), transparent 70%),
+    linear-gradient(160deg, #d9f3f5 0%, #eaf8f9 45%, #fff1e3 100%);
+  box-shadow: inset 0 0 0 1px rgba(31, 42, 68, 0.06), 0 40px 80px -50px rgba(15, 140, 147, 0.55);
+}
+.explore-placeholder { background: radial-gradient(circle at 35% 30%, #bdeef2, #7fcfe0); }
+.explore-pin {
+  display: flex;
+  align-items: center;
+  border-radius: 9999px;
+  will-change: transform;
+  transition: filter 0.2s;
+  z-index: 5;
+}
+.explore-pin img {
+  width: 26px;
+  height: 26px;
+  border-radius: 9999px;
+  object-fit: cover;
+  border: 2.5px solid #fff;
+  box-shadow: 0 4px 10px -2px rgba(31, 42, 68, 0.45);
+  transition: scale 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.explore-pin:hover img,
+.explore-pin:focus-visible img { scale: 1.3; }
+.explore-pin.is-picked img { scale: 1.35; border-color: #ff6b5b; box-shadow: 0 0 0 4px rgba(255, 107, 91, 0.3), 0 6px 14px -2px rgba(31, 42, 68, 0.5); }
+.explore-pin-label {
+  position: absolute;
+  left: calc(100% + 6px);
+  top: 50%;
+  translate: -4px -50%;
+  white-space: nowrap;
+  border-radius: 9999px;
+  background: #fff;
+  padding: 0.15rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #1f2a44;
+  box-shadow: 0 4px 10px -4px rgba(31, 42, 68, 0.4);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s, translate 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.explore-pin.show-label .explore-pin-label,
+.explore-pin:hover .explore-pin-label,
+.explore-pin:focus-visible .explore-pin-label { opacity: 1; translate: 0 -50%; }
+.explore-pin.flat { transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
+.explore-card { width: 21rem; transition: opacity 0.25s; will-change: transform; }
+.explore-card .info-card { animation: card-pop 0.35s cubic-bezier(0.22, 1, 0.36, 1); }
+@keyframes card-pop {
+  from { opacity: 0; scale: 0.94; }
+}
+.info-card {
+  border-radius: 1.4rem;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 1.1rem;
+  color: #1f2a44;
+  box-shadow: 0 30px 60px -28px rgba(31, 42, 68, 0.5), 0 0 0 1px rgba(31, 42, 68, 0.05);
+  backdrop-filter: blur(10px);
+}
+.info-card.is-wide { max-width: 36rem; }
+.explore-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #ff8a4c, #ff6b5b);
+  padding: 0.6rem 1.1rem;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #fff;
+  box-shadow: 0 10px 22px -10px rgba(255, 107, 91, 0.9);
+  transition: translate 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.explore-more:hover { translate: 0 -2px; }
+.zoom-btn {
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 9999px;
+  background: #fff;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #1f2a44;
+  box-shadow: 0 8px 18px -8px rgba(31, 42, 68, 0.45);
+  transition: scale 0.2s, opacity 0.2s;
+}
+.zoom-btn:hover { scale: 1.08; }
+.zoom-btn:disabled { opacity: 0.4; scale: 1; }
+.flat-img { filter: saturate(1.45) brightness(1.08); }
+.flat-frame { background: #9fd8e6; }
+.slider-arrow {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 9999px;
+  background: #fff;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #1f2a44;
+  box-shadow: 0 8px 18px -10px rgba(31, 42, 68, 0.5);
+  transition: background-color 0.2s, color 0.2s;
+}
+.slider-arrow:hover { background: #1f2a44; color: #fff; }
+.slider-track {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding: 0.75rem 0.25rem 1.5rem;
+  margin: 0 -0.25rem;
+  cursor: grab;
+}
+.slider-track::-webkit-scrollbar { display: none; }
+.slider-track.is-dragging { scroll-snap-type: none; cursor: grabbing; }
+.slider-track.is-dragging .slider-card { pointer-events: none; }
+.slider-item { flex: 0 0 auto; scroll-snap-align: start; }
+.slider-card {
+  display: block;
+  width: 15rem;
+  overflow: hidden;
+  border-radius: 1.4rem;
+  background: #fff;
+  text-align: left;
+  box-shadow: 0 18px 36px -24px rgba(31, 42, 68, 0.55);
+  transition: translate 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s;
+}
+.slider-card:hover { translate: 0 -5px; }
+.slider-card.is-picked { box-shadow: 0 0 0 3px #ff6b5b, 0 22px 40px -22px rgba(255, 107, 91, 0.8); translate: 0 -5px; }
+.slider-photo { position: relative; display: block; aspect-ratio: 4 / 3; overflow: hidden; background: #ffe3d3; }
+.slider-photo img { width: 100%; height: 100%; object-fit: cover; transition: scale 0.6s cubic-bezier(0.22, 1, 0.36, 1); }
+.slider-card:hover .slider-photo img { scale: 1.07; }
+.slider-spot {
+  position: absolute;
+  left: 0.6rem;
+  bottom: 0.6rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 0.15rem 0.55rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #1f2a44;
+}
+@media (max-width: 639px) {
+  .slider-card { width: 12.5rem; }
 }
