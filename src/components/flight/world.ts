@@ -77,6 +77,13 @@ export class FlightWorld {
   private places: THREE.Vector3[];
   private width = 1;
   private height = 1;
+  // Helper state for the home page explorer (unused by /fly).
+  private dpr = 1;
+  private capped = false;
+  private slowFor = 0;
+  private frameMs = 16.7;
+  /** Country to circle with the pulsing ring while free roaming (-1 = none). Home page helper. */
+  highlight = -1;
   // scratch objects, so the render loop allocates nothing
   private a = new THREE.Vector3();
   private b = new THREE.Vector3();
@@ -85,21 +92,13 @@ export class FlightWorld {
   private m = new THREE.Matrix4();
   private rotY = 0;
   private rotX = 0;
-  private bright = false;
-  private dpr = 1;
-  private capped = false;
-  private slowFor = 0;
-  private frameMs = 16.7;
-  /** Country to circle with a pulsing ring in free roam (-1 = none). */
-  highlight = -1;
 
   /** Height of the visible area at the globe's depth, in world units. */
   get viewHeight() {
     return 2 * this.camera.position.z * Math.tan((this.camera.fov / 2) * DEG);
   }
 
-  constructor(canvas: HTMLCanvasElement, places: Place[], route: number[], textures: { day: string; night: string }, look: 'space' | 'bright' = 'space') {
-    this.bright = look === 'bright';
+  constructor(canvas: HTMLCanvasElement, places: Place[], route: number[], textures: { day: string; night: string }) {
     this.renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, powerPreference: 'high-performance' });
     this.renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
     this.renderer.setClearColor(0x000000, 0);
@@ -111,46 +110,20 @@ export class FlightWorld {
 
     /* ------------------------------ Earth ------------------------------ */
     const loader = new THREE.TextureLoader();
-    const load = (url: string, onLoad?: () => void) => {
-      const t = loader.load(url, onLoad);
+    const load = (url: string) => {
+      const t = loader.load(url);
       t.colorSpace = THREE.NoColorSpace;
       t.anisotropy = 4;
       return t;
     };
     this.earth = new THREE.ShaderMaterial({
-      uniforms: {
-        uDay: { value: load(textures.day, () => (this.earth.uniforms.uHasDay.value = 1)) },
-        // The bright look never shows the night side, so it skips that download.
-        uNight: { value: this.bright ? new THREE.Texture() : load(textures.night) },
-        uSun: { value: SUN },
-        uBright: { value: this.bright ? 1 : 0 },
-        uHasDay: { value: 0 },
-      },
+      uniforms: { uDay: { value: load(textures.day) }, uNight: { value: load(textures.night) }, uSun: { value: SUN } },
       vertexShader: `varying vec2 vUv; varying vec3 vWorld; varying vec3 vView;
         void main(){ vUv = uv; vWorld = normalize(mat3(modelMatrix) * normal); vView = normalize(normalMatrix * normal);
           gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-      fragmentShader: `uniform sampler2D uDay; uniform sampler2D uNight; uniform vec3 uSun; uniform float uBright; uniform float uHasDay; varying vec2 vUv; varying vec3 vWorld; varying vec3 vView;
+      fragmentShader: `uniform sampler2D uDay; uniform sampler2D uNight; uniform vec3 uSun; varying vec2 vUv; varying vec3 vWorld; varying vec3 vView;
         void main(){
           float lit = dot(normalize(vWorld), uSun);
-          if (uBright > 0.5) {
-            // Daylight everywhere: richer colour, turquoise seas, a soft sun
-            // from the upper left and a crisp turquoise to sky rim.
-            // Until the photo arrives, draw a plain turquoise sea (never a dark ball).
-            vec3 c = uHasDay > 0.5 ? texture2D(uDay, vUv).rgb : vec3(0.12, 0.42, 0.62);
-            float l = dot(c, vec3(0.299, 0.587, 0.114));
-            c = mix(vec3(l), c, 1.45) * 1.12;
-            float sea = smoothstep(0.02, 0.12, c.b - max(c.r, c.g * 0.92));
-            c = mix(c, mix(c, vec3(0.1, 0.74, 0.8), 0.55) * 1.2 + 0.06, sea);
-            c = mix(c, c * vec3(1.04, 1.0, 0.93), 0.5 * (1.0 - sea));
-            vec3 n = normalize(vView);
-            c *= 0.84 + 0.28 * max(n.z, 0.0);
-            float sun = pow(max(dot(n, normalize(vec3(-0.45, 0.5, 0.74))), 0.0), 18.0);
-            c += vec3(1.0, 0.93, 0.78) * sun * (0.22 + 0.25 * sea);
-            float r = pow(1.0 - max(n.z, 0.0), 2.4);
-            c += mix(vec3(0.07, 0.71, 0.65), vec3(0.45, 0.85, 1.0), clamp(n.y * 0.5 + 0.5, 0.0, 1.0)) * r * 0.6;
-            gl_FragColor = vec4(c, 1.0);
-            return;
-          }
           float day = smoothstep(-0.18, 0.3, lit);
           vec3 dayCol = texture2D(uDay, vUv).rgb * (0.55 + 0.6 * max(lit, 0.0));
           vec3 nightCol = texture2D(uNight, vUv).rgb * vec3(1.9, 1.55, 1.05) + vec3(0.012, 0.016, 0.05);
@@ -170,11 +143,7 @@ export class FlightWorld {
         depthWrite: false,
         vertexShader: `varying vec3 vN; void main(){ vN = normalize(normalMatrix * normal); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
         // Brightest where the halo meets the Earth's edge, fading to nothing at its outer rim.
-        fragmentShader: this.bright
-          ? `varying vec3 vN; void main(){ float g = pow(clamp(-vN.z / 0.5, 0.0, 1.0), 2.0);
-          vec3 col = mix(vec3(0.07, 0.71, 0.65), vec3(0.42, 0.84, 1.0), clamp(vN.y * 0.5 + 0.5, 0.0, 1.0));
-          gl_FragColor = vec4(col, g * 0.75); }`
-          : `varying vec3 vN; void main(){ float g = pow(clamp(-vN.z / 0.5, 0.0, 1.0), 2.2);
+        fragmentShader: `varying vec3 vN; void main(){ float g = pow(clamp(-vN.z / 0.5, 0.0, 1.0), 2.2);
           gl_FragColor = vec4(0.3, 0.72, 1.0, g * 0.85); }`,
       }),
     );
@@ -255,16 +224,12 @@ export class FlightWorld {
     starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
     this.stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xfff4e0, size: 1.6, sizeAttenuation: false, transparent: true, opacity: 0.75 }));
     this.scene.add(this.stars);
-    if (this.bright) {
-      this.stars.visible = false;
-      (this.ring.material as THREE.MeshBasicMaterial).color.set(0xff6b5b);
-    }
   }
 
   resize(width: number, height: number, dpr: number) {
     this.width = width;
     this.height = height;
-    // Once the frame guard has lowered the ratio, keep it lowered.
+    // Once adapt() has lowered the pixel ratio, keep it lowered.
     if (this.capped) dpr = Math.min(dpr, this.dpr);
     this.dpr = dpr;
     this.renderer.setPixelRatio(dpr);
@@ -327,14 +292,16 @@ export class FlightWorld {
     this.plane.scale.setScalar(Math.max(0.0001, planeScale));
     this.plane.visible = planeScale > 0.02;
 
-    // Pulsing ring on the stop we are flying to, or on the picked country.
+    // Pulsing ring on the stop we are flying to.
     const pulse = (f.time * 0.9) % 1;
     const picked = this.highlight >= 0 && f.free > 0.5;
     const next = picked ? this.places[this.highlight] : this.stops[Math.min(last, leg + 1)];
     this.ring.position.copy(next).multiplyScalar(1.014);
     this.ring.quaternion.setFromUnitVectors(this.c.set(0, 0, 1), next);
-    this.ring.scale.setScalar((1 + pulse * 1.8) * (picked ? 1.6 : 1));
+    this.ring.scale.setScalar(1 + pulse * 1.8);
     (this.ring.material as THREE.MeshBasicMaterial).opacity = (1 - pulse) * (picked ? 1 : 1 - f.free);
+    if (picked) this.ring.scale.multiplyScalar(1.6);
+    (this.ring.material as THREE.MeshBasicMaterial).color.set(picked ? 0xff6b5b : 0xfff4e0);
 
     this.lights.uniforms.uFree.value = f.free;
     this.lights.uniforms.uTime.value = f.time;
@@ -342,31 +309,30 @@ export class FlightWorld {
     this.renderer.render(this.scene, this.camera);
   }
 
+  /** Screen position of a country (pixels), and whether it is on the near side. */
   /**
-   * Adaptive quality: call once a frame with the frame time. If frames stay
-   * slow for about a second, draw at a lower pixel ratio (never below 1) so
-   * dragging stays fluid on older phones. Returns true when it changed.
+   * Home page helper: call once a frame with the frame time. If frames stay
+   * slow for about a second, draw at a lower pixel ratio (never below 1).
+   * Returns true when it changed.
    */
   adapt(frameMs: number) {
-    if (frameMs > 200) return false; // a tab switch, not a slow device
+    if (frameMs > 200) return false;
     this.frameMs += (frameMs - this.frameMs) * 0.08;
     if (this.frameMs > 24 && this.dpr > 1) {
       this.slowFor += frameMs;
       if (this.slowFor > 1000) {
         this.dpr = Math.max(1, this.dpr - 0.25);
-        this.renderer.setPixelRatio(this.dpr);
-        this.renderer.setSize(this.width, this.height, false);
-        this.lights.uniforms.uSize.value = Math.max(14, Math.min(this.width, this.height) * 0.03) * this.dpr;
         this.capped = true;
         this.slowFor = 0;
         this.frameMs = 16.7;
+        this.renderer.setPixelRatio(this.dpr);
+        this.renderer.setSize(this.width, this.height, false);
         return true;
       }
-    } else if (this.slowFor > 0) this.slowFor = 0;
+    } else this.slowFor = 0;
     return false;
   }
 
-  /** Screen position of a country (pixels), whether it is on the near side, and how squarely it faces us (depth, 1 = centre). */
   project(index: number, out: { x: number; y: number; visible: boolean; depth?: number }) {
     const world = this.a.copy(this.places[index]).applyMatrix4(this.globe.matrixWorld);
     const facing = this.b.copy(world).sub(this.globe.position).normalize().dot(this.c.copy(this.camera.position).sub(this.globe.position).normalize());

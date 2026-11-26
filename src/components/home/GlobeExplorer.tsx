@@ -1,18 +1,18 @@
 'use client';
 
 /**
- * EXPLORE: the sunlit atlas. The v8 globe (FlightWorld, bright look), a flat
- * map, a fact card and a country slider, all kept in step.
+ * EXPLORE: the original v8 globe (FlightWorld, unchanged look) in a deep
+ * observatory frame on a bright ivory stage, a flat map, an always visible
+ * country card and a country slider, all kept in step.
  *
- *  - Drag to spin, pinch, ctrl + wheel or the buttons to zoom. A plain wheel
- *    always scrolls the page.
- *  - Every country has a flag pin. Pins that would pile up (Europe on a
- *    phone) shrink to a dot until you zoom in.
- *  - Hover (or tap) shows a card with the capital, population, area and one
- *    fact. Picking a country, from a pin, the slider or the hero, springs the
- *    globe round to it, circles it, centres its slider card and offers
- *    "Explore".
- *  - Globe and Flat map share the same pick, hover card and coral ring.
+ *  - India is picked on load, so the country card is full from the start.
+ *  - Hovering a pin previews that country in the card; clicking a pin, a
+ *    slider card or a hero island picks it: the globe springs round to it,
+ *    rings it in coral and the slider centres its card.
+ *  - Drag to spin; pinch, ctrl + wheel or the buttons to zoom. A plain
+ *    wheel always scrolls the page.
+ *  - Globe and Flat map share the pick, the hover preview and the card. The
+ *    flat map draws a curved flight arc from the last pick to the new one.
  *
  * The 3D code loads as soon as the page is idle and draws only while the
  * section is on screen.
@@ -20,6 +20,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'framer-motion';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { flagSrc } from '@/components/Flag';
 import { track } from '@/lib/analytics';
 import { pexels } from '@/data/places';
@@ -38,19 +40,25 @@ export interface ExploreCountry {
   photo: number;
   photoAlt: string;
   spot: string;
+  language: string;
+  /** Typical weekly working hours (an estimate). */
+  workHours: number;
 }
 
 const TEXTURES = { day: '/textures/earth-day.webp', night: '/textures/earth-night.webp' };
-const IDLE = 0.09;
+const IDLE = 0.08;
 const ZMIN = 1;
 const ZMAX = 2.6;
 const DEG = Math.PI / 180;
 // The flat map is cropped to 75°N to 45°S, so it is 3:1.
 const N = 75;
 const S = -45;
-const EASE = [0.22, 1, 0.36, 1] as const;
+const EASE = [0.23, 1, 0.32, 1] as const;
+const SPRING = { type: 'spring', duration: 0.45, bounce: 0.18 } as const;
 
 type Pt = { x: number; y: number; visible: boolean; depth?: number };
+const fx = (c: ExploreCountry) => ((c.lng + 180) / 360) * 100;
+const fy = (c: ExploreCountry) => ((N - c.lat) / (N - S)) * 100;
 
 export default function GlobeExplorer({
   countries,
@@ -63,29 +71,33 @@ export default function GlobeExplorer({
   request?: { slug: string; n: number } | null;
 }) {
   const stage = useRef<HTMLDivElement>(null);
+  const frameEl = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const pins = useRef<(HTMLButtonElement | null)[]>([]);
-  const card = useRef<HTMLDivElement>(null);
   const track$ = useRef<HTMLDivElement>(null);
   const worldRef = useRef<FW | null>(null);
   const pts = useRef<Pt[]>(countries.map(() => ({ x: 0, y: 0, visible: false, depth: 0 })));
   const spin = useRef({ x: 0, y: 0, v: IDLE, gvx: 0, gvy: 0, dragging: false, lastX: 0, lastY: 0, lastT: 0, moved: 0, goal: null as null | { x: number; y: number } });
+  const sweep = useRef({ v: 0 });
   const zoomRef = useRef(1);
   const pinch = useRef<{ d: number; z: number } | null>(null);
   const touches = useRef(new Map<number, { x: number; y: number }>());
-  const activeRef = useRef<number | null>(null);
-  const pickRef = useRef<number | null>(null);
+  const activeRef = useRef<number | null>(startIndex);
+  const pickRef = useRef<number | null>(startIndex);
   const modeRef = useRef<'globe' | 'flat'>('globe');
 
   const [mode, setMode] = useState<'globe' | 'flat'>('globe');
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
-  const [pick, setPick] = useState<number | null>(null);
+  const [pick, setPick] = useState<number>(startIndex);
+  const [prevPick, setPrevPick] = useState<number | null>(null);
   const [hover, setHover] = useState<number | null>(null);
   const [zoom, setZoomState] = useState(1);
 
   const active = hover ?? pick;
   activeRef.current = active;
+  const hover$ = useRef<number | null>(null);
+  hover$.current = hover;
   pickRef.current = pick;
   modeRef.current = mode;
 
@@ -101,10 +113,7 @@ export default function GlobeExplorer({
       const s = spin.current;
       const c = countries[i];
       const home = countries[startIndex];
-      // Laptops: park the country left of centre, so its fact card sits beside it, not on it.
-      const aside = (stage.current?.clientWidth ?? 0) >= 768 ? 24 : 0;
-      let gx = (home.lng - c.lng - aside) * DEG;
-      // take the short way round
+      let gx = (home.lng - c.lng) * DEG;
       while (gx - s.x > Math.PI) gx -= 2 * Math.PI;
       while (gx - s.x < -Math.PI) gx += 2 * Math.PI;
       const gy = Math.max(-1.05, Math.min(1.05, c.lat * DEG - home.lat * DEG * 0.75));
@@ -125,18 +134,21 @@ export default function GlobeExplorer({
 
   const choose = useCallback(
     (i: number, where: string) => {
-      setPick(i);
+      setPick((p) => {
+        if (p !== i) setPrevPick(p);
+        return i;
+      });
       setHover(null);
       if (worldRef.current) worldRef.current.highlight = i;
       faceCountry(i);
-      if (zoomRef.current < 1.35) setZoom(1.35);
+      if (zoomRef.current < 1.3) setZoom(1.3);
       track('map_country_opened', { country: countries[i].slug, where });
       centreCard(i);
     },
     [countries, faceCountry, setZoom, centreCard],
   );
 
-  // A postcard picked in the hero: turn to it here too.
+  // A country picked in the hero: turn to it here too.
   useEffect(() => {
     if (!request) return;
     const i = countries.findIndex((c) => c.slug === request.slug);
@@ -169,30 +181,13 @@ export default function GlobeExplorer({
       frame.scale = 1;
       world.render(frame);
       world.disc(disc);
-      base = (Math.min(w, h) * (w < 640 ? 0.44 : 0.41)) / disc.r;
+      base = (Math.min(w, h) * (w < 640 ? 0.43 : 0.4)) / disc.r;
     };
 
-    const placeCard = () => {
-      const c = card.current;
-      const a = activeRef.current;
-      if (!c || a === null || modeRef.current !== 'globe') return;
-      const p = pts.current[a];
-      const w = el.clientWidth;
-      if (w < 768) return; // phones: the card is docked under the globe
-      const cw = c.offsetWidth;
-      const ch = c.offsetHeight;
-      const right = p.x + 30 + cw < w - 12;
-      const x = right ? p.x + 30 : Math.max(12, p.x - 30 - cw);
-      const y = Math.max(12, Math.min(el.clientHeight - ch - 12, p.y - ch / 2));
-      c.style.transform = `translate(${x}px, ${y}px)`;
-      c.style.opacity = p.visible ? '1' : '0';
-    };
-
-    /** Pins: grow with zoom; where two would overlap, the one further back becomes a dot. */
+    /** Pins grow with zoom; where two would pile up, the one further back becomes a dot. */
     const placePins = (z: number) => {
-      const w = el.clientWidth;
-      const phone = w < 640;
-      const size = (phone ? 20 : 26) * Math.min(1.3, 0.92 + (z - 1) * 0.3);
+      const phone = el.clientWidth < 640;
+      const size = (phone ? 22 : 26) * Math.min(1.3, 0.92 + (z - 1) * 0.3);
       const gap = size * 0.9;
       const pk = pickRef.current;
       const hv = activeRef.current;
@@ -206,7 +201,7 @@ export default function GlobeExplorer({
         let s = 0;
         if (p.visible) {
           const crowded = kept.some((k) => Math.abs(pts.current[k].x - p.x) < gap && Math.abs(pts.current[k].y - p.y) < gap);
-          s = crowded ? 0.38 : size / 26;
+          s = crowded ? 0.36 : size / 26;
           if (!crowded) kept.push(i);
         }
         pin.style.transform = `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px) translate(-50%, -50%) scale(${s.toFixed(3)})`;
@@ -229,11 +224,9 @@ export default function GlobeExplorer({
           s.y = s.goal.y;
           s.goal = null;
         } else {
-          // A soft spring: a touch of overshoot, then settle.
-          const k = 34;
-          const c = 10.5;
-          s.gvx += ((s.goal.x - s.x) * k - s.gvx * c) * dt;
-          s.gvy += ((s.goal.y - s.y) * k - s.gvy * c) * dt;
+          // a soft spring: a touch of overshoot, then settle
+          s.gvx += ((s.goal.x - s.x) * 34 - s.gvx * 10.5) * dt;
+          s.gvy += ((s.goal.y - s.y) * 34 - s.gvy * 10.5) * dt;
           s.x += s.gvx * dt;
           s.y += s.gvy * dt;
           if (Math.abs(s.goal.x - s.x) < 0.0008 && Math.abs(s.goal.y - s.y) < 0.0008 && Math.abs(s.gvx) + Math.abs(s.gvy) < 0.004) {
@@ -243,14 +236,13 @@ export default function GlobeExplorer({
           }
         }
       } else if (!s.dragging) {
-        const target = reduce || activeRef.current !== null ? 0 : IDLE;
+        const target = reduce || hover$.current !== null ? 0 : IDLE;
         s.v += (target - s.v) * Math.min(1, dt * 1.5);
         s.x += s.v * dt;
       }
-      frame.time = reduce ? 0 : now / 1000;
-      frame.dragX = s.x;
+      frame.time = now / 1000;
+      frame.dragX = s.x + sweep.current.v;
       frame.dragY = s.y;
-      // ease the zoom
       const zNow = frame.scale / base || 1;
       const z = zNow + (zoomRef.current - zNow) * Math.min(1, dt * 8);
       frame.scale = base * z;
@@ -261,7 +253,6 @@ export default function GlobeExplorer({
         p.visible = p.visible && p.x > -20 && p.y > -20 && p.x < el.clientWidth + 20 && p.y < el.clientHeight + 20;
       }
       placePins(z);
-      placeCard();
       if (visible && modeRef.current === 'globe') raf = requestAnimationFrame(tick);
     };
     const kick = () => {
@@ -277,9 +268,9 @@ export default function GlobeExplorer({
         .then((mod) => {
           if (disposed || !canvas.current) return;
           const places = countries.map((c) => ({ lat: c.lat, lng: c.lng }));
-          world = new mod.FlightWorld(canvas.current, places, [startIndex, (startIndex + 1) % places.length], TEXTURES, 'bright');
+          world = new mod.FlightWorld(canvas.current, places, [startIndex, (startIndex + 1) % places.length], TEXTURES);
           worldRef.current = world;
-          if (pickRef.current !== null) world.highlight = pickRef.current;
+          world.highlight = pickRef.current ?? -1;
           fit();
           frame.scale = base;
           setReady(true);
@@ -291,7 +282,6 @@ export default function GlobeExplorer({
     // Load the globe as soon as the page is idle, so it is already there when you arrive.
     const w = window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number; cancelIdleCallback?: (id: number) => void };
     const idle = w.requestIdleCallback ? w.requestIdleCallback(start, { timeout: 1500 }) : window.setTimeout(start, 300);
-
     const io = new IntersectionObserver(
       ([e]) => {
         visible = e.isIntersecting;
@@ -327,6 +317,18 @@ export default function GlobeExplorer({
   useEffect(() => {
     if (mode === 'globe') stage.current?.dispatchEvent(new Event('globe:kick'));
   }, [mode]);
+
+  /* ---------------------- Scroll entrance of the frame ---------------------- */
+  useEffect(() => {
+    const el = frameEl.current;
+    if (!el || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    gsap.registerPlugin(ScrollTrigger);
+    const ctx = gsap.context(() => {
+      gsap.fromTo(el, { y: 60, scale: 0.9 }, { y: 0, scale: 1, ease: 'none', scrollTrigger: { trigger: el, start: 'top 98%', end: 'top 45%', scrub: 0.6 } });
+      gsap.fromTo(sweep.current, { v: -1.1 }, { v: 0, ease: 'none', scrollTrigger: { trigger: el, start: 'top 98%', end: 'top 35%', scrub: 0.8, onUpdate: () => stage.current?.dispatchEvent(new Event('globe:kick')) } });
+    }, el);
+    return () => ctx.revert();
+  }, []);
 
   /* --------------------------- Drag and pinch --------------------------- */
   const down = (e: React.PointerEvent) => {
@@ -393,26 +395,46 @@ export default function GlobeExplorer({
   }, [setZoom]);
 
   /* ------------------------------- Slider ------------------------------- */
-  const drag = useRef<{ x: number; left: number; moved: number } | null>(null);
+  // Mouse drag with momentum (touch already flicks natively).
+  const drag = useRef<{ x: number; left: number; moved: number; v: number; t: number } | null>(null);
+  const coast = useRef(0);
   const sliderDown = (e: React.PointerEvent) => {
     if (e.pointerType !== 'mouse' || !track$.current) return;
-    drag.current = { x: e.clientX, left: track$.current.scrollLeft, moved: 0 };
+    cancelAnimationFrame(coast.current);
+    drag.current = { x: e.clientX, left: track$.current.scrollLeft, moved: 0, v: 0, t: performance.now() };
   };
   const sliderMove = (e: React.PointerEvent) => {
     const d = drag.current;
-    if (!d || !track$.current) return;
-    d.moved = Math.abs(e.clientX - d.x);
+    const t = track$.current;
+    if (!d || !t) return;
+    const now = performance.now();
+    const prev = t.scrollLeft;
+    d.moved = Math.max(d.moved, Math.abs(e.clientX - d.x));
     if (d.moved > 4) {
-      track$.current.classList.add('is-dragging');
-      track$.current.scrollLeft = d.left - (e.clientX - d.x);
+      t.classList.add('is-dragging');
+      t.scrollLeft = d.left - (e.clientX - d.x);
+      d.v = d.v * 0.4 + ((t.scrollLeft - prev) / Math.max(1, now - d.t)) * 0.6;
     }
+    d.t = now;
   };
   const sliderUp = () => {
+    const d = drag.current;
+    const t = track$.current;
+    if (d && t && d.moved > 4) {
+      let v = d.v * 16;
+      const run = () => {
+        v *= 0.93;
+        t.scrollLeft += v;
+        if (Math.abs(v) > 0.4) coast.current = requestAnimationFrame(run);
+        else t.classList.remove('is-dragging');
+      };
+      coast.current = requestAnimationFrame(run);
+    } else t?.classList.remove('is-dragging');
     setTimeout(() => {
       drag.current = null;
     }, 0);
-    track$.current?.classList.remove('is-dragging');
   };
+  useEffect(() => () => cancelAnimationFrame(coast.current), []);
   const page = (dir: number) => {
     const t = track$.current;
     if (!t) return;
@@ -427,7 +449,7 @@ export default function GlobeExplorer({
     const to = e.key === 'ArrowRight' ? i + 1 : e.key === 'ArrowLeft' ? i - 1 : e.key === 'Home' ? 0 : e.key === 'End' ? countries.length - 1 : null;
     if (to === null || to < 0 || to >= countries.length) return;
     e.preventDefault();
-    track$.current?.querySelector<HTMLElement>(`[data-i="${to}"] button`)?.focus({ preventScroll: true });
+    track$.current?.querySelector<HTMLElement>(`[data-i="${to}"] .slider-hit`)?.focus({ preventScroll: true });
     centreCard(to);
   };
 
@@ -437,7 +459,7 @@ export default function GlobeExplorer({
     track('map_toggled', { view: m, where: 'home-explore' });
   };
 
-  const info = active !== null ? countries[active] : null;
+  const info = countries[active];
 
   return (
     <div>
@@ -457,107 +479,84 @@ export default function GlobeExplorer({
                 {m === 'globe' ? (
                   <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
                     <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2" />
-                    <path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18" fill="none" stroke="currentColor" strokeWidth="1.6" />
+                    <path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18" fill="none" stroke="currentColor" strokeWidth="1.8" />
                   </svg>
                 ) : (
                   <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
                     <path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z M9 4v14 M15 6v14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
                   </svg>
                 )}
-                {m === 'globe' ? 'Globe' : 'Flat map'}
+                {m === 'globe' ? '3D globe' : 'Flat map'}
               </span>
             </button>
           ))}
         </div>
       </div>
 
-      {/* The stage */}
-      <div className="explore-stage relative mt-7 overflow-hidden rounded-[2rem] sm:mt-9">
-        {/* Globe */}
-        <motion.div
-          ref={stage}
-          initial={false}
-          animate={{ opacity: mode === 'globe' ? 1 : 0, scale: mode === 'globe' ? 1 : 0.97 }}
-          transition={{ duration: 0.5, ease: EASE }}
-          className={`relative h-[min(92vw,30rem)] w-full touch-none select-none sm:h-[34rem] lg:h-[38rem] ${mode === 'globe' ? '' : 'hidden'}`}
-          onPointerDown={down}
-          onPointerMove={move}
-          onPointerUp={up}
-          onPointerCancel={up}
-        >
-          <div aria-hidden className="explore-halo pointer-events-none absolute inset-0" />
-          <canvas ref={canvas} aria-hidden className={`absolute inset-0 h-full w-full cursor-grab transition-opacity duration-500 active:cursor-grabbing ${ready ? 'opacity-100' : 'opacity-0'}`} />
-          {!ready && !failed && <div aria-hidden className="explore-placeholder absolute left-1/2 top-1/2 aspect-square w-[min(80%,27rem)] -translate-x-1/2 -translate-y-1/2 rounded-full" />}
-          {countries.map((c, i) => (
-            <button
-              key={c.slug}
-              ref={(el) => {
-                pins.current[i] = el;
+      {/* The observatory and the country card */}
+      <div className="mt-7 grid items-start gap-5 sm:mt-9 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.85fr)] lg:gap-6">
+        <div ref={frameEl} className="observatory relative overflow-hidden">
+          {/* Globe */}
+          <motion.div
+            ref={stage}
+            initial={false}
+            animate={{ opacity: mode === 'globe' ? 1 : 0 }}
+            transition={{ duration: 0.45, ease: EASE }}
+            className={`relative h-[min(96vw,30rem)] w-full touch-none select-none sm:h-[34rem] lg:h-[38rem] ${mode === 'globe' ? '' : 'hidden'}`}
+            onPointerDown={down}
+            onPointerMove={move}
+            onPointerUp={up}
+            onPointerCancel={up}
+          >
+            <canvas ref={canvas} aria-hidden className={`absolute inset-0 h-full w-full cursor-grab transition-opacity duration-500 active:cursor-grabbing ${ready ? 'opacity-100' : 'opacity-0'}`} />
+            {!ready && !failed && <div aria-hidden className="observatory-placeholder absolute left-1/2 top-1/2 aspect-square w-[min(80%,27rem)] -translate-x-1/2 -translate-y-1/2 rounded-full" />}
+            {countries.map((c, i) => (
+              <button
+                key={c.slug}
+                ref={(el) => {
+                  pins.current[i] = el;
+                }}
+                type="button"
+                tabIndex={-1}
+                onClick={() => choose(i, 'home-globe')}
+                onPointerEnter={(e) => e.pointerType === 'mouse' && setHover(i)}
+                onPointerLeave={() => setHover(null)}
+                onFocus={() => setHover(i)}
+                onBlur={() => setHover(null)}
+                className={`explore-pin absolute left-0 top-0 ${pick === i ? 'is-picked show-label' : ''} ${hover === i ? 'show-label' : ''}`}
+                style={{ transform: 'scale(0)' }}
+                aria-label={`${c.name}: show facts`}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={flagSrc(c.slug)} alt="" width={26} height={26} draggable={false} />
+                <span className="explore-pin-label">{c.name}</span>
+              </button>
+            ))}
+            <ZoomButtons
+              zoom={zoom}
+              setZoom={setZoom}
+              reset={() => {
+                setZoom(1);
+                spin.current.goal = null;
+                spin.current.v = IDLE;
               }}
-              type="button"
-              tabIndex={-1}
-              onClick={() => choose(i, 'home-globe')}
-              onPointerEnter={(e) => e.pointerType === 'mouse' && setHover(i)}
-              onPointerLeave={() => setHover(null)}
-              onFocus={() => setHover(i)}
-              onBlur={() => setHover(null)}
-              className={`explore-pin absolute left-0 top-0 ${pick === i ? 'is-picked' : ''} ${zoom >= 1.6 || pick === i ? 'show-label' : ''}`}
-              style={{ transform: 'scale(0)' }}
-              aria-label={`${c.name}: show facts`}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={flagSrc(c.slug)} alt="" width={26} height={26} draggable={false} />
-              <span className="explore-pin-label">{c.name}</span>
-            </button>
-          ))}
-
-          {/* Floating info card (laptops) */}
-          <div ref={card} className="explore-card pointer-events-none absolute left-0 top-0 z-20 hidden md:block" style={{ opacity: 0 }}>
-            <AnimatePresence mode="wait" initial={false}>
-              {info && <InfoCard key={info.slug} c={info} picked={pick === active} where="home-globe" />}
-            </AnimatePresence>
-          </div>
-
-          <ZoomButtons
-            zoom={zoom}
-            setZoom={setZoom}
-            reset={() => {
-              setZoom(1);
-              setPick(null);
-              if (worldRef.current) worldRef.current.highlight = -1;
-              spin.current.goal = null;
-              spin.current.v = IDLE;
-            }}
-          />
-          <p className="explore-hint pointer-events-none absolute bottom-4 left-4 z-10 hidden sm:block">Drag to spin, pinch to zoom, tap a flag</p>
-        </motion.div>
-
-        {/* Flat map */}
-        {mode === 'flat' && (
-          <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, ease: EASE }}>
-            <FlatMap countries={countries} pick={pick} hover={hover} setHover={setHover} choose={choose} zoom={zoom} setZoom={setZoom} />
+            />
+            <p className="observatory-hint pointer-events-none absolute bottom-4 left-4 z-10 hidden sm:block">Drag to spin, pinch to zoom, tap a flag</p>
           </motion.div>
-        )}
-      </div>
 
-      {/* Flat map card (laptops): docked under the map so it never hides a pin. Hover shows the pin label. */}
-      {mode === 'flat' && (
-        <div className="mt-4 hidden md:block" aria-live="polite">
-          <AnimatePresence mode="wait" initial={false}>
-            {pick !== null && <InfoCard key={countries[pick].slug} c={countries[pick]} picked where="home-flat" wide />}
-          </AnimatePresence>
+          {/* Flat map */}
+          {mode === 'flat' && (
+            <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.45, ease: EASE }}>
+              <FlatMap countries={countries} pick={pick} prev={prevPick} hover={hover} setHover={setHover} choose={choose} zoom={zoom} setZoom={setZoom} />
+            </motion.div>
+          )}
         </div>
-      )}
 
-      {/* Docked info card (phones) */}
-      <div className="mt-4 md:hidden" aria-live="polite">
-        <AnimatePresence mode="wait" initial={false}>
-          {info && <InfoCard key={info.slug} c={info} picked={pick === active} where={`home-${mode}`} wide />}
-        </AnimatePresence>
+        <CountryCard c={info} picked={active === pick} />
       </div>
 
       {/* Country discovery slider */}
-      <div className="mt-8 sm:mt-10">
+      <div className="mt-9 sm:mt-12">
         <div className="flex items-end justify-between gap-4">
           <h3 className="slider-title">Discover a country</h3>
           <div className="flex gap-2">
@@ -573,50 +572,50 @@ export default function GlobeExplorer({
             </button>
           </div>
         </div>
-        <div
-          ref={track$}
-          className="slider-track relative mt-4"
-          onPointerDown={sliderDown}
-          onPointerMove={sliderMove}
-          onPointerUp={sliderUp}
-          onPointerLeave={sliderUp}
-          onKeyDown={sliderKey}
-          role="list"
-          aria-label="Countries"
-        >
+        <div ref={track$} className="slider-track relative mt-4" onPointerDown={sliderDown} onPointerMove={sliderMove} onPointerUp={sliderUp} onPointerLeave={sliderUp} onKeyDown={sliderKey} role="list" aria-label="Countries">
           {countries.map((c, i) => (
             <div role="listitem" key={c.slug} data-i={i} className="slider-item">
-              <motion.button
-                type="button"
+              <motion.div
                 className={`slider-card ${pick === i ? 'is-picked' : ''}`}
-                aria-pressed={pick === i}
-                aria-label={`${c.name}, ${c.spot}. Show on the map`}
-                animate={{ y: pick === i ? -6 : 0 }}
+                animate={{ scale: pick === i ? 1.05 : 1, y: pick === i ? -4 : 0 }}
                 whileHover={{ y: -6 }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ type: 'spring', stiffness: 380, damping: 24 }}
-                onClick={(e) => {
-                  if (drag.current && drag.current.moved > 4) {
-                    e.preventDefault();
-                    return;
-                  }
-                  choose(i, 'home-slider');
-                }}
+                transition={{ type: 'spring', stiffness: 380, damping: 26 }}
               >
-                <span className="slider-photo">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={pexels(c.photo, 520)} alt={c.photoAlt} loading="lazy" decoding="async" draggable={false} />
-                  <span className="slider-spot">{c.spot}</span>
-                </span>
-                <span className="flex items-center gap-3 px-4 pb-4 pt-3">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={flagSrc(c.slug)} alt="" width={26} height={26} className="slider-flag" draggable={false} />
-                  <span className="min-w-0 text-left">
-                    <span className="slider-name">{c.name}</span>
-                    <span className="slider-region">{c.region}</span>
+                <button
+                  type="button"
+                  className="slider-hit"
+                  aria-pressed={pick === i}
+                  aria-label={`${c.name}, ${c.spot}. Show on the map`}
+                  onClick={(e) => {
+                    if (drag.current && drag.current.moved > 4) {
+                      e.preventDefault();
+                      return;
+                    }
+                    choose(i, 'home-slider');
+                  }}
+                >
+                  <span className="slider-photo">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={pexels(c.photo, 520)} alt={c.photoAlt} loading="lazy" decoding="async" draggable={false} />
                   </span>
-                </span>
-              </motion.button>
+                  <span className="flex items-center gap-3 px-4 pb-4 pt-3">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={flagSrc(c.slug)} alt="" width={26} height={26} className="slider-flag" draggable={false} />
+                    <span className="min-w-0 text-left">
+                      <span className="slider-name">{c.name}</span>
+                      <span className="slider-region">{c.spot}</span>
+                    </span>
+                  </span>
+                </button>
+                {pick === i && (
+                  <Link href={`/countries/${c.slug}`} className="slider-explore" onClick={() => track('explore_country_clicked', { country: c.slug, where: 'home-slider' })}>
+                    Explore
+                    <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden>
+                      <path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </Link>
+                )}
+              </motion.div>
             </div>
           ))}
         </div>
@@ -630,7 +629,9 @@ function ZoomButtons({ zoom, setZoom, reset }: { zoom: number; setZoom: (z: numb
   return (
     <div className="absolute bottom-4 right-4 z-10 flex flex-col gap-2">
       <button type="button" className="zoom-btn" onClick={() => setZoom(zoom * 1.3)} aria-label="Zoom in" disabled={zoom >= ZMAX - 0.01}>
-        +
+        <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden>
+          <path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
+        </svg>
       </button>
       <button type="button" className="zoom-btn" onClick={() => setZoom(zoom / 1.3)} aria-label="Zoom out" disabled={zoom <= ZMIN + 0.01}>
         <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden>
@@ -638,58 +639,70 @@ function ZoomButtons({ zoom, setZoom, reset }: { zoom: number; setZoom: (z: numb
         </svg>
       </button>
       {reset && (
-        <button type="button" className="zoom-btn text-[0.8rem]" onClick={reset} aria-label="Reset the view">
-          ⟲
+        <button type="button" className="zoom-btn" onClick={reset} aria-label="Reset the view">
+          <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden>
+            <path d="M4 12a8 8 0 1 0 2.6-5.9M4 4v4h4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
         </button>
       )}
     </div>
   );
 }
 
-/* --------------------------- The info card --------------------------- */
-function InfoCard({ c, picked, where, wide = false }: { c: ExploreCountry; picked: boolean; where: string; wide?: boolean }) {
+/* --------------------------- The country card --------------------------- */
+function CountryCard({ c, picked }: { c: ExploreCountry; picked: boolean }) {
   return (
-    <motion.article
-      className={`info-card ${wide ? 'is-wide' : ''}`}
-      initial={{ opacity: 0, y: 8, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.97, transition: { duration: 0.15 } }}
-      transition={{ duration: 0.35, ease: EASE }}
-    >
-      <header className="flex items-center gap-3">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={flagSrc(c.slug)} alt="" width={40} height={40} className="info-flag" />
-        <div className="min-w-0">
-          <p className="info-region">{c.region}</p>
-          <h3 className="info-name">{c.name}</h3>
-        </div>
-      </header>
-      <dl className="mt-4 grid grid-cols-3 gap-2">
-        {[
-          ['Capital', c.capital],
-          ['Population', c.population.replace(/^About /, '')],
-          ['Area', c.area],
-        ].map(([k, v]) => (
-          <div key={k} className="info-stat">
-            <dt>{k}</dt>
-            <dd>{v}</dd>
+    <aside className="country-card" aria-live="polite" aria-label="Country facts">
+      <AnimatePresence mode="popLayout" initial={false}>
+        <motion.div key={c.slug} initial={{ opacity: 0, y: 10, filter: 'blur(4px)' }} animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }} exit={{ opacity: 0, y: -6, transition: { duration: 0.14 } }} transition={SPRING}>
+          <div className="country-photo">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={pexels(c.photo, 820)} alt={c.photoAlt} decoding="async" />
+            <span className="country-badge">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={flagSrc(c.slug)} alt="" width={22} height={22} />
+              {c.region}
+            </span>
+            {!picked && <span className="country-preview">Preview</span>}
           </div>
-        ))}
-      </dl>
-      <p className="info-fact">
-        <strong>Did you know?</strong> {c.fact}
-      </p>
-      {picked ? (
-        <Link href={`/countries/${c.slug}`} className="explore-more pointer-events-auto mt-4" onClick={() => track('explore_country_clicked', { country: c.slug, where })}>
-          Explore {c.name}
-          <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden>
-            <path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </Link>
-      ) : (
-        <p className="info-hint">Click the flag to explore {c.name}</p>
-      )}
-    </motion.article>
+          <div className="country-body">
+            <h3 className="country-name">{c.name}</h3>
+            <p className="country-spot">{c.spot}</p>
+            <dl className="country-stats">
+              {[
+                ['Capital', c.capital],
+                ['Population', c.population.replace(/^About /, '')],
+                ['Area', c.area],
+              ].map(([k, v]) => (
+                <div key={k}>
+                  <dt>{k}</dt>
+                  <dd>{v}</dd>
+                </div>
+              ))}
+            </dl>
+            <dl className="country-snapshot">
+              <div>
+                <dt>Language</dt>
+                <dd>{c.language}</dd>
+              </div>
+              <div>
+                <dt>Work week</dt>
+                <dd>About {c.workHours} hours</dd>
+              </div>
+            </dl>
+            <p className="country-fact">
+              <strong>Did you know?</strong> {c.fact}
+            </p>
+            <Link href={`/countries/${c.slug}`} className="country-cta" onClick={() => track('explore_country_clicked', { country: c.slug, where: 'home-card' })}>
+              Explore {c.name}
+              <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
+                <path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </Link>
+          </div>
+        </motion.div>
+      </AnimatePresence>
+    </aside>
   );
 }
 
@@ -697,6 +710,7 @@ function InfoCard({ c, picked, where, wide = false }: { c: ExploreCountry; picke
 function FlatMap({
   countries,
   pick,
+  prev,
   hover,
   setHover,
   choose,
@@ -704,7 +718,8 @@ function FlatMap({
   setZoom,
 }: {
   countries: ExploreCountry[];
-  pick: number | null;
+  pick: number;
+  prev: number | null;
   hover: number | null;
   setHover: (i: number | null) => void;
   choose: (i: number, where: string) => void;
@@ -712,30 +727,42 @@ function FlatMap({
   setZoom: (z: number) => void;
 }) {
   const box = useRef<HTMLDivElement>(null);
-  const focus = pick ?? hover;
-  const fx = focus !== null ? ((countries[focus].lng + 180) / 360) * 100 : 50;
-  const fy = focus !== null ? ((N - countries[focus].lat) / (N - S)) * 100 : 50;
-  // Start phones on Europe, Africa and Asia.
+  const focus = hover ?? pick;
+  const ox = fx(countries[focus]);
+  const oy = fy(countries[focus]);
+  // Start on the picked country, then keep each new pick in view.
   useEffect(() => {
     const el = box.current;
-    if (el && el.scrollWidth > el.clientWidth) el.scrollLeft = el.scrollWidth * (215 / 360) - el.clientWidth / 2;
-  }, []);
-  // Keep the picked country in view on phones.
-  useEffect(() => {
-    const el = box.current;
-    if (el && pick !== null && el.scrollWidth > el.clientWidth) el.scrollTo({ left: (el.scrollWidth * fx) / 100 - el.clientWidth / 2, behavior: 'smooth' });
-  }, [pick, fx]);
+    if (el && el.scrollWidth > el.clientWidth) el.scrollTo({ left: (el.scrollWidth * fx(countries[pick])) / 100 - el.clientWidth / 2, behavior: 'smooth' });
+  }, [pick, countries]);
+  // the flight arc from the last pick to this one, in a 300 x 100 box
+  const arc = (() => {
+    if (prev === null || prev === pick) return null;
+    const a = countries[prev];
+    const b = countries[pick];
+    const x1 = fx(a) * 3;
+    const y1 = fy(a);
+    const x2 = fx(b) * 3;
+    const y2 = fy(b);
+    const lift = Math.min(30, Math.hypot(x2 - x1, y2 - y1) * 0.35);
+    return `M ${x1} ${y1} Q ${(x1 + x2) / 2} ${Math.min(y1, y2) - lift} ${x2} ${y2}`;
+  })();
 
   return (
     <div className="relative">
       <div ref={box} className="flat-scroll overflow-x-auto overscroll-x-contain [scrollbar-width:none]">
-        <div className="flat-frame relative aspect-[3/1] min-w-[56rem] overflow-hidden md:min-w-0">
-          <div className="absolute inset-0 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none" style={{ transform: `scale(${zoom})`, transformOrigin: `${fx}% ${fy}%` }}>
+        <div className="flat-frame relative overflow-hidden">
+          <div className="absolute inset-0 transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none" style={{ transform: `scale(${zoom})`, transformOrigin: `${ox}% ${oy}%` }}>
             {/* the full 2:1 picture, cropped to 75°N to 45°S */}
             <div className="absolute inset-x-0" style={{ top: `${(-(90 - N) / (N - S)) * 100}%`, height: `${(180 / (N - S)) * 100}%` }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/textures/earth-day.webp" alt="" className="flat-img block h-full w-full" draggable={false} />
             </div>
+            {arc && (
+              <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 300 100" preserveAspectRatio="none" aria-hidden>
+                <motion.path key={arc} d={arc} fill="none" stroke="#ffc233" strokeWidth="0.55" strokeLinecap="round" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 0.9, ease: EASE }} />
+              </svg>
+            )}
             {countries.map((c, i) => (
               <button
                 key={c.slug}
@@ -746,7 +773,7 @@ function FlatMap({
                 onFocus={() => setHover(i)}
                 onBlur={() => setHover(null)}
                 className={`explore-pin flat absolute ${pick === i ? 'is-picked show-label' : ''} ${hover === i ? 'show-label' : ''}`}
-                style={{ left: `${((c.lng + 180) / 360) * 100}%`, top: `${((N - c.lat) / (N - S)) * 100}%`, transform: `translate(-50%, -50%) scale(${1 / zoom})` }}
+                style={{ left: `${fx(c)}%`, top: `${fy(c)}%`, transform: `translate(-50%, -50%) scale(${1 / zoom})` }}
                 aria-label={`${c.name}: show facts`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
