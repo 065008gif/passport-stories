@@ -1502,7 +1502,7 @@ html.js [data-rv].rv-in {
   background:
     repeating-conic-gradient(from 0deg at 50% 38%, rgba(255, 183, 3, 0.16) 0deg 8deg, transparent 8deg 20deg),
     radial-gradient(60% 50% at 50% 38%, rgba(255, 122, 26, 0.45), transparent 70%),
-    rgba(11, 13, 51, 0.94);
+    rgba(76, 46, 200, 0.92);
 }
 
 /* Home hero: keep clear of the flight tracker on short laptop screens (v8) */
@@ -1621,4 +1621,22 @@ html.js [data-rv].rv-in {
 }
 footer.bg-ink {
   background: linear-gradient(160deg, #6c4cf5 0%, #5733e3 100%) !important;
+}
+
+/* Pia waves hello. */
+.pia-wave {
+  transform-origin: 100px 232px;
+  animation: pia-wave 2.4s ease-in-out infinite;
+}
+@keyframes pia-wave {
+  0%, 60%, 100% { transform: rotate(0deg); }
+  70% { transform: rotate(-14deg); }
+  80% { transform: rotate(8deg); }
+  90% { transform: rotate(-10deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pia-wave { animation: none; }
+}
+@media (min-width: 768px) and (max-height: 820px) {
+  .hero-pia { display: none !important; }
 }

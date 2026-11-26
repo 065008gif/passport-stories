@@ -8,6 +8,7 @@ import Flag from '@/components/Flag';
 import FlightHome from '@/components/flight/FlightHome';
 import Reels from '@/components/home/Reels';
 import BoardingGates from '@/components/home/BoardingGates';
+import { PiaSays } from '@/components/Pia';
 
 /**
  * HOME: one flight around the world.
@@ -28,34 +29,41 @@ export default function HomePage() {
       <FlightHome countries={countries} route={route}>
         {/* ------------------------------ Take-off ------------------------------ */}
         <section className={`${SCREEN} is-here md:!pb-36 lg:!pb-12`} aria-labelledby="hero-title">
-          <div className="hero-card stop-card max-w-xl md:max-w-[36rem]">
+          <div className="hero-card stop-card max-w-xl md:max-w-[34rem] md:rounded-[2rem] md:bg-night/75 md:p-7 md:shadow-[0_20px_50px_-25px_rgba(36,18,61,.35)] md:backdrop-blur-md">
             <p className="kicker text-sun">Flight PS 001 · Departing {INDIA.airport}</p>
-            <h1 id="hero-title" className="hero-h1 sign mt-1.5 text-[2.5rem] leading-[0.95] sm:mt-2 sm:text-7xl">
-              Same planet. <span className="text-sun">Different lives.</span>
+            <h1 id="hero-title" className="hero-h1 sign mt-1.5 text-[2.4rem] leading-[0.98] sm:mt-2 sm:text-[3.9rem]">
+              The world is more <em className="text-coral">interesting</em> than you think.
             </h1>
-            <p className="hero-p mt-2.5 text-[0.95rem] leading-snug text-cream/90 sm:mt-3 sm:text-xl sm:leading-normal">
-              <span className="sm:hidden">Who works the longest week? Where is a wedding a three-day party? Explore how the world really lives, compare any two countries, print your boarding pass and collect stamps.</span>
-              <span className="hidden sm:inline">Who works the longest week? Where does dinner start early? Where is a wedding a three-day party? Explore how people around the world
-              really live, compare any two countries head to head or theme by theme, print your own boarding pass, collect stamps, play trivia.
-              Enjoy, and repeat!
-              </span>
+            <p className="hero-p mt-2.5 text-[0.95rem] leading-snug text-cream/90 sm:mt-3 sm:text-lg sm:leading-normal">
+              Discover the traditions, lifestyles, habits and little-known stories that make every country unique.
+              <span className="hidden sm:inline"> Who works the longest week? Where is a wedding a three-day party? Compare any two countries, print your own boarding pass, collect stamps and play.</span>
             </p>
             <ul className="mt-2.5 flex flex-wrap gap-1.5 text-[11px] font-bold sm:mt-3 sm:gap-2 sm:text-sm" aria-label="What is on this site">
               {['One new country every week', 'Compare any two countries', 'Games and your own boarding pass'].map((t) => (
-                <li key={t} className="rounded-full border border-cream/30 bg-night/50 px-2.5 py-0.5 backdrop-blur sm:px-3 sm:py-1">
+                <li key={t} className="rounded-full border border-cream/30 bg-white/60 px-2.5 py-0.5 backdrop-blur sm:px-3 sm:py-1">
                   {t}
                 </li>
               ))}
             </ul>
             <p className="hero-scroll mt-2.5 font-mono text-[10px] uppercase tracking-widest text-sun sm:mt-3 sm:text-xs">Scroll for a one-minute flight through five of them ↓</p>
-            <p className="hero-cta mt-3.5 flex flex-wrap items-center gap-2.5 sm:mt-5 sm:gap-3">
+            <p className="hero-cta mt-3.5 flex flex-wrap items-center gap-2 sm:mt-5 sm:gap-3">
               <a href="#stop-1" className="btn btn-sun max-sm:px-4 max-sm:py-2.5 max-sm:text-sm">
                 Take off <span aria-hidden className="nudge inline-block">↓</span>
               </a>
-              <Link href="/countries" className="btn btn-ghost max-sm:px-4 max-sm:py-2.5 max-sm:text-sm">
-                See every country →
-              </Link>
+              <a href="#all" className="btn btn-ink max-sm:px-4 max-sm:py-2.5 max-sm:text-sm" data-track="hero-explore-map">
+                Explore the map
+              </a>
+              <TeleportButton label="Surprise me" className="btn btn-ghost max-sm:px-4 max-sm:py-2.5 max-sm:text-sm" countries={countries.filter((c) => c.slug !== INDIA.slug).map(({ slug, name, airport }) => ({ slug, name, airport }))} />
             </p>
+            <div className="hero-pia mt-3 hidden items-center gap-3 md:flex">
+              <PiaSays size={64}>
+                Hi, I&apos;m Pia! Scroll down and I&apos;ll fly you through five countries. Or{' '}
+                <Link href="/countries" className="link-u text-coral">
+                  see every country
+                </Link>
+                .
+              </PiaSays>
+            </div>
           </div>
         </section>
 
