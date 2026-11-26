@@ -28,7 +28,7 @@ function Slider({ label, unit, min, max, step = 1, value, onChange, mood }: { la
   const n = Number(value) || 0;
   const pct = Math.max(0, Math.min(100, ((n - min) / (max - min)) * 100));
   const nudge = (d: number) => onChange(String(Math.max(min, Math.min(max, n + d))));
-  const BTN = 'flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-[3px] border-ink bg-cream text-xl font-bold text-ink shadow-[0_3px_0_#1B1F5E] transition-transform hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none';
+  const BTN = 'flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-[3px] border-ink bg-paper text-xl font-bold text-ink shadow-[0_3px_0_#24123D] transition-transform hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none';
   return (
     <div>
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
@@ -61,7 +61,7 @@ function Money({ label, value, onChange, placeholder }: { label: string; value: 
   return (
     <label className="group block min-w-0">
       <span className="font-mono text-xs font-bold uppercase tracking-[0.18em] text-ink/75">{label}</span>
-      <span className="mt-1.5 flex items-baseline gap-2 rounded-2xl border-[3px] border-ink bg-cream px-3 py-1 sm:mt-2 sm:px-4 sm:py-2 shadow-[0_5px_0_#1B1F5E] transition-transform group-focus-within:-translate-y-0.5">
+      <span className="mt-1.5 flex items-baseline gap-2 rounded-2xl border-[3px] border-ink bg-paper px-3 py-1 sm:mt-2 sm:px-4 sm:py-2 shadow-[0_5px_0_#24123D] transition-transform group-focus-within:-translate-y-0.5">
         <span className="chunk text-2xl text-tang sm:text-3xl">₹</span>
         <input
           className="chunk h-11 min-w-0 flex-1 bg-transparent text-[1.7rem] tabular-nums text-ink placeholder:text-ink/25 focus:outline-none sm:h-12 sm:text-[2.2rem]"
@@ -319,13 +319,13 @@ export default function YourLifeClient({ countries, slug }: { countries: LifeCou
           </div>
         </Lane>
 
-        <Lane n={2} title="Your time" sub="Drag to match your real week." color="linear-gradient(135deg,#4CC9F0,#7BDCF7)" tilt={0.4}>
+        <Lane n={2} title="Your time" sub="Drag to match your real week." color="linear-gradient(135deg,#6C4CF5,#7BDCF7)" tilt={0.4}>
           <div className="space-y-5 sm:space-y-7">
             <Slider label="Work hours a week" unit="hrs" min={10} max={90} value={form.hours} onChange={(v) => setForm({ ...form, hours: v })} mood={hoursMood} />
             <Slider label="Commute a day, both ways" unit="min" min={0} max={240} step={5} value={form.commute} onChange={(v) => setForm({ ...form, commute: v })} mood={commuteMood} />
             <label className="flex flex-wrap items-center gap-3">
               <span className="font-mono text-xs font-bold uppercase tracking-[0.18em] text-ink/75">Flying from</span>
-              <input className="h-11 w-48 rounded-full border-[3px] border-ink bg-cream px-4 font-bold text-ink placeholder:font-normal placeholder:text-ink/40 focus:outline-none" type="text" autoComplete="address-level2" placeholder="Delhi" value={form.city} onChange={set('city')} maxLength={30} />
+              <input className="h-11 w-48 rounded-full border-[3px] border-ink bg-paper px-4 font-bold text-ink placeholder:font-normal placeholder:text-ink/40 focus:outline-none" type="text" autoComplete="address-level2" placeholder="Delhi" value={form.city} onChange={set('city')} maxLength={30} />
               <span className="text-sm font-semibold text-ink/60">optional, printed on your pass</span>
             </label>
           </div>

@@ -3,6 +3,8 @@ import type { Metadata, Viewport } from 'next';
 import '@fontsource-variable/bricolage-grotesque/opsz.css';
 import '@fontsource-variable/dm-sans/wght.css';
 import '@fontsource/bowlby-one/400.css';
+import '@fontsource/dm-serif-display/400.css';
+import '@fontsource/dm-serif-display/400-italic.css';
 import '@fontsource-variable/jetbrains-mono/wght.css';
 import './globals.css';
 import { site } from '@/data/site';
@@ -25,7 +27,7 @@ export const metadata: Metadata = {
   icons: { icon: site.logo },
 };
 
-export const viewport: Viewport = { themeColor: '#1B1F5E', width: 'device-width', initialScale: 1 };
+export const viewport: Viewport = { themeColor: '#24123D', width: 'device-width', initialScale: 1 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

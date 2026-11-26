@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react';
 
 /** Dotted flight arc with a small plane, used between two airport codes. */
-export function FlightArc({ className = '', color = '#FB8500', dot = '#1B1F5E' }: { className?: string; color?: string; dot?: string }) {
+export function FlightArc({ className = '', color = '#FF7A1A', dot = '#24123D' }: { className?: string; color?: string; dot?: string }) {
   return (
     <svg viewBox="0 0 200 60" className={className} aria-hidden>
       <path d="M8 50 Q100 -18 192 50" fill="none" stroke={color} strokeWidth="3.5" strokeLinecap="round" strokeDasharray="1 9" />
@@ -27,7 +27,7 @@ export interface PassRow {
  * `notch` must match the colour of whatever is behind the card so the
  * punched holes on the perforation look real.
  */
-const TILES = ['#FFB703', '#4CC9F0', '#B693FF', '#06A77D', '#FB8500', '#7BDCF7'];
+const TILES = ['#FFB703', '#6C4CF5', '#B693FF', '#06A77D', '#FF7A1A', '#7BDCF7'];
 
 export default function BoardingPass({
   from,
@@ -60,7 +60,7 @@ export default function BoardingPass({
           <p className="chunk text-4xl leading-none sm:text-7xl">{from.code}</p>
           <p className="mt-1 truncate text-sm font-bold text-ink/80">{from.label}</p>
         </div>
-        <FlightArc className="mb-6 min-w-0 flex-1" color="#1B1F5E" dot="#1B1F5E" />
+        <FlightArc className="mb-6 min-w-0 flex-1" color="#24123D" dot="#24123D" />
         <div className="min-w-0 text-right">
           <p className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-ink/70">To</p>
           <p className="chunk text-4xl leading-none sm:text-7xl">{to.code}</p>

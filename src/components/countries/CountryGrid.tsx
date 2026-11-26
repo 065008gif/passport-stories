@@ -30,8 +30,8 @@ export interface SortOption {
   emoji: string;
 }
 
-const ACCENTS = ['#FFB703', '#4CC9F0', '#06A77D', '#FB8500'];
-const CHIP_COLORS = ['#FFB703', '#4CC9F0', '#06A77D', '#FB8500', '#FFB703', '#4CC9F0', '#06A77D'];
+const ACCENTS = ['#FFB703', '#6C4CF5', '#06A77D', '#FF7A1A'];
+const CHIP_COLORS = ['#FFB703', '#6C4CF5', '#06A77D', '#FF7A1A', '#FFB703', '#6C4CF5', '#06A77D'];
 
 export default function CountryGrid({ countries, regions, sorts }: { countries: GridCountry[]; regions: string[]; sorts: SortOption[] }) {
   const board = useBoard();
@@ -90,7 +90,7 @@ export default function CountryGrid({ countries, regions, sorts }: { countries: 
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Find a country…"
-              className="h-12 w-full rounded-full border-2 border-cream/25 bg-cream pl-11 pr-4 text-base font-bold text-ink placeholder:font-semibold placeholder:text-ink/45 focus:border-sun"
+              className="h-12 w-full rounded-full border-2 border-cream/25 bg-paper pl-11 pr-4 text-base font-bold text-ink placeholder:font-semibold placeholder:text-ink/45 focus:border-sun"
             />
           </label>
         </div>
@@ -150,7 +150,7 @@ export default function CountryGrid({ countries, regions, sorts }: { countries: 
                       <img src={flagSrc(c.slug)} alt="" loading="lazy" className="ccard-wash" />
                       <img src={flagSrc(c.slug)} alt="" loading="lazy" className="ccard-sticker" />
                       {stat && (
-                        <span className="absolute right-3 top-3 z-[2] flex h-9 min-w-9 items-center justify-center rounded-full bg-sun px-2 font-display text-lg font-extrabold text-ink shadow-[0_3px_0_#1b1f5e]">
+                        <span className="absolute right-3 top-3 z-[2] flex h-9 min-w-9 items-center justify-center rounded-full bg-sun px-2 font-display text-lg font-extrabold text-ink shadow-[0_3px_0_#24123D]">
                           #{i + 1}
                         </span>
                       )}

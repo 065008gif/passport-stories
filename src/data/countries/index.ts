@@ -71,7 +71,7 @@ export const getCountryByIso = (iso: string | number | undefined) =>
 export const INDIA = india;
 
 /** Sunset accent colour for a country, cycled so neighbours differ. */
-const ACCENTS = ['#FFB703', '#FB8500', '#F94144'];
+const ACCENTS = ['#FFB703', '#FF7A1A', '#FF4F7B'];
 export const accentOf = (c: Country) => ACCENTS[COUNTRIES.indexOf(c) % ACCENTS.length];
 
 /** Country of the Week: pinned in site.ts, or rotating weekly (never India). */

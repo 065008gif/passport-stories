@@ -7,25 +7,28 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        ink: '#1B1F5E', // deep indigo: base, ring, dark surfaces
-        night: 'rgb(var(--night) / <alpha-value>)', // darker shade of ink for the page background
+        ink: '#24123D', // deep plum: text on bright colours, dark details (Fiesta theme)
+        night: 'rgb(var(--night) / <alpha-value>)', // the page background (light warm cream in the Fiesta theme)
         sun: '#FFB703',
-        tang: '#FB8500',
-        coral: '#F27B35', // was red; the owner asked for no red, so this is now a warm orange
-        cream: 'rgb(var(--cream) / <alpha-value>)',
+        tang: '#FF7A1A',
+        coral: '#FF4F7B', // Fiesta magenta
+        cream: 'rgb(var(--cream) / <alpha-value>)', // main text colour (deep plum in the Fiesta theme)
+        paper: '#FFFFFF', // cards and tickets
         teal: '#06A77D',
-        sky: '#4CC9F0',
+        sky: '#6C4CF5', // Fiesta electric violet (kept the old name so every page picks it up)
         panel: 'rgb(var(--panel) / <alpha-value>)',
-        violet: '#B693FF', // supporting accents added in v7
+        violet: '#B693FF', // soft lavender accent
+        magenta: '#FF4F7B',
       },
       fontFamily: {
         chunk: ['"Bowlby One"', '"Bricolage Grotesque Variable"', 'system-ui', 'sans-serif'],
-        display: ['"Bricolage Grotesque Variable"', 'system-ui', 'sans-serif'],
+        display: ['"DM Serif Display"', 'Georgia', 'serif'],
+        ui: ['"Bricolage Grotesque Variable"', 'system-ui', 'sans-serif'],
         sans: ['"DM Sans Variable"', 'system-ui', 'sans-serif'],
         mono: ['"JetBrains Mono Variable"', 'ui-monospace', 'monospace'],
       },
       boxShadow: {
-        ticket: '0 18px 40px -18px rgba(0,0,0,.55)',
+        ticket: '0 18px 40px -18px rgba(36,18,61,.35)',
       },
     },
   },

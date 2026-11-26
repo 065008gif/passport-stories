@@ -21,7 +21,7 @@ const GATES = [
     title: 'Your life, abroad',
     text: 'Plug in your pay, rent and hours. We print the same life in another country.',
     cta: 'Print my pass',
-    color: '#FB8500',
+    color: '#FF7A1A',
   },
   {
     gate: 'A2',
@@ -31,7 +31,7 @@ const GATES = [
     title: 'Head to head',
     text: 'Pick any two countries. See who works longer, eats later and travels further.',
     cta: 'Start comparing',
-    color: '#4CC9F0',
+    color: '#6C4CF5',
   },
   {
     gate: 'A3',
@@ -78,7 +78,7 @@ export default function BoardingGates() {
               Boarding now · 4 gates open
             </p>
             <h2 id="gates-title" className="chunk mt-2 text-[1.9rem] leading-[0.95] text-ink sm:mt-3 sm:text-6xl">
-              Your turn to <span className="text-cream [-webkit-text-stroke:2px_#1B1F5E] [paint-order:stroke_fill]">take off.</span>
+              Your turn to <span className="text-cream [-webkit-text-stroke:2px_#24123D] [paint-order:stroke_fill]">take off.</span>
             </h2>
           </div>
           <p className="max-w-sm text-sm font-semibold text-ink/80 sm:text-base">Pick a gate. Every one ends with something you can keep or share.</p>
@@ -88,7 +88,7 @@ export default function BoardingGates() {
           {/* The dotted hop route and the plane (desktop) */}
           <div aria-hidden className="relative mb-2 h-12 sm:h-16 lg:mb-0 lg:h-20">
             <svg viewBox="0 0 100 20" preserveAspectRatio="none" className="absolute inset-0 h-full w-full overflow-visible">
-              <path d="M12.5 18 Q25 0 37.5 18 Q50 0 62.5 18 Q75 0 87.5 18" fill="none" stroke="#1B1F5E" strokeOpacity=".7" strokeWidth="3" strokeDasharray="1 7" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+              <path d="M12.5 18 Q25 0 37.5 18 Q50 0 62.5 18 Q75 0 87.5 18" fill="none" stroke="#24123D" strokeOpacity=".7" strokeWidth="3" strokeDasharray="1 7" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
             </svg>
             {GATES.map((g, i) => (
               <span key={g.gate} className="absolute bottom-[4px] h-4 w-4 -translate-x-1/2 rounded-full border-[3px] border-ink" style={{ left: `${12.5 + i * 25}%`, background: g.color }}>
@@ -125,7 +125,7 @@ export default function BoardingGates() {
                   <span className="flex items-center justify-between px-3 pt-3 sm:px-4 sm:pt-4">
                     <span className="chunk text-lg leading-none sm:text-3xl">{g.from}</span>
                     <span className="mx-1 flex-1 border-t-2 border-dashed border-ink/25 sm:mx-2" />
-                    <span aria-hidden className="text-sm sm:text-xl" style={{ color: g.color === '#FFB703' ? '#FB8500' : g.color }}>
+                    <span aria-hidden className="text-sm sm:text-xl" style={{ color: g.color === '#FFB703' ? '#FF7A1A' : g.color }}>
                       ✈
                     </span>
                     <span className="mx-1 flex-1 border-t-2 border-dashed border-ink/25 sm:mx-2" />

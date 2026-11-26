@@ -31,14 +31,14 @@ export function SampleTag({ stat }: { stat: Stat }) {
 }
 
 /**
- * Page heading backdrop: starry indigo sky sinking into a sunset, with the
- * striped sun from the logo. The look of the first published version.
+ * Page heading backdrop: a warm cream sky with confetti dots and a soft
+ * magenta glow, with the striped sun from the logo.
  */
 export function Poster({ code }: { code?: string }) {
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
       <div className="stars absolute inset-0" />
-      <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-coral/70 via-[#7b2f6b]/50 to-transparent" />
+      <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-coral/25 via-sun/15 to-transparent" />
       <div className="retro-sun absolute -bottom-[16vmin] right-[6%] h-[46vmin] w-[46vmin] opacity-95 sm:right-[12%]" />
       {code && <span className="sign absolute -right-4 top-6 select-none text-[34vw] leading-none text-cream/[0.06] sm:text-[22vw]">{code}</span>}
       <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-night/80 to-transparent" />

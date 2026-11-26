@@ -444,8 +444,8 @@ export default function AdminClient({ names }: { names: Record<string, string> }
                   <div className="mt-3 grid gap-4 md:grid-cols-2">
                     <BarList title="Boarding passes printed" note="Your Life, by destination." rows={stats.features.prints.map((c) => ({ ...c, name: names[c.name] || c.name }))} />
                     <BarList title="Home page gates" note="Which 'Your turn to take off' gate people picked." rows={stats.features.gates} color="#06A77D" />
-                    <BarList title="Globe spins" note="Drags on the home page globe." rows={stats.features.spins} color="#4CC9F0" />
-                    <BarList title="Comparisons run" rows={stats.features.compares} color="#FB8500" />
+                    <BarList title="Globe spins" note="Drags on the home page globe." rows={stats.features.spins} color="#6C4CF5" />
+                    <BarList title="Comparisons run" rows={stats.features.compares} color="#FF7A1A" />
                     <BarList title="Play Zone games" rows={stats.features.games} color="#B693FF" />
                     <BarList title="Story cards downloaded" rows={stats.features.shares} color="#FFB703" />
                   </div>
@@ -454,11 +454,11 @@ export default function AdminClient({ names }: { names: Record<string, string> }
 
               <div className="mt-4 grid gap-4 md:grid-cols-2">
                 <BarList title="What people pressed" note="Every button and link, by its label." rows={stats.clicks} />
-                <BarList title="Events" note="Every tracked interaction." rows={stats.events} color="#4CC9F0" />
+                <BarList title="Events" note="Every tracked interaction." rows={stats.events} color="#6C4CF5" />
                 <BarList title="Countries opened" rows={stats.countries.map((c) => ({ ...c, name: names[c.name] || c.name }))} color="#06A77D" />
-                <BarList title="Sections seen" note="Blocks that scrolled into view." rows={stats.sections} color="#FB8500" />
+                <BarList title="Sections seen" note="Blocks that scrolled into view." rows={stats.sections} color="#FF7A1A" />
                 <BarList title="Where visits came from" note="UTM source, else the referring site, else direct." rows={stats.sources} color="#B693FF" />
-                <BarList title="Devices" rows={stats.devices} color="#4CC9F0" />
+                <BarList title="Devices" rows={stats.devices} color="#6C4CF5" />
               </div>
             </>
           )}

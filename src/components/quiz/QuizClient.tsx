@@ -37,8 +37,8 @@ type Mode = 'clue' | 'hl' | 'flag';
 
 const MODES: Record<Mode, { name: string; emoji: string; line: string; how: string; color: string }> = {
   clue: { name: 'Clue Chase', emoji: '🕵️', line: 'Name the country from its clues.', how: '5 rounds · fewer clues = more points', color: '#FFB703' },
-  hl: { name: 'Higher or Lower', emoji: '⚖️', line: 'Who has the bigger number?', how: '5 lives · take your time', color: '#FB8500' },
-  flag: { name: 'Flag Run', emoji: '🏁', line: 'Ten flags. How many do you know?', how: '10 flags · no clock', color: '#4CC9F0' },
+  hl: { name: 'Higher or Lower', emoji: '⚖️', line: 'Who has the bigger number?', how: '5 lives · take your time', color: '#FF7A1A' },
+  flag: { name: 'Flag Run', emoji: '🏁', line: 'Ten flags. How many do you know?', how: '10 flags · no clock', color: '#6C4CF5' },
 };
 
 const TITLES = ['Tourist', 'Backpacker', 'Explorer', 'Navigator', 'Globetrotter', 'Captain', 'Legend'];
@@ -112,8 +112,8 @@ function makeQuestion(mode: Mode, countries: QuizCountry[], avoid?: string): Que
     : { kind: 'flag', prompt: 'Whose flag?', flag: answer.slug, options, answer: answer.slug };
 }
 
-const COLORS = ['#FFB703', '#06A77D', '#4CC9F0', '#FB8500'];
-const LETTER_COLORS = ['#FFB703', '#4CC9F0', '#06A77D', '#FB8500'];
+const COLORS = ['#FFB703', '#06A77D', '#6C4CF5', '#FF7A1A'];
+const LETTER_COLORS = ['#FFB703', '#6C4CF5', '#06A77D', '#FF7A1A'];
 function Confetti() {
   return (
     <span aria-hidden className="pointer-events-none fixed inset-0 z-[60] overflow-hidden">
@@ -264,7 +264,7 @@ export default function QuizClient({ countries }: { countries: QuizCountry[] }) 
       <div className="mx-auto max-w-4xl" data-section="arcade-lobby">
         {/* Player card */}
         <div className="flex flex-wrap items-center gap-4 rounded-3xl border border-cream/20 bg-night/70 p-4 backdrop-blur sm:p-5" data-rv="up">
-          <div className="flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-2xl bg-sun text-ink shadow-[0_4px_0_#fb8500]">
+          <div className="flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-2xl bg-sun text-ink shadow-[0_4px_0_#FF7A1A]">
             <span className="font-mono text-[9px] font-bold uppercase tracking-widest">Level</span>
             <span className="h-display text-3xl leading-none">{level + 1}</span>
           </div>
@@ -410,7 +410,7 @@ export default function QuizClient({ countries }: { countries: QuizCountry[] }) 
       {rounds > 0 && (
         <ol className="flex gap-1.5" aria-label={`Question ${Math.min(round + 1, rounds)} of ${rounds}`}>
           {Array.from({ length: rounds }, (_, i) => (
-            <li key={i} className={`h-2.5 flex-1 rounded-full transition-colors duration-300 ${i < round ? 'bg-sun' : i === round ? 'bg-cream' : 'bg-cream/20'}`} />
+            <li key={i} className={`h-2.5 flex-1 rounded-full transition-colors duration-300 ${i < round ? 'bg-sun' : i === round ? 'bg-paper' : 'bg-cream/20'}`} />
           ))}
         </ol>
       )}

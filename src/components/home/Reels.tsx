@@ -41,7 +41,7 @@ export function SocialButtons() {
     <div className="flex flex-wrap gap-3">
       {links.map(({ platform, href, label }, i) => {
         const ig = platform === 'instagram';
-        const cls = `social-btn bg-cream text-ink shadow-[0_5px_0_#fb8500] ${i ? 'rotate-[1.5deg]' : '-rotate-[1.5deg]'}`;
+        const cls = `social-btn bg-paper text-ink shadow-[0_5px_0_#FF7A1A] ${i ? 'rotate-[1.5deg]' : '-rotate-[1.5deg]'}`;
         const icon = ig ? (
           <span className="flex h-8 w-8 items-center justify-center rounded-[10px]" style={{ background: IG_GRADIENT }}>
             <InstagramLogo className="h-5 w-5" color="#fff" />
@@ -154,7 +154,7 @@ export default function Reels() {
                 className="sunset-sky relative flex aspect-[9/16] flex-col justify-between overflow-hidden rounded-3xl border-2 border-cream/15 p-4 transition-transform duration-300 hover:-translate-y-2 hover:rotate-1 hover:border-sun"
               >
                 <span className="kicker self-start rounded-full bg-night/70 px-2 py-1 text-cream">Reel · {String(i + 1).padStart(2, '0')}</span>
-                <span aria-hidden className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-cream text-ink">
+                <span aria-hidden className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-paper text-ink">
                   <InstagramLogo className="h-8 w-8" />
                 </span>
                 <p className="rounded-xl bg-night/75 p-3 text-sm font-semibold leading-snug text-cream">

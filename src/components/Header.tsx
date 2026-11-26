@@ -15,9 +15,9 @@ import { earnBadge, usePassport } from '@/lib/passport';
 /** Phone menu tiles: one bright colour, an icon and a short line per page. */
 const MENU_TILES = [
   { bg: '#FFB703', icon: '🏠', line: 'The flight and the globe' },
-  { bg: '#4CC9F0', icon: '🌍', line: 'Every country, six topics' },
+  { bg: '#6C4CF5', icon: '🌍', line: 'Every country, six topics' },
   { bg: '#B693FF', icon: '⚖️', line: 'Any two, side by side' },
-  { bg: '#FB8500', icon: '🎫', line: 'Print your boarding pass' },
+  { bg: '#FF7A1A', icon: '🎫', line: 'Print your boarding pass' },
   { bg: '#06A77D', icon: '🎮', line: 'Three quick games' },
   { bg: '#FFD24D', icon: '💬', line: 'Facts from travellers' },
 ];
@@ -60,7 +60,7 @@ export default function Header() {
   const isActive = (href: string) => (href === '/' ? pathname === '/' : pathname.startsWith(href));
 
   return (
-    <header className="sticky top-0 z-50 bg-night/90 shadow-[0_8px_30px_-10px_rgba(0,0,0,.7)] backdrop-blur-md">
+    <header className="sticky top-0 z-50 bg-night/90 shadow-[0_8px_30px_-14px_rgba(36,18,61,.35)] backdrop-blur-md">
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded focus:bg-sun focus:px-3 focus:py-2 focus:text-ink">
         Skip to content
       </a>
@@ -68,7 +68,7 @@ export default function Header() {
         <Link href="/" onClick={onLogo} className="flex shrink-0 items-center gap-2" aria-label="Passport Stories home">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={site.logo} alt="" width={60} height={60} className="h-11 w-11 transition-transform duration-300 hover:rotate-12 md:h-[3.9rem] md:w-[3.9rem]" />
-          <span className="sign hidden text-[17px] leading-[0.95] text-cream sm:block md:text-[1.55rem]">
+          <span className="wordmark hidden text-[17px] leading-[0.95] text-cream sm:block md:text-[1.55rem]">
             Passport
             <br />
             Stories
@@ -81,7 +81,7 @@ export default function Header() {
               key={n.href}
               href={n.href}
               aria-current={isActive(n.href) ? 'page' : undefined}
-              className={`whitespace-nowrap rounded-full px-2.5 py-2 text-[0.98rem] font-extrabold transition-colors xl:px-4 xl:text-[1.05rem] ${isActive(n.href) ? 'bg-sun text-ink shadow-[0_3px_0_#fb8500]' : 'text-cream hover:bg-cream/15 hover:text-sun'}`}
+              className={`whitespace-nowrap rounded-full px-2.5 py-2 text-[0.98rem] font-extrabold transition-colors xl:px-4 xl:text-[1.05rem] ${isActive(n.href) ? 'bg-sun text-ink shadow-[0_3px_0_#FF7A1A]' : 'text-cream hover:bg-cream/15 hover:text-sun'}`}
             >
               {n.label}
             </Link>
@@ -115,17 +115,17 @@ export default function Header() {
                   </clipPath>
                 </defs>
                 <g clipPath="url(#ps-cover)">
-                  <rect width="46" height="58" fill="#1B1F5E" />
-                  <rect width="46" height="16" fill="#FB8500" />
+                  <rect width="46" height="58" fill="#24123D" />
+                  <rect width="46" height="16" fill="#FF7A1A" />
                   <rect y="16" width="46" height="12" fill="#FFB703" />
                   <circle cx="25" cy="30" r="9" fill="#FFF4E0" />
-                  <rect y="30" width="46" height="28" fill="#4CC9F0" />
-                  <rect y="35" width="46" height="2" fill="#1B1F5E" opacity=".45" />
-                  <rect y="40" width="46" height="2" fill="#1B1F5E" opacity=".45" />
-                  <rect y="45" width="46" height="13" fill="#1B1F5E" />
+                  <rect y="30" width="46" height="28" fill="#6C4CF5" />
+                  <rect y="35" width="46" height="2" fill="#24123D" opacity=".45" />
+                  <rect y="40" width="46" height="2" fill="#24123D" opacity=".45" />
+                  <rect y="45" width="46" height="13" fill="#24123D" />
                   <rect width="6" height="58" fill="#0D0F3A" />
                 </g>
-                <text x="26" y="11" textAnchor="middle" fontFamily="Bowlby One, Arial Black" fontSize="5.4" fill="#1B1F5E" letterSpacing=".4">
+                <text x="26" y="11" textAnchor="middle" fontFamily="Bowlby One, Arial Black" fontSize="5.4" fill="#24123D" letterSpacing=".4">
                   PASSPORT
                 </text>
                 <text x="26" y="54" textAnchor="middle" fontFamily="Bowlby One, Arial Black" fontSize="5.4" fill="#FFB703" letterSpacing=".4">
@@ -168,7 +168,7 @@ export default function Header() {
       <div aria-hidden className="h-[3px] bg-gradient-to-r from-coral via-tang to-sun" />
       {open && (
         createPortal(<div className="fixed inset-x-0 bottom-0 top-[var(--header)] z-40 md:hidden">
-          <button aria-label="Close menu" className="absolute inset-0 bg-[#05061f]/70 backdrop-blur-sm" onClick={() => setOpen(false)} />
+          <button aria-label="Close menu" className="absolute inset-0 bg-[#24123d]/40 backdrop-blur-sm" onClick={() => setOpen(false)} />
           <nav id="mobile-menu" aria-label="Main (mobile)" className="relative max-h-full overflow-y-auto rounded-b-3xl border-b-2 border-sun/60 bg-night px-4 pb-5 pt-4 shadow-[0_20px_40px_rgba(0,0,0,.6)]">
             <p className="kicker text-sun">Where to?</p>
             <ul className="mt-3 grid grid-cols-2 gap-2.5">

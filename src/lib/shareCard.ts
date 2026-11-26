@@ -19,7 +19,7 @@ export interface StoryCard {
 
 const W = 1080;
 const H = 1920;
-const C = { ink: '#1B1F5E', night: '#0D0F3A', sun: '#FFB703', tang: '#FB8500', coral: '#F94144', cream: '#FFF4E0', teal: '#06A77D', sky: '#4CC9F0' };
+const C = { ink: '#24123D', night: '#0D0F3A', sun: '#FFB703', tang: '#FF7A1A', coral: '#FF4F7B', cream: '#FFF4E0', teal: '#06A77D', sky: '#6C4CF5' };
 
 function wrap(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
   const lines: string[] = [];

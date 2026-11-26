@@ -10,7 +10,7 @@
 import type { CSSProperties, ReactNode } from 'react';
 
 const DARK = '#0D0F3A';
-const MID = '#1B1F5E';
+const MID = '#24123D';
 const LIT = '#FFB703';
 const G = 292; // ground line
 
@@ -365,7 +365,7 @@ const SCENES: Record<string, SceneDef> = {
           return (
             <g key={i}>
               <rect x={x} y={G - 16} width={2} height={18} fill={DARK} />
-              <path d={`M${x - 5} ${G - 16} q0 -12 3 -12 l3 6 l3 -6 q3 0 3 12 q-6 6 -12 0`} fill={['#F94144', '#FFB703', '#FB8500'][i % 3]} />
+              <path d={`M${x - 5} ${G - 16} q0 -12 3 -12 l3 6 l3 -6 q3 0 3 12 q-6 6 -12 0`} fill={['#FF4F7B', '#FFB703', '#FF7A1A'][i % 3]} />
             </g>
           );
         })}
@@ -407,7 +407,7 @@ const SCENES: Record<string, SceneDef> = {
         {/* Northern lights */}
         <g className="scene-aurora" fill="none" strokeLinecap="round" opacity={0.75}>
           <path d="M420 120 Q620 30 820 96 T1200 60" stroke="#06A77D" strokeWidth={26} />
-          <path d="M480 160 Q700 80 900 140 T1200 110" stroke="#4CC9F0" strokeWidth={16} />
+          <path d="M480 160 Q700 80 900 140 T1200 110" stroke="#6C4CF5" strokeWidth={16} />
           <path d="M560 86 Q760 20 960 70 T1200 30" stroke="#06A77D" strokeWidth={10} opacity={0.7} />
         </g>
         {hills(HILLS_B, 0.6)}
@@ -516,7 +516,7 @@ const SCENES: Record<string, SceneDef> = {
           const t = (i + 0.5) / 12;
           const x = 560 + t * 640;
           const y = 26 + 4 * t * (1 - t) * 46 * 0.98 + (22 - 26) * t;
-          return <path key={i} d={`M${x - 16} ${y} h32 v22 l-8 -6 l-8 6 l-8 -6 l-8 6 Z`} fill={['#F94144', '#FFB703', '#06A77D', '#4CC9F0', '#FB8500'][i % 5]} opacity={0.9} />;
+          return <path key={i} d={`M${x - 16} ${y} h32 v22 l-8 -6 l-8 6 l-8 -6 l-8 6 Z`} fill={['#FF4F7B', '#FFB703', '#06A77D', '#6C4CF5', '#FF7A1A'][i % 5]} opacity={0.9} />;
         })}
         {R(0, G, 1200, 40)}
       </>
@@ -610,12 +610,12 @@ const SCENES: Record<string, SceneDef> = {
 
 const PCOLORS: Record<Particle, string[]> = {
   petals: ['#FFC2D1', '#FFE5EC', '#FF8FAB'],
-  marigold: ['#FFB703', '#FB8500', '#F94144'],
+  marigold: ['#FFB703', '#FF7A1A', '#FF4F7B'],
   snow: ['#FFF4E0', '#FFFFFF'],
-  stars: ['#FFF4E0', '#FFB703', '#4CC9F0'],
-  lanterns: ['#F94144', '#FB8500'],
-  leaves: ['#FB8500', '#F94144', '#FFB703'],
-  confetti: ['#F94144', '#FFB703', '#06A77D', '#4CC9F0', '#FB8500'],
+  stars: ['#FFF4E0', '#FFB703', '#6C4CF5'],
+  lanterns: ['#FF4F7B', '#FF7A1A'],
+  leaves: ['#FF7A1A', '#FF4F7B', '#FFB703'],
+  confetti: ['#FF4F7B', '#FFB703', '#06A77D', '#6C4CF5', '#FF7A1A'],
   sand: ['#FFB703', '#FFF4E0'],
 };
 
