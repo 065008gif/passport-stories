@@ -385,10 +385,11 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
     for (let i = 0; i < nLanterns; i++) lanterns.push(newLantern(false));
     lanterns.sort((a, b) => a.d - b.d);
 
+    // fewer stars over the blossom and the bridge; the mountains keep their bright sky
     const stars: Star[] = Array.from({ length: phone() ? 160 : 280 }, () => {
       const big = Math.random() < 0.07;
       return { x: rand(-500, 2100), y: rand(-420, 560) * (Math.random() < 0.6 ? 0.7 : 1), r: big ? rand(10, 18) : rand(0.7, 1.9), ph: rand(0, 6.28), sp: rand(0.6, 2.6), big };
-    });
+    }).filter((s) => s.x > 1150 || Math.random() < 0.3);
     let shoot: { x: number; y: number; vx: number; vy: number; t: number } | null = null;
     let nextShoot = 2;
 
@@ -892,7 +893,7 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
         puffT -= dt;
         if (puffT < 0) {
           puffT = 0.14;
-          puffs.push({ x: 284 + rand(-3, 3), y: 750, t: 0, d: 0.68, s: 1 }, { x: 1194 + rand(-2, 2), y: 744, t: 0, d: 0.68, s: 0.6 });
+          puffs.push({ x: 284 + rand(-3, 3), y: 750, t: 0, d: 0.68, s: 1 });
         }
       }
       for (let i = puffs.length - 1; i >= 0; i--) {
@@ -1120,7 +1121,7 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
         {/* the words, once the whole world is in view */}
         <div className="culture-copy">
           <h1 id="hero-title" className="culture-title">
-            One World. <span>Endless Ways to Live.</span>
+            Explore Cultures, <span>Uncover Curiosities.</span>
           </h1>
         </div>
 

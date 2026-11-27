@@ -62,7 +62,7 @@ function ridge(x0: number, x1: number, y: number, amp: number, base: number, see
 }
 
 /* ------------------------------ people ------------------------------ */
-export type Garb = { robe: string; trim?: string; skin: string; hair: string; rim?: string; obi?: string; collar?: string };
+export type Garb = { robe: string; trim?: string; skin: string; hair: string; rim?: string; obi?: string; collar?: string; bun?: string; topknot?: boolean; braids?: boolean };
 
 /** A standing figure: slender, long garment, small head. (x, y) is the feet; h is height. */
 export function Standing({ x, y, h, g, lean = 0, arm = 'down', className = '', parasol }: { x: number; y: number; h: number; g: Garb; lean?: number; arm?: 'down' | 'up' | 'forward'; className?: string; parasol?: string }) {
@@ -95,6 +95,20 @@ export function Standing({ x, y, h, g, lean = 0, arm = 'down', className = '', p
       <g className="cw-head">
         <circle cx={x} cy={top + hr} r={hr} fill={g.skin} />
         <path d={`M${x - hr * 1.02},${top + hr * 1.05} Q${x - hr},${top - hr * 0.15} ${x},${top - hr * 0.05} Q${x + hr * 1.05},${top} ${x + hr * 0.9},${top + hr * 0.7} Q${x + hr * 0.2},${top + hr * 0.35} ${x - hr * 1.02},${top + hr * 1.05} Z`} fill={g.hair} />
+        {g.bun && (
+          <>
+            <circle cx={x} cy={top - hr * 0.25} r={hr * 0.6} fill={g.hair} />
+            <path d={`M${x - hr * 1.1},${top - hr * 0.5} L${x + hr * 1.1},${top}`} stroke={g.bun} strokeWidth={hr * 0.22} strokeLinecap="round" />
+            <circle cx={x + hr * 1.1} cy={top} r={hr * 0.22} fill={g.bun} />
+          </>
+        )}
+        {g.topknot && <rect x={x - hr * 0.35} y={top - hr * 0.75} width={hr * 0.7} height={hr * 0.7} rx={hr * 0.2} fill={g.hair} />}
+        {g.braids && (
+          <>
+            <path d={`M${x - hr * 0.9},${top + hr * 0.9} Q${x - hr * 1.3},${top + hr * 2.4} ${x - hr * 0.8},${top + hr * 3.4}`} stroke={g.hair} strokeWidth={hr * 0.5} fill="none" strokeLinecap="round" />
+            <path d={`M${x + hr * 0.9},${top + hr * 0.9} Q${x + hr * 1.3},${top + hr * 2.4} ${x + hr * 0.8},${top + hr * 3.4}`} stroke={g.hair} strokeWidth={hr * 0.5} fill="none" strokeLinecap="round" />
+          </>
+        )}
       </g>
     </g>
   );
@@ -171,10 +185,10 @@ const G = {
   k6: { robe: '#fdf3e7', obi: '#d32f2f', collar: '#d32f2f', skin: '#e6ba98', hair: '#140e16', trim: '#d32f2f' },
   yukata: { robe: '#283593', obi: '#b0bec5', collar: '#e8eaf6', skin: '#d8a984', hair: '#181216' },
   // hanfu on the lantern bridge
-  hanfuRed: { robe: '#d32f2f', obi: '#ffcc4d', collar: '#fff3d6', skin: '#e2b48e', hair: '#141016', trim: '#ffcc4d' },
-  hanfuJade: { robe: '#1f8a6e', obi: '#ffd27a', collar: '#fdf3e0', skin: '#d8a882', hair: '#161016' },
+  hanfuRed: { robe: '#d32f2f', obi: '#ffcc4d', collar: '#fff3d6', skin: '#f1d0b0', hair: '#141016', trim: '#ffcc4d', bun: '#ffd24a' },
+  hanfuJade: { robe: '#1f8a6e', obi: '#ffd27a', collar: '#fdf3e0', skin: '#ecc8a6', hair: '#161016', topknot: true },
   // Switzerland: a dirndl and an alpine herder's jacket
-  dirndl: { robe: '#c62828', obi: '#ffffff', collar: '#ffffff', skin: '#efc8a8', hair: '#8a5a2a', trim: '#2e7d32' },
+  dirndl: { robe: '#c62828', obi: '#ffffff', collar: '#ffffff', skin: '#f6dac2', hair: '#e6be6a', trim: '#2e7d32', braids: true },
   herder: { robe: '#5d4037', obi: '#e8d5b0', collar: '#ffffff', skin: '#e8bc98', hair: '#3a2a1e' },
 } satisfies Record<string, Garb>;
 
@@ -568,7 +582,6 @@ export default function CultureWorld() {
           ))}
           <rect x="1240" y="730" width="3" height="56" fill="#3a2a22" />
           <HangingLantern x={1252} y={744} r={6} i={2} string={8} color="#ffb03a" />
-          <Seated x={1180} y={768} h={52} g={G.dirndl} facing={1} cup />
         </g>
         {/* a small chalet with two warm windows */}
         <g>
@@ -580,6 +593,8 @@ export default function CultureWorld() {
           <rect x="1576" y="762" width="20" height="16" rx="2" fill="#ffd27a" />
           <rect x="1551" y="778" width="18" height="24" rx="2" fill="#5a2e1e" />
         </g>
+        {/* a woman in a dirndl waving beside the flag */}
+        <Standing x={1446} y={806} h={64} g={G.dirndl} arm="up" />
         {/* the Swiss flag beside the chalet */}
         <g>
           <rect x="1470" y="712" width="3" height="92" fill="#f1e8da" />
