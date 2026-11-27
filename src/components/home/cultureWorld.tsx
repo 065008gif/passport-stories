@@ -189,7 +189,7 @@ const G = {
   hanfuJade: { robe: '#1f8a6e', obi: '#ffd27a', collar: '#fdf3e0', skin: '#ecc8a6', hair: '#161016', topknot: true },
   // Switzerland: a dirndl and an alpine herder's jacket
   dirndl: { robe: '#c62828', obi: '#ffffff', collar: '#ffffff', skin: '#f6dac2', hair: '#e6be6a', trim: '#2e7d32', braids: true },
-  herder: { robe: '#5d4037', obi: '#e8d5b0', collar: '#ffffff', skin: '#e8bc98', hair: '#3a2a1e' },
+  herder: { robe: '#d7263d', obi: '#ffffff', collar: '#ffffff', skin: '#f4d2b4', hair: '#c89a4a', trim: '#ffd24a' },
 } satisfies Record<string, Garb>;
 
 const PETAL = ['#ff9cc8', '#ffc4de', '#ff6fb0', '#ffe4f0', '#f0559a'];

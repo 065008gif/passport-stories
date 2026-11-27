@@ -118,7 +118,7 @@ export default function CountryDirectory({ countries, regions, sorts }: { countr
     const i = list.findIndex((x) => x.slug === sel);
     [list[i + 1], list[i - 1]].forEach((x) => {
       const p = x && COUNTRY_PHOTOS[x.slug];
-      if (p) new Image().src = photoUrl(p.id, 1280);
+      if (p) new Image().src = p.src ?? photoUrl(p.id, 1280);
     });
   }, [list, sel]);
 
@@ -223,7 +223,7 @@ export default function CountryDirectory({ countries, regions, sorts }: { countr
                 {COUNTRY_PHOTOS[c.slug] && (
                   <div className="wx-photo-wrap">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img className="wx-photo" src={photoUrl(COUNTRY_PHOTOS[c.slug].id, 1280)} srcSet={photoSet(COUNTRY_PHOTOS[c.slug].id)} sizes="(min-width: 1024px) 60vw, 100vw" alt={COUNTRY_PHOTOS[c.slug].alt} decoding="async" />
+                    <img className="wx-photo" src={COUNTRY_PHOTOS[c.slug].src ?? photoUrl(COUNTRY_PHOTOS[c.slug].id, 1280)} srcSet={COUNTRY_PHOTOS[c.slug].src ? undefined : photoSet(COUNTRY_PHOTOS[c.slug].id)} sizes="(min-width: 1024px) 60vw, 100vw" alt={COUNTRY_PHOTOS[c.slug].alt} decoding="async" />
                   </div>
                 )}
                 <span className="wx-shade" aria-hidden />
@@ -263,7 +263,7 @@ export default function CountryDirectory({ countries, regions, sorts }: { countr
                         <path d="M2 12 22 3l-5 18-5-7-10-2z" fill="currentColor" />
                       </svg>
                     </a>
-                    {COUNTRY_PHOTOS[c.slug] && (
+                    {COUNTRY_PHOTOS[c.slug]?.credit && (
                       <a className="wx-credit" href={`https://www.pexels.com/photo/${COUNTRY_PHOTOS[c.slug].id}/`} target="_blank" rel="noopener noreferrer">
                         Photo: {COUNTRY_PHOTOS[c.slug].credit} / Pexels
                       </a>

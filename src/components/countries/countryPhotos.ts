@@ -9,11 +9,13 @@ export interface CountryPhoto {
   alt: string;
   caption: string;
   credit: string;
+  /** a local image instead of a Pexels one */
+  src?: string;
 }
 
 export const COUNTRY_PHOTOS: Record<string, CountryPhoto> = {
   japan: { id: 29537669, alt: 'A family in colourful kimonos walking along a historic street in Kyoto', caption: 'Kimonos on an old street in Kyoto', credit: 'G N' },
-  india: { id: 8819344, alt: 'Friends in traditional Indian clothes celebrating Diwali with marigold garlands and lit lamps', caption: 'Diwali, the festival of lights', credit: 'Yan Krukau' },
+  india: { id: 0, src: '/photos/india-diwali.jpg', alt: 'A street at Diwali lined with glowing diyas on rangoli, fairy lights and fireworks overhead', caption: 'Diwali, the festival of lights', credit: '' },
   italy: { id: 13784008, alt: 'People dining outdoors in Piazza delle Erbe, Verona', caption: 'Long lunches in a piazza in Verona', credit: 'Helena Jankovičová Kováčová' },
   mexico: { id: 16625366, alt: 'A street in San Miguel de Allende strung with colourful papel picado', caption: 'Papel picado over San Miguel de Allende', credit: 'Jorge Acre' },
   china: { id: 28890198, alt: 'A crowded street hung with red lanterns during a night festival', caption: 'A festival night under red lanterns', credit: '征宇 郑' },
