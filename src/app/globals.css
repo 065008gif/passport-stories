@@ -2407,7 +2407,7 @@ footer.bg-ink {
    HOME · The Culture Map hero (illustrated world, three states)
    ================================================================== */
 .culture-hero { height: 560vh; }
-@media (max-width: 767px) { .culture-hero { height: 480vh; } }
+@media (max-width: 767px) { .culture-hero { height: 540vh; } }
 .culture-stage {
   --words: 0;
   --start: 1;
@@ -2492,8 +2492,24 @@ footer.bg-ink {
 .culture-cta:hover svg { translate: 3px 0; }
 .culture-cta:focus-visible { outline: 3px solid #ffe2a8; outline-offset: 4px; }
 
-/* the globe section slides up over the last ivory cloud */
-.culture-hero + .explore-section { position: relative; z-index: 2; margin-top: -22vh; }
+/* The globe section rises straight over the closing hero on a cloud edge:
+   it overlaps the last screen of the hero's runway, so there is no gap. */
+.culture-hero + .explore-section { position: relative; z-index: 2; margin-top: calc(var(--header) - 100svh); }
+.culture-hero + .explore-section::before,
+.culture-hero + .explore-section::after {
+  content: ''; position: absolute; left: 0; right: 0; pointer-events: none;
+  background-repeat: repeat-x; background-position: bottom; background-size: 900px 100%;
+}
+.culture-hero + .explore-section::before {
+  bottom: 100%; height: 170px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 900 170' preserveAspectRatio='none'><path d='M0,170 L0,96 C40,60 90,58 120,80 C150,30 230,24 262,70 C300,40 360,46 380,82 C420,20 520,14 548,74 C590,44 640,50 664,86 C700,40 780,36 806,82 C840,58 880,62 900,96 L900,170 Z' fill='%23e27ab8' fill-opacity='.55'/></svg>");
+}
+.culture-hero + .explore-section::after {
+  top: -110px; height: 112px;
+  background-position: 220px bottom;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 900 112' preserveAspectRatio='none'><path d='M0,112 L0,70 C30,40 80,34 110,58 C140,18 210,12 240,52 C270,30 320,32 340,62 C380,10 470,8 500,56 C540,30 590,34 612,66 C650,24 730,22 760,62 C800,40 860,44 900,70 L900,112 Z' fill='%23fff8ef'/></svg>");
+}
+.culture-hero + .explore-section > * { position: relative; z-index: 1; }
 
 /* place label */
 .culture-tip {

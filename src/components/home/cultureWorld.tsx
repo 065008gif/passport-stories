@@ -377,7 +377,7 @@ export default function CultureWorld() {
           ))}
         </g>
         {/* the Matterhorn in alpenglow (Switzerland) */}
-        <g data-spot="alps" className="cw-spot">
+        <g data-spot="alps" className="cw-spot" transform="translate(120 0)">
           <polygon points="1170,615 1258,522 1298,472 1334,402 1361,332 1391,262 1402,256 1409,300 1417,352 1439,432 1420,520 1380,615" fill="url(#cw-peak-lit)" />
           <polygon points="1402,256 1420,272 1450,340 1490,420 1540,500 1612,615 1380,615 1420,520 1439,432 1417,352 1409,300" fill="url(#cw-peak-shade)" />
           <path d="M1383,282 L1391,262 L1402,256 L1420,272 L1436,306 L1424,302 L1414,318 L1404,300 L1394,312 L1388,296 Z" fill="#ffffff" />
@@ -410,7 +410,7 @@ export default function CultureWorld() {
         <ellipse cx="905" cy="612" rx="520" ry="90" fill="url(#cw-sunpath)" />
 
         {/* the Matterhorn mirrored in the lake, broken by ripples */}
-        <g data-spot="alps" className="cw-spot cw-reflection" mask="url(#cw-reflect-mask)">
+        <g data-spot="alps" className="cw-spot cw-reflection" mask="url(#cw-reflect-mask)" transform="translate(120 0)">
           <g transform="translate(0 1230) scale(1 -1)">
             <polygon points="1170,615 1258,522 1298,472 1334,402 1361,332 1391,262 1402,256 1409,300 1417,352 1439,432 1420,520 1380,615" fill="#d9ccff" />
             <polygon points="1402,256 1420,272 1450,340 1490,420 1540,500 1612,615 1380,615 1420,520 1439,432 1417,352 1409,300" fill="#2c2070" />

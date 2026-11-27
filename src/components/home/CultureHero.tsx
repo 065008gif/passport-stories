@@ -12,14 +12,13 @@
  *   0.44  the Matterhorn under the stars, mist and fireflies (Switzerland)
  *   0.66  the whole world, then the words and the button
  *   0.80  closing: the camera walks down the path, the banks part, lanterns
- *         rush up and a curtain of clouds rises into the next section
+ *         rush up while the globe section rises over the hero on a cloud edge
  *
  * Performance: the SVG art (cultureWorld.tsx) never animates by itself, so
  * it only repaints when the camera moves. Everything alive is painted on two
- * canvases: the sky behind the art (gradient, stars, moon, shooting stars)
- * and the light in front of it (water waves and reflections, lantern glow,
- * sky lanterns, petals in depth of field, fireflies, mist, steam, the cloud
- * curtain). Reduced motion: the camera follows the scroll, nothing else moves.
+ * canvases: the sky behind the art (gradient, stars, moon, shooting stars,
+ * and an aurora over the alps) and the light in front of it (water waves and reflections, lantern glow,
+ * sky lanterns, petals in depth of field, fireflies, mist, steam). Reduced motion: the camera follows the scroll, nothing else moves.
  */
 import { useEffect, useRef, useState } from 'react';
 import CultureWorld, { SPOTS } from '@/components/home/cultureWorld';
@@ -60,12 +59,14 @@ const PATH = (phone: boolean, visW: number, visH: number): Shot[] => {
     { p: 0.1, cx: 795, cy: 556, s: 2.4 * f },
     { p: 0.22, cx: 150, cy: 650, s: 2.05 * f },
     { p: 0.32, cx: 180, cy: 645, s: 2.15 * f },
-    { p: 0.44, cx: 1360, cy: 540, s: 1.95 * f },
-    { p: 0.54, cx: 1320, cy: 560, s: 2.05 * f },
+    { p: 0.44, cx: 1460, cy: 540, s: 1.95 * f },
+    { p: 0.54, cx: 1400, cy: 560, s: 2.05 * f },
     { p: 0.68, cx: 800, cy: co, s: so },
   ];
 };
 const CLOSE_AT = 0.8;
+/** Test: aurora curtains over the mountains, merging into the night sky. Set false to remove. */
+const AURORA = true;
 
 function cameraAt(P: number, path: Shot[]) {
   if (P <= path[0].p) return path[0];
@@ -221,7 +222,6 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
     let wasRevealed = false;
     let camKey = '';
     const vars: Record<string, string> = {};
-    let curtain: { x: number; r: number; dy: number }[][] = [];
 
     const setVar = (n: string, v: string) => {
       if (vars[n] !== v) {
@@ -243,17 +243,6 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
       ox = (vw - W * k) / 2;
       oy = (vh - H * k) / 2;
       path = PATH(phone(), vw / k, vh / k);
-      // the cloud curtain: three bands of soft bumps, sized to the screen
-      curtain = [0, 1, 2].map((layer) => {
-        const out: { x: number; r: number; dy: number }[] = [];
-        let x = -60;
-        while (x < vw + 60) {
-          const r = rand(50, 120) * (phone() ? 0.6 : 1) * (1 + layer * 0.15);
-          out.push({ x, r, dy: rand(-20, 30) });
-          x += r * rand(0.9, 1.3);
-        }
-        return out;
-      });
       camKey = '';
     };
     size();
@@ -442,9 +431,6 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
       d: 0.68,
     }));
     const mists = Array.from({ length: 8 }, (_, i) => ({ x: rand(980, 1720), y: 628 + (i % 4) * 16 + rand(-6, 6), w: rand(260, 440), h: rand(30, 52), v: rand(5, 13), d: 0.6 }));
-    const flakes = Array.from({ length: reduce ? 0 : phone() ? 50 : 110 }, () => ({ x: rand(1000, 1900), y: rand(150, 620), r: rand(0.8, 2), v: rand(8, 20), ph: rand(0, 6.28) }));
-    const plume: { x: number; y: number; vx: number; vy: number; t: number; s: number }[] = [];
-    let plumeT = 0;
     const puffs: Puff[] = [];
     let puffT = 0;
     const rings: Ring[] = [];
@@ -501,6 +487,48 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
       }
       sky.fillStyle = g;
       sky.fillRect(0, 0, vw, vh);
+
+      // aurora: soft green to violet curtains above the alps, fading into the sky
+      if (AURORA && starVis > 0.1) {
+        sky.globalCompositeOperation = 'lighter';
+        const bands = [
+          { x0: 1060, x1: 1980, y: 470, h: 360, ph: 0, a: 0.9 },
+          { x0: 1200, x1: 1940, y: 420, h: 300, ph: 2.1, a: 0.7 },
+          { x0: 960, x1: 1620, y: 500, h: 240, ph: 4.2, a: 0.5 },
+        ];
+        for (const b of bands) {
+          const yb = sy(b.y, 0.05);
+          const yt = sy(b.y - b.h, 0.05);
+          const g = sky.createLinearGradient(0, yb + 30, 0, yt);
+          g.addColorStop(0, 'rgba(90,255,170,0)');
+          g.addColorStop(0.14, 'rgba(110,255,180,0.7)');
+          g.addColorStop(0.45, 'rgba(70,225,215,0.36)');
+          g.addColorStop(0.8, 'rgba(170,110,255,0.18)');
+          g.addColorStop(1, 'rgba(180,100,255,0)');
+          sky.fillStyle = g;
+          const step = 14;
+          for (let x = b.x0; x < b.x1; x += step) {
+            const f = (x - b.x0) / (b.x1 - b.x0);
+            const edge = Math.sin(f * Math.PI);
+            const ray = 0.55 + 0.45 * Math.sin(x * 0.045 + T * 1.3 + b.ph) * Math.sin(x * 0.013 - T * 0.5);
+            const wave = (xx: number) => Math.sin(xx * 0.006 + T * 0.35 + b.ph) * 34 + Math.sin(xx * 0.017 - T * 0.6) * 10;
+            sky.globalAlpha = Math.max(0, b.a * edge * ray * starVis);
+            const xa = sx(x, 0.05);
+            const xb = sx(x + step + 1, 0.05);
+            const da = (wave(x) * k * Math.sqrt(c.s));
+            const db = (wave(x + step) * k * Math.sqrt(c.s));
+            sky.beginPath();
+            sky.moveTo(xa, yb + 30 + da);
+            sky.lineTo(xb, yb + 30 + db);
+            sky.lineTo(xb, yt + db * 0.6);
+            sky.lineTo(xa, yt + da * 0.6);
+            sky.closePath();
+            sky.fill();
+          }
+        }
+        sky.globalAlpha = 1;
+        sky.globalCompositeOperation = 'source-over';
+      }
 
       // the moon, high above the lake
       const mx = sx(1215, 0.04);
@@ -724,37 +752,6 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
       ctx.drawImage(img, -PS / 2, -PS / 2);
     };
 
-    const drawCurtain = (closeP: number) => {
-      if (closeP <= 0.2) return;
-      const cols = ['#3a0f52', '#d2509c', '#fff8ef'];
-      const alphas = [0.78, 0.92, 1];
-      const starts = [0.2, 0.32, 0.44];
-      for (let l = 0; l < 3; l++) {
-        const e = ease(clamp((closeP - starts[l]) / 0.32));
-        if (e <= 0) continue;
-        const top = vh + 140 - e * (vh + 260);
-        ctx.globalAlpha = alphas[l];
-        ctx.fillStyle = cols[l];
-        ctx.beginPath();
-        ctx.rect(0, top + 40, vw, vh - top + 80);
-        for (const b of curtain[l]) {
-          const yy = top + b.dy + Math.sin(T * 0.6 + b.x * 0.01 + l) * 6;
-          ctx.moveTo(b.x + b.r, yy);
-          ctx.arc(b.x, yy, b.r, 0, Math.PI * 2);
-        }
-        ctx.fill();
-        ctx.globalAlpha = 1;
-        if (l === 1) {
-          // the rose clouds catch the lantern light on their tops
-          ctx.globalCompositeOperation = 'lighter';
-          ctx.globalAlpha = 0.25;
-          ctx.drawImage(pinkBloom, -vw * 0.2, top - 160, vw * 1.4, 320);
-          ctx.globalAlpha = 1;
-          ctx.globalCompositeOperation = 'source-over';
-        }
-      }
-    };
-
     const frame = (now: number) => {
       raf = 0;
       const dt = Math.min(0.05, (now - last) / 1000);
@@ -797,6 +794,9 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
       c.cx = tcx + (800 - tcx) * q;
       c.cy = tcy + (640 - tcy) * q;
       c.s = ts * (1 + q * (ph ? 0.9 : 1.5));
+      // never pan past the edges of the painting (it spans about -300 to 1900)
+      const halfW = vw / k / (2 * c.s);
+      if (halfW < 1080) c.cx = clamp(c.cx, -280 + halfW, 1880 - halfW);
       applyCamera(closeP);
 
       drawSky(pink, starVis, dt);
@@ -846,45 +846,6 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
         ctx.globalAlpha = a;
         ctx.drawImage(sparkle, sx(t.x, 0.68) - s, sy(t.y, 0.68) - s, s * 2, s * 2);
       }
-      // snow: spindrift rolling off the summit, flakes drifting down over the alps
-      if (!reduce) {
-        plumeT -= dt;
-        if (plumeT < 0) {
-          plumeT = 0.05;
-          plume.push({ x: 1402 + rand(-4, 6), y: 258 + rand(-2, 8), vx: rand(30, 60), vy: rand(-6, 10), t: 0, s: rand(0.6, 1.3) });
-          if (Math.random() < 0.5) plume.push({ x: 1450 + rand(0, 40), y: 340 + rand(0, 60), vx: rand(20, 45), vy: rand(2, 12), t: 0, s: rand(0.5, 1) });
-        }
-      }
-      for (let i = plume.length - 1; i >= 0; i--) {
-        const pl = plume[i];
-        pl.t += dt;
-        if (pl.t > 3.2) {
-          plume.splice(i, 1);
-          continue;
-        }
-        pl.x += pl.vx * dt;
-        pl.y += pl.vy * dt;
-        const rr = (6 + pl.t * 16) * pl.s * sc;
-        ctx.globalAlpha = 0.55 * Math.sin((pl.t / 3.2) * Math.PI);
-        ctx.drawImage(steamSp, sx(pl.x, 0.25) - rr, sy(pl.y, 0.25) - rr * 0.6, rr * 2, rr * 1.2);
-      }
-      ctx.fillStyle = '#ffffff';
-      for (const f of flakes) {
-        f.y += f.v * dt;
-        f.x += (Math.sin(T * 0.8 + f.ph) * 10 + 6) * dt;
-        if (f.y > 630) {
-          f.y = 150;
-          f.x = rand(1000, 1900);
-        }
-        const x = sx(f.x, 0.3);
-        const y = sy(f.y, 0.3);
-        if (x < -4 || x > vw + 4 || y < -4 || y > vh + 4) continue;
-        ctx.globalAlpha = 0.75;
-        ctx.beginPath();
-        ctx.arc(x, y, f.r * Math.sqrt(sc), 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.globalAlpha = 1;
       // the waterfall
       for (let i = 0; i < 6; i++) {
         const f = (T * 0.9 + i / 6) % 1;
@@ -892,8 +853,8 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
         ctx.strokeStyle = '#f4f0ff';
         ctx.lineWidth = Math.max(1, 2.4 * sc * 0.5);
         ctx.beginPath();
-        ctx.moveTo(sx(1588 + f * 3, 0.25), sy(520 + f * 92, 0.25));
-        ctx.lineTo(sx(1588 + f * 3.5, 0.25), sy(532 + f * 92, 0.25));
+        ctx.moveTo(sx(1708 + f * 3, 0.25), sy(520 + f * 92, 0.25));
+        ctx.lineTo(sx(1708 + f * 3.5, 0.25), sy(532 + f * 92, 0.25));
         ctx.stroke();
       }
       // fireflies over the meadow and under the tree
@@ -1012,20 +973,6 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.globalAlpha = 1;
 
-      drawCurtain(closeP);
-      // a few lanterns keep rising over the clouds and lead the eye into the next section
-      if (closeP > 0.5) {
-        const a = smooth(clamp((closeP - 0.5) / 0.3));
-        for (const L of lanterns) {
-          if (L.d < 0.35 || L.d > 0.7) continue;
-          const x = sx(L.x + Math.sin(L.ph) * 8, L.d);
-          const y = sy(L.y, L.d);
-          if (y < -40 || y > vh + 40) continue;
-          drawLantern(L, x, y, L.size * sc * (0.45 + L.d * 0.9) * 0.8, 1, a);
-        }
-        ctx.globalAlpha = 1;
-      }
-
       if (visible) raf = requestAnimationFrame(frame);
     };
     let hoverId = '';
@@ -1135,11 +1082,6 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
 
   const info = spot ? SPOTS[spot] : null;
 
-  const explore = () => {
-    track('hero_explore', { from: 'culture_hero' });
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    document.getElementById('explore')?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
-  };
 
   return (
     <section ref={root} className="culture-hero relative" aria-labelledby="hero-title">
@@ -1167,12 +1109,6 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
           <h1 id="hero-title" className="culture-title">
             One World. <span>Endless Ways to Live.</span>
           </h1>
-          <button type="button" className="culture-cta" onClick={explore} tabIndex={revealed ? 0 : -1}>
-            Explore the Culture Map
-            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
-              <path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
         </div>
 
         {/* a place label that follows the hand */}
