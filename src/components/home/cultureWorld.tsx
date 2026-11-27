@@ -203,7 +203,7 @@ export default function CultureWorld() {
         </radialGradient>
         <linearGradient id="cw-haze" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#ff4fa3" stopOpacity="0" />
-          <stop offset="1" stopColor="#ff5aa8" stopOpacity=".38" />
+          <stop offset="1" stopColor="#ff7ab8" stopOpacity=".18" />
         </linearGradient>
         <linearGradient id="cw-fuji" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#ffffff" />
@@ -273,9 +273,14 @@ export default function CultureWorld() {
           <rect x="1100" y="612" width="600" height="260" fill="url(#cw-reflect)" />
         </mask>
         <linearGradient id="cw-foothill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#3a8a6a" />
-          <stop offset=".6" stopColor="#1c5544" />
+          <stop offset="0" stopColor="#4aa07a" />
+          <stop offset=".6" stopColor="#246a52" />
           <stop offset="1" stopColor="#123c34" />
+        </linearGradient>
+        <linearGradient id="cw-ridge" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#3f8a80" />
+          <stop offset=".5" stopColor="#24605e" />
+          <stop offset="1" stopColor="#173f46" />
         </linearGradient>
         <linearGradient id="cw-trunk" x1="0" y1="0" x2="1" y2="0">
           <stop offset="0" stopColor="#14081a" />
@@ -309,7 +314,8 @@ export default function CultureWorld() {
         <path d="M712,388 Q742,372 772,388 L792,402 L776,410 L760,401 L744,414 L728,402 L708,412 L694,400 Z" fill="#ffffff" />
         <path d="M1020,615 L1090,540 L1130,556 L1200,486 L1240,520 L1290,470 L1330,505 L1520,452 L1570,480 L1620,430 L1700,470 L1780,440 L1900,480 L1900,615 Z" fill="#3d3488" />
         <path d="M1200,486 L1216,502 L1206,506 L1196,498 Z M1290,470 L1304,486 L1292,490 L1282,482 Z M1620,430 L1640,450 L1626,454 L1612,446 Z M1520,452 L1536,466 L1522,470 Z" fill="#ffffff" />
-        <path d={ridge(-300, 1900, 560, 26, 640, 7, 60)} fill="#2a2068" />
+        <path d={ridge(-300, 1900, 560, 26, 640, 7, 60)} fill="url(#cw-ridge)" />
+        <path d={ridge(-300, 1900, 560, 26, 560, 7, 60).replace(/ L\S+ Z$/, '').replace(/^M\S+ L/, 'M')} fill="none" stroke="#b9f0e0" strokeWidth="1.6" opacity=".35" />
         <rect x="-300" y="520" width="2200" height="120" fill="url(#cw-haze)" />
       </g>
 
@@ -355,6 +361,8 @@ export default function CultureWorld() {
         <g data-spot="alps" className="cw-spot">
           <polygon points="1170,615 1258,522 1298,472 1334,402 1361,332 1391,262 1402,256 1409,300 1417,352 1439,432 1420,520 1380,615" fill="url(#cw-peak-lit)" />
           <polygon points="1402,256 1420,272 1450,340 1490,420 1540,500 1612,615 1380,615 1420,520 1439,432 1417,352 1409,300" fill="url(#cw-peak-shade)" />
+          <path d="M1383,282 L1391,262 L1402,256 L1420,272 L1436,306 L1424,302 L1414,318 L1404,300 L1394,312 L1388,296 Z" fill="#ffffff" />
+          <path d="M1340,398 L1352,372 L1362,388 L1356,410 Z M1300,470 L1316,452 L1322,474 L1310,486 Z M1440,340 L1456,352 L1452,372 Z M1478,412 L1496,428 L1488,440 Z" fill="#f4f0ff" opacity=".9" />
           <path d="M1170,615 L1258,522 L1298,472 L1334,402 L1361,332 L1391,262 L1402,256" fill="none" stroke="#ff8fd0" strokeWidth="3" strokeLinejoin="round" opacity=".9" />
           <path d="M1402,256 L1420,272 L1450,340 L1490,420" fill="none" stroke="#c9bcff" strokeWidth="2" opacity=".7" />
           <g fill="none" strokeLinecap="round" className="cw-snow">
@@ -369,8 +377,8 @@ export default function CultureWorld() {
           <path className="cw-fall" d="M1588,520 C1590,550 1586,580 1592,612" stroke="#fdf3ee" strokeWidth="3" fill="none" strokeLinecap="round" />
         </g>
         {/* green foothills: the mountains stand on land, not on the water */}
-        <path d="M1100,616 C1160,596 1220,588 1290,592 C1360,572 1440,566 1520,582 C1600,560 1700,552 1800,566 L1900,560 L1900,620 L1100,620 Z" fill="url(#cw-foothill)" />
-        <path d="M1100,616 C1160,596 1220,588 1290,592 C1360,572 1440,566 1520,582 C1600,560 1700,552 1800,566 L1900,560" fill="none" stroke="#9fd8ff" strokeWidth="2" opacity=".45" />
+        <path d="M1050,622 C1100,600 1150,574 1230,568 C1300,560 1360,548 1440,556 C1520,548 1600,532 1700,540 C1780,532 1850,536 1900,530 L1900,624 L1050,624 Z" fill="url(#cw-foothill)" />
+        <path d="M1050,622 C1100,600 1150,574 1230,568 C1300,560 1360,548 1440,556 C1520,548 1600,532 1700,540 C1780,532 1850,536 1900,530" fill="none" stroke="#ffffff" strokeWidth="3" opacity=".55" strokeLinecap="round" />
         <path d="M400,614 C470,600 540,596 600,602 C700,592 820,596 900,604 C980,598 1060,600 1120,612 L1120,620 L400,620 Z" fill="url(#cw-foothill)" opacity=".9" />
       </g>
 
@@ -497,6 +505,9 @@ export default function CultureWorld() {
           <Seated x={205} y={790} h={58} g={G.kimono} facing={1} pour />
           <Seated x={372} y={786} h={56} g={G.teal} facing={-1} cup />
           <Seated x={300} y={810} h={50} g={G.cream} facing={1} cup />
+          <Seated x={70} y={776} h={46} g={G.plum} facing={1} cup />
+          <Standing x={540} y={818} h={70} g={G.saffron} arm="forward" />
+          <HangingLantern x={556} y={782} r={6} i={4} string={10} color="#ffb03a" />
         </g>
 
         </g>

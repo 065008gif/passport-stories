@@ -2415,7 +2415,7 @@ footer.bg-ink {
   position: sticky;
   top: var(--header);
   height: calc(100svh - var(--header));
-  min-height: 34rem;
+  min-height: 20rem;
   overflow: hidden;
   isolation: isolate;
   background: #05030c;

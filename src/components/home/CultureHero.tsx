@@ -36,7 +36,7 @@ const bump = (v: number, a: number, b: number, c: number, d: number) => (v <= a 
 
 type Shot = { p: number; cx: number; cy: number; s: number };
 type Lantern = { x: number; y: number; vy: number; ph: number; size: number; d: number; glow: number; hot: number; tilt: number };
-type Petal = { x: number; y: number; vx: number; vy: number; a: number; va: number; rot: number; vr: number; size: number; d: number; sp: number; blur: boolean; flat: number; life: number };
+type Petal = { x: number; y: number; vx: number; vy: number; a: number; va: number; rot: number; vr: number; size: number; d: number; sp: number; blur: boolean; flat: number; life: number; land: number };
 type Star = { x: number; y: number; r: number; ph: number; sp: number; big: boolean };
 type Fly = { x: number; y: number; vx: number; vy: number; ph: number; d: number };
 type Puff = { x: number; y: number; t: number; d: number; s: number };
@@ -51,9 +51,10 @@ type Ring = { x: number; y: number; t: number; s: number };
  */
 const PATH = (phone: boolean, visW: number, visH: number): Shot[] => {
   const f = (phone ? 0.82 : 1) * clamp(visH / 820, 0.72, 1);
-  const so = Math.max(visW / 2100, Math.min(1, visH / 740));
+  const so = Math.max(visW / 2100, Math.min(1, visH / 780));
   const hw = visH / so;
-  const co = hw >= 900 ? 450 : 850 - hw / 2;
+  // the tea party, path lanterns and jetty (world y ~830) stay inside the frame with a margin
+  const co = Math.max(450, 836 - hw * 0.44);
   return [
     { p: 0.0, cx: 792, cy: 548, s: 2.7 * f },
     { p: 0.1, cx: 795, cy: 556, s: 2.4 * f },
@@ -80,7 +81,7 @@ function cameraAt(P: number, path: Shot[]) {
 }
 
 /* sky palettes: night (lanterns, mountains) and blossom (purplish pink) */
-const SKY_NIGHT = ['#010006', '#07031a', '#170833', '#36104c', '#6a1d66'];
+const SKY_NIGHT = ['#0a0526', '#1c0e4a', '#36186e', '#62288e', '#a0429e'];
 const SKY_PINK = ['#260a3c', '#5c1a6c', '#a2338c', '#dc5aa6', '#ff9ccb'];
 const SKY_STOPS = [0, 0.38, 0.66, 0.86, 1];
 const hex = (h: string) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
@@ -98,6 +99,7 @@ const LIGHTS: { x: number; y: number; d: number; r: number; c: 0 | 1; ry: number
   { x: 432, y: 640, d: 0.68, r: 0.9, c: 0, ry: 0, rl: 0 },
   { x: 178, y: 648, d: 0.68, r: 0.85, c: 0, ry: 0, rl: 0 },
   { x: 1252, y: 744, d: 0.68, r: 0.6, c: 1, ry: 770, rl: 34 },
+  { x: 556, y: 782, d: 0.68, r: 0.6, c: 1, ry: 0, rl: 0 },
   ...([
     [712, 798, 0.7],
     [888, 798, 0.7],
@@ -114,7 +116,8 @@ const LIGHTS: { x: number; y: number; d: number; r: number; c: 0 | 1; ry: number
 
 /* warm pools of light on the ground: [x, y, depth, rx, ry] */
 const POOLS: [number, number, number, number, number][] = [
-  [290, 790, 0.68, 250, 80],
+  [290, 790, 0.68, 300, 90],
+  [545, 800, 0.68, 90, 40],
   [800, 840, 1, 190, 100],
   [1205, 772, 0.68, 120, 40],
   [800, 604, 0.42, 230, 56],
@@ -394,9 +397,11 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
     let shoot: { x: number; y: number; vx: number; vy: number; t: number } | null = null;
     let nextShoot = 2;
 
+    // the top edge of the green bank, left of the water (world units)
+    const bankTop = (x: number) => (x < 200 ? 650 - (x + 300) * 0.036 : x < 420 ? 632 + (x - 200) * 0.127 : 660 + (x - 420) * 0.27);
     const petals: Petal[] = [];
     const addPetal = (x: number, y: number, d: number, kick = 0, blur = false) => {
-      if (petals.length > 420) return;
+      if (petals.length > 520) return;
       petals.push({
         x,
         y,
@@ -412,6 +417,7 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
         blur,
         flat: 0,
         life: 1,
+        land: rand(bankTop(x) + 6, 900),
       });
     };
     // twinkles in the blossom canopy
@@ -440,6 +446,9 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
       d: 0.68,
     }));
     const mists = Array.from({ length: 8 }, (_, i) => ({ x: rand(980, 1720), y: 628 + (i % 4) * 16 + rand(-6, 6), w: rand(260, 440), h: rand(30, 52), v: rand(5, 13), d: 0.6 }));
+    const flakes = Array.from({ length: reduce ? 0 : phone() ? 50 : 110 }, () => ({ x: rand(1000, 1900), y: rand(150, 620), r: rand(0.8, 2), v: rand(8, 20), ph: rand(0, 6.28) }));
+    const plume: { x: number; y: number; vx: number; vy: number; t: number; s: number }[] = [];
+    let plumeT = 0;
     const puffs: Puff[] = [];
     let puffT = 0;
     const rings: Ring[] = [];
@@ -767,8 +776,8 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
       lastP = P;
       const closeP = clamp((Ps - CLOSE_AT) / (1 - CLOSE_AT));
       const blossom = bump(Ps, 0.12, 0.2, 0.33, 0.42);
-      const pink = Math.max(blossom, 0.38 * bump(Ps, 0.56, 0.66, 0.82, 0.95));
-      const starVis = 1 - pink * 0.75;
+      const pink = Math.max(blossom, 0.5 * bump(Ps, 0.56, 0.66, 0.82, 0.95));
+      const starVis = 1 - pink * 0.6;
 
       // petal gusts carry the camera between moments; stronger when you scroll faster
       // a burst from the tree when you scroll into the blossom
@@ -841,6 +850,45 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
         ctx.globalAlpha = a;
         ctx.drawImage(sparkle, sx(t.x, 0.68) - s, sy(t.y, 0.68) - s, s * 2, s * 2);
       }
+      // snow: spindrift rolling off the summit, flakes drifting down over the alps
+      if (!reduce) {
+        plumeT -= dt;
+        if (plumeT < 0) {
+          plumeT = 0.05;
+          plume.push({ x: 1402 + rand(-4, 6), y: 258 + rand(-2, 8), vx: rand(30, 60), vy: rand(-6, 10), t: 0, s: rand(0.6, 1.3) });
+          if (Math.random() < 0.5) plume.push({ x: 1450 + rand(0, 40), y: 340 + rand(0, 60), vx: rand(20, 45), vy: rand(2, 12), t: 0, s: rand(0.5, 1) });
+        }
+      }
+      for (let i = plume.length - 1; i >= 0; i--) {
+        const pl = plume[i];
+        pl.t += dt;
+        if (pl.t > 3.2) {
+          plume.splice(i, 1);
+          continue;
+        }
+        pl.x += pl.vx * dt;
+        pl.y += pl.vy * dt;
+        const rr = (6 + pl.t * 16) * pl.s * sc;
+        ctx.globalAlpha = 0.55 * Math.sin((pl.t / 3.2) * Math.PI);
+        ctx.drawImage(steamSp, sx(pl.x, 0.25) - rr, sy(pl.y, 0.25) - rr * 0.6, rr * 2, rr * 1.2);
+      }
+      ctx.fillStyle = '#ffffff';
+      for (const f of flakes) {
+        f.y += f.v * dt;
+        f.x += (Math.sin(T * 0.8 + f.ph) * 10 + 6) * dt;
+        if (f.y > 630) {
+          f.y = 150;
+          f.x = rand(1000, 1900);
+        }
+        const x = sx(f.x, 0.3);
+        const y = sy(f.y, 0.3);
+        if (x < -4 || x > vw + 4 || y < -4 || y > vh + 4) continue;
+        ctx.globalAlpha = 0.75;
+        ctx.beginPath();
+        ctx.arc(x, y, f.r * Math.sqrt(sc), 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
       // the waterfall
       for (let i = 0; i < 6; i++) {
         const f = (T * 0.9 + i / 6) % 1;
@@ -917,33 +965,32 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
 
       // petals: from the canopy, in depth (back, mid, out-of-focus front), on a swirling wind
       if (!reduce) {
-        const rate = ((ph ? 5 : 9) + blossom * (ph ? 22 : 40)) * (1 - closeP);
+        const rate = ((ph ? 7 : 14) + blossom * (ph ? 22 : 40)) * (1 - closeP);
         let n = rate * dt;
         while (n > 0) {
           if (Math.random() < n) {
             const dd = Math.random();
-            addPetal(rand(60, 570), rand(360, 580), dd < 0.25 ? 0.55 : dd < 0.85 ? 0.68 : 0.82);
+            if (Math.random() < 0.7) addPetal(rand(60, 570), rand(360, 580), dd < 0.25 ? 0.6 : 0.68);
+            else addPetal(rand(-260, 600), rand(380, 520), 0.68);
           }
           n -= 1;
         }
-        if (Math.random() < dt * (0.5 + blossom * 3) * (1 - closeP)) addPetal(rand(40, 520), rand(380, 560), 0.95, 0, true);
+        if (Math.random() < dt * (0.5 + blossom * 3) * (1 - closeP)) addPetal(rand(-200, 560), rand(380, 560), 0.95, 0, true);
       }
       const wind = 8 + Math.sin(T / 2.3) * 8 + Math.max(0, Math.sin(T / 5.1)) * 12;
       for (let i = petals.length - 1; i >= 0; i--) {
         const pe = petals[i];
         if (pe.flat) {
-          // floating on the water, drifting downstream and fading
+          // resting on the grass, then fading
           pe.flat += dt;
-          pe.x += 7 * dt;
-          pe.y += Math.sin(T * 1.4 + i) * 0.4 * dt;
-          pe.life = clamp(1 - (pe.flat - 6) / 3);
+          pe.life = clamp(1 - (pe.flat - 5) / 3) * (1 - closeP);
           if (pe.life <= 0) {
             petals.splice(i, 1);
             continue;
           }
         } else if (!reduce) {
-          // petals stay under their tree: the wind turns back near its edge
-          const target = wind + Math.sin(pe.y * 0.02 + T * 1.1) * 18 - Math.max(0, pe.x - 520) * 0.6;
+          // petals drift over the green bank; the wind turns back before the water
+          const target = wind + Math.sin(pe.y * 0.02 + T * 1.1) * 18 - Math.max(0, pe.x - 560) * 0.9 + Math.max(0, -200 - pe.x) * 0.5;
           pe.vx += (target - pe.vx) * Math.min(1, dt * 0.9);
           pe.vy += (16 + Math.sin(pe.a * 2) * 12 + Math.cos(pe.x * 0.015 + T) * 6 - pe.vy) * Math.min(1, dt * 1.2);
           pe.x += pe.vx * dt;
@@ -951,8 +998,12 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
           pe.a += pe.va * dt;
           pe.rot += pe.vr * dt;
           // land on the water, or settle on the grass
-          if (pe.y > 690 + (pe.d - 0.68) * 200) pe.life -= dt * 1.2;
-          if (pe.x > 600) pe.life -= dt * 2;
+          if (pe.y >= pe.land) {
+            pe.flat = 0.001;
+            pe.a = 0;
+            pe.y = pe.land;
+          }
+          if (pe.x > 640) pe.life -= dt * 2;
         }
         const x = sx(pe.x, pe.d);
         const y = sy(pe.y, pe.d);
