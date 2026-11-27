@@ -15,7 +15,7 @@ export interface CountryPhoto {
 
 export const COUNTRY_PHOTOS: Record<string, CountryPhoto> = {
   japan: { id: 29537669, alt: 'A family in colourful kimonos walking along a historic street in Kyoto', caption: 'Kimonos on an old street in Kyoto', credit: 'G N' },
-  india: { id: 0, src: '/photos/india-diwali.jpg', alt: 'A street at Diwali lined with glowing diyas on rangoli, fairy lights and fireworks overhead', caption: 'Diwali, the festival of lights', credit: '' },
+  india: { id: 41264144, alt: 'Glowing clay diyas on a colourful rangoli at Diwali', caption: 'Diwali, the festival of lights', credit: 'ELEOD' },
   italy: { id: 13784008, alt: 'People dining outdoors in Piazza delle Erbe, Verona', caption: 'Long lunches in a piazza in Verona', credit: 'Helena Jankovičová Kováčová' },
   mexico: { id: 16625366, alt: 'A street in San Miguel de Allende strung with colourful papel picado', caption: 'Papel picado over San Miguel de Allende', credit: 'Jorge Acre' },
   china: { id: 28890198, alt: 'A crowded street hung with red lanterns during a night festival', caption: 'A festival night under red lanterns', credit: '征宇 郑' },

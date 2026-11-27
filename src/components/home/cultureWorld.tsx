@@ -62,7 +62,7 @@ function ridge(x0: number, x1: number, y: number, amp: number, base: number, see
 }
 
 /* ------------------------------ people ------------------------------ */
-export type Garb = { robe: string; trim?: string; skin: string; hair: string; rim?: string; obi?: string; collar?: string; bun?: string; topknot?: boolean; braids?: boolean };
+export type Garb = { robe: string; trim?: string; skin: string; hair: string; rim?: string; obi?: string; collar?: string; bun?: string; topknot?: boolean; braids?: boolean; twinBuns?: string; cap?: string; frogs?: string };
 
 /** A standing figure: slender, long garment, small head. (x, y) is the feet; h is height. */
 export function Standing({ x, y, h, g, lean = 0, arm = 'down', className = '', parasol }: { x: number; y: number; h: number; g: Garb; lean?: number; arm?: 'down' | 'up' | 'forward'; className?: string; parasol?: string }) {
@@ -77,6 +77,7 @@ export function Standing({ x, y, h, g, lean = 0, arm = 'down', className = '', p
       {/* garment */}
       <path d={`M${x - w * 0.55},${sh} Q${x},${sh - hr * 0.6} ${x + w * 0.55},${sh} L${x + hem / 2},${y} Q${x},${y + h * 0.02} ${x - hem / 2},${y} Z`} fill={g.robe} />
       {g.trim && <path d={`M${x - w * 0.2},${sh + h * 0.02} L${x - hem * 0.18},${y} L${x - hem * 0.02},${y} L${x + w * 0.05},${sh + h * 0.02} Z`} fill={g.trim} opacity=".85" />}
+      {g.frogs && [0.06, 0.13, 0.2].map((f) => <rect key={f} x={x - w * 0.22} y={sh + (y - sh) * f} width={w * 0.44} height={h * 0.012 + 0.6} rx="0.6" fill={g.frogs} />)}
       {g.obi && <path d={`M${x - w * 0.62},${sh + (y - sh) * 0.2} L${x + w * 0.62},${sh + (y - sh) * 0.2} L${x + w * 0.7},${sh + (y - sh) * 0.32} L${x - w * 0.7},${sh + (y - sh) * 0.32} Z`} fill={g.obi} />}
       {g.collar && <path d={`M${x - w * 0.3},${sh - 1} L${x + w * 0.12},${sh + (y - sh) * 0.2} M${x + w * 0.3},${sh - 1} L${x - w * 0.05},${sh + (y - sh) * 0.17}`} stroke={g.collar} strokeWidth={h * 0.03} fill="none" />}
       {parasol && (
@@ -102,6 +103,17 @@ export function Standing({ x, y, h, g, lean = 0, arm = 'down', className = '', p
             <circle cx={x + hr * 1.1} cy={top} r={hr * 0.22} fill={g.bun} />
           </>
         )}
+        {g.twinBuns && (
+          <>
+            <circle cx={x - hr * 0.85} cy={top + hr * 0.05} r={hr * 0.5} fill={g.hair} />
+            <circle cx={x + hr * 0.85} cy={top + hr * 0.05} r={hr * 0.5} fill={g.hair} />
+            <circle cx={x - hr * 1.15} cy={top + hr * 0.35} r={hr * 0.2} fill={g.twinBuns} />
+            <circle cx={x + hr * 1.15} cy={top + hr * 0.35} r={hr * 0.2} fill={g.twinBuns} />
+            <path d={`M${x - hr * 0.95},${top + hr * 0.55} Q${x},${top + hr * 0.25} ${x + hr * 0.95},${top + hr * 0.55} L${x + hr * 0.9},${top + hr * 0.75} Q${x},${top + hr * 0.5} ${x - hr * 0.9},${top + hr * 0.75} Z`} fill={g.hair} />
+          </>
+        )}
+        {g.cap && <path d={`M${x - hr * 1.05},${top + hr * 0.55} Q${x - hr},${top - hr * 0.45} ${x},${top - hr * 0.5} Q${x + hr},${top - hr * 0.45} ${x + hr * 1.05},${top + hr * 0.55} Z`} fill={g.cap} />}
+        {g.cap && <circle cx={x} cy={top - hr * 0.55} r={hr * 0.22} fill="#d32f2f" />}
         {g.topknot && <rect x={x - hr * 0.35} y={top - hr * 0.75} width={hr * 0.7} height={hr * 0.7} rx={hr * 0.2} fill={g.hair} />}
         {g.braids && (
           <>
@@ -185,8 +197,8 @@ const G = {
   k6: { robe: '#fdf3e7', obi: '#d32f2f', collar: '#d32f2f', skin: '#e6ba98', hair: '#140e16', trim: '#d32f2f' },
   yukata: { robe: '#283593', obi: '#b0bec5', collar: '#e8eaf6', skin: '#d8a984', hair: '#181216' },
   // hanfu on the lantern bridge
-  hanfuRed: { robe: '#d32f2f', obi: '#ffcc4d', collar: '#fff3d6', skin: '#f1d0b0', hair: '#141016', trim: '#ffcc4d', bun: '#ffd24a' },
-  hanfuJade: { robe: '#1f8a6e', obi: '#ffd27a', collar: '#fdf3e0', skin: '#ecc8a6', hair: '#161016', topknot: true },
+  hanfuRed: { robe: '#d32f2f', collar: '#ffcc4d', skin: '#f3d6b8', hair: '#0e0a10', trim: '#ffcc4d', twinBuns: '#ffd24a', frogs: '#ffd24a' },
+  hanfuJade: { robe: '#1d4fa0', collar: '#ffd27a', skin: '#efcfb0', hair: '#0e0a10', cap: '#141018', frogs: '#ffd27a' },
   // Switzerland: a dirndl and an alpine herder's jacket
   dirndl: { robe: '#c62828', obi: '#ffffff', collar: '#ffffff', skin: '#f6dac2', hair: '#e6be6a', trim: '#2e7d32', braids: true },
   herder: { robe: '#d7263d', obi: '#ffffff', collar: '#ffffff', skin: '#f4d2b4', hair: '#c89a4a', trim: '#ffd24a' },
