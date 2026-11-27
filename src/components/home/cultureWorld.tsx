@@ -570,44 +570,19 @@ export default function CultureWorld() {
           <HangingLantern x={1252} y={744} r={6} i={2} string={8} color="#ffb03a" />
           <Seated x={1180} y={768} h={52} g={G.dirndl} facing={1} cup />
         </g>
-        {/* a wooden chalet with warm windows */}
+        {/* a small chalet with two warm windows */}
         <g>
-          <ellipse cx="1560" cy="806" rx="120" ry="12" fill="#0b2a22" opacity=".5" />
-          <rect x="1478" y="730" width="164" height="74" fill="#8a5432" />
-          <rect x="1478" y="730" width="164" height="74" fill="url(#cw-trunk)" opacity=".12" />
-          {[0, 1, 2, 3, 4, 5, 6].map((k) => <line key={k} x1="1478" y1={740 + k * 10} x2="1642" y2={740 + k * 10} stroke="#6a3e24" strokeWidth="1.4" />)}
-          <path d="M1456,734 L1560,668 L1664,734 L1652,738 L1560,680 L1468,738 Z" fill="#4a2a1c" />
-          <path d="M1470,728 L1560,672 L1650,728 L1640,730 L1560,684 L1480,730 Z" fill="#f4f0ff" />
-          <rect x="1478" y="758" width="164" height="5" fill="#5a3420" />
-          {[1496, 1532, 1588, 1624].map((x) => (
-            <g key={x}>
-              <rect x={x - 9} y="740" width="18" height="14" rx="1.5" fill="#ffd27a" stroke="#4a2a1c" strokeWidth="2" />
-              <rect x={x - 10} y="754" width="20" height="4" fill="#d84a4a" />
-              <circle cx={x - 5} cy="753" r="2" fill="#ff5a6e" />
-              <circle cx={x + 5} cy="753" r="2" fill="#ffffff" />
-            </g>
-          ))}
-          <rect x="1548" y="772" width="24" height="32" rx="2" fill="#ffc861" stroke="#4a2a1c" strokeWidth="2" />
-          <rect x="1606" y="772" width="18" height="14" rx="1.5" fill="#ffd27a" stroke="#4a2a1c" strokeWidth="2" />
-        </g>
-        {/* the Swiss flag */}
-        <g>
-          <rect x="1424" y="700" width="3" height="104" fill="#e8e0d0" />
-          <rect x="1427" y="702" width="32" height="32" fill="#e52b2b" />
-          <rect x="1440" y="708" width="6" height="20" fill="#ffffff" />
-          <rect x="1433" y="715" width="20" height="6" fill="#ffffff" />
-        </g>
-        {/* an alphorn player on the meadow */}
-        <g data-spot="alphorn" className="cw-spot">
-          <Standing x={1372} y={858} h={76} g={G.herder} arm="forward" />
-          <path d="M1364,794 Q1318,822 1266,846" fill="none" stroke="#b8763e" strokeWidth="4" strokeLinecap="round" />
-          <path d="M1266,846 Q1250,854 1244,842 Q1242,832 1256,834" fill="none" stroke="#8a5028" strokeWidth="8" strokeLinecap="round" />
-          <path d="M1300,828 L1306,824 M1330,812 L1336,808" stroke="#e8c070" strokeWidth="2" />
-          <path d="M1356,782 Q1372,770 1388,782 L1384,786 L1360,786 Z" fill="#2e4a2a" />
+          <ellipse cx="1560" cy="804" rx="80" ry="8" fill="#0b2a22" opacity=".45" />
+          <rect x="1508" y="748" width="104" height="54" rx="2" fill="#a0603a" />
+          <path d="M1494,752 L1560,708 L1626,752 Z" fill="#5a2e1e" />
+          <path d="M1504,746 L1560,710 L1616,746 L1606,748 L1560,720 L1514,748 Z" fill="#ffffff" />
+          <rect x="1524" y="762" width="20" height="16" rx="2" fill="#ffd27a" />
+          <rect x="1576" y="762" width="20" height="16" rx="2" fill="#ffd27a" />
+          <rect x="1551" y="778" width="18" height="24" rx="2" fill="#5a2e1e" />
         </g>
         {/* alpine flowers that sway */}
         <g className="cw-flowers-alp">
-          {Array.from({ length: 46 }, (_, i) => {
+          {Array.from({ length: 22 }, (_, i) => {
             const r = rng(1200 + i * 7919);
             r();
             const x = 1080 + r() * 590;

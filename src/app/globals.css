@@ -1922,7 +1922,7 @@ footer.bg-ink {
 .view-toggle button[aria-pressed='true'] { color: var(--ps-ink); }
 .view-toggle button:active { transform: scale(0.96); }
 .nav-active { background: linear-gradient(135deg, #7ff0e0 0%, #2fd3c1 45%, #0fa89a 100%); box-shadow: 0 3px 0 #0b7f75, inset 0 1px 0 rgba(255, 255, 255, 0.55); }
-.view-pill { position: absolute; inset: 0; border-radius: 9999px; background: linear-gradient(135deg, #7ff0e0 0%, #2fd3c1 45%, #0fa89a 100%); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 6px 14px -6px color-mix(in srgb, var(--ps-tang) 80%, transparent); }
+.view-pill { position: absolute; inset: 0; border-radius: 9999px; background: linear-gradient(135deg, #ffd98a 0%, #ffa24f 50%, #ff6f61 100%); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 6px 14px -6px color-mix(in srgb, var(--ps-tang) 80%, transparent); }
 
 /* The observatory stage: deep turquoise to midnight so the v8 globe reads as it did */
 .observatory {
@@ -2437,11 +2437,8 @@ footer.bg-ink {
 .nav-plum { color: #3d1f48; }
 .nav-lavender { color: #8b6cf0; }
 .nav-accent { color: #e8603c; }
-.nav-links {
-  background: rgba(255, 246, 236, 0.22);
-  border: 1px solid rgba(255, 196, 120, 0.6);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 0 18px -8px rgba(255, 170, 90, 0.6);
-}
+.nav-links { background: transparent; }
+.nav-shell > * { min-width: 0; }
 .nav-link { color: #3d1f48; transition: background-color 0.25s var(--ps-ease), color 0.25s var(--ps-ease); }
 .nav-link:hover { background: rgba(255, 248, 240, 0.4); color: #5a2a66; }
 .nav-active {
@@ -2454,8 +2451,8 @@ footer.bg-ink {
     0 0 18px -4px rgba(255, 190, 90, 0.7);
 }
 .nav-search, .nav-card {
-  background: rgba(255, 248, 238, 0.62);
-  border: 1.5px solid rgba(90, 42, 98, 0.55);
+  background: rgba(255, 248, 238, 0.55);
+  border: 1px solid rgba(90, 42, 98, 0.35);
   color: #e8603c;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
   transition: background-color 0.25s var(--ps-ease), border-color 0.25s var(--ps-ease), box-shadow 0.25s var(--ps-ease);

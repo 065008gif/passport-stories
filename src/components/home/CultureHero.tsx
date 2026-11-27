@@ -94,8 +94,7 @@ const BRIDGE_LAMPS = [680, 740, 800, 860, 920].map((x) => [x, 524 + (1 - Math.po
 const LIGHTS: { x: number; y: number; d: number; r: number; c: 0 | 1; ry: number; rl: number }[] = [
   ...BRIDGE_LAMPS.map(([x, y]) => ({ x, y, d: 0.42, r: 0.78, c: 0 as const, ry: 652, rl: 80 })),
   { x: 792, y: 508, d: 0.42, r: 0.75, c: 1, ry: 660, rl: 70 },
-  ...[1496, 1532, 1588, 1624].map((x) => ({ x, y: 747, d: 0.68, r: 0.32, c: 1 as const, ry: 0, rl: 0 })),
-  { x: 1560, y: 788, d: 0.68, r: 0.4, c: 1, ry: 0, rl: 0 },
+  ...[1534, 1586].map((x) => ({ x, y: 770, d: 0.68, r: 0.3, c: 1 as const, ry: 0, rl: 0 })),
   { x: 586, y: 503, d: 0.25, r: 0.35, c: 1, ry: 616, rl: 26 },
   { x: 595, y: 527, d: 0.25, r: 0.35, c: 1, ry: 616, rl: 26 },
   ...[930, 965, 1035, 1070].map((x) => ({ x, y: 584, d: 0.25, r: 0.4, c: 1 as const, ry: 614, rl: 30 })),
@@ -120,7 +119,7 @@ const POOLS: [number, number, number, number, number][] = [
   [800, 840, 1, 190, 100],
   [1205, 772, 0.68, 120, 40],
   [800, 604, 0.42, 200, 44],
-  [1560, 800, 0.68, 140, 34],
+  [1560, 800, 0.68, 100, 26],
   [1000, 588, 0.25, 170, 46],
   [590, 530, 0.25, 70, 100],
 ];
@@ -370,19 +369,20 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
 
     /* ----------------------------- particles ----------------------------- */
     const lanterns: Lantern[] = [];
+    // only the lanterns the couple on the bridge let go: a few, rising slowly and fading high up
     const newLantern = (low: boolean): Lantern => ({
-      x: low ? rand(520, 1100) : rand(-300, 1900),
-      y: low ? rand(540, 640) : rand(40, 600),
-      vy: rand(7, 14),
+      x: rand(774, 812),
+      y: low ? rand(500, 516) : rand(200, 500),
+      vy: rand(5, 9),
       ph: rand(0, Math.PI * 2),
-      size: rand(0.75, 1.25),
-      d: Math.random() < 0.16 ? rand(0.75, 1) : rand(0.15, 0.55),
+      size: rand(0.8, 1.05),
+      d: 0.42,
       glow: rand(0.8, 1),
       hot: 0,
       tilt: rand(-0.12, 0.12),
     });
-    const nLanterns = reduce ? 8 : phone() ? 10 : 18;
-    for (let i = 0; i < nLanterns; i++) lanterns.push(newLantern(i < 3));
+    const nLanterns = reduce ? 3 : phone() ? 3 : 5;
+    for (let i = 0; i < nLanterns; i++) lanterns.push(newLantern(false));
     lanterns.sort((a, b) => a.d - b.d);
 
     const stars: Star[] = Array.from({ length: phone() ? 160 : 280 }, () => {
@@ -914,7 +914,7 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
         if (!reduce) {
           L.y -= L.vy * dt * rush * (0.6 + L.d * 0.6);
           L.ph += dt * 0.8;
-          L.x += Math.sin(L.ph * 0.6) * dt * 4;
+          L.x += (Math.sin(L.ph * 0.6) * 4 + 3) * dt;
         }
         const x = sx(L.x + Math.sin(L.ph) * 8, L.d);
         const y = sy(L.y, L.d);
@@ -924,11 +924,13 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
           L.hot += (near - L.hot) * Math.min(1, dt * 6);
           if (near > 0) L.x += ((x - ptr.sx) / (dd || 1)) * near * dt * 30;
         } else L.hot *= 0.95;
-        if (y < -120) {
-          Object.assign(L, newLantern(Math.random() < 0.2), { d: L.d, y: rand(560, 700) });
+        if (L.y < 140 || y < -120) {
+          Object.assign(L, newLantern(true));
           continue;
         }
-        drawLantern(L, x, y, L.size * sc * (0.45 + L.d * 0.9), clamp(L.glow + L.hot * 0.8, 0, 1.7));
+        const fadeIn = clamp((516 - L.y) / 30);
+        const fadeOut = clamp((L.y - 140) / 220);
+        drawLantern(L, x, y, L.size * sc * (0.45 + L.d * 0.9), clamp(L.glow + L.hot * 0.8, 0, 1.7), fadeIn * fadeOut);
       }
 
       // petals: from the canopy, in depth (back, mid, out-of-focus front), on a swirling wind

@@ -64,7 +64,7 @@ export default function Header() {
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded focus:bg-sun focus:px-3 focus:py-2 focus:text-ink">
         Skip to content
       </a>
-      <div className="nav-shell mx-auto flex h-[calc(var(--header)-14px)] max-w-7xl items-center gap-2 px-3 sm:px-4">
+      <div className="nav-shell mx-auto flex h-[calc(var(--header)-14px)] max-w-[88rem] items-center gap-2 px-3 sm:px-4">
         <Link href="/" onClick={onLogo} className="flex shrink-0 items-center gap-2" aria-label="Passport Stories home">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={site.logo} alt="" width={60} height={60} className="h-11 w-11 transition-transform duration-300 hover:rotate-12 md:h-[3.9rem] md:w-[3.9rem]" />
@@ -81,7 +81,7 @@ export default function Header() {
               key={n.href}
               href={n.href}
               aria-current={isActive(n.href) ? 'page' : undefined}
-              className={`whitespace-nowrap rounded-full px-2.5 py-2 text-[0.98rem] font-extrabold transition-colors xl:px-4 xl:text-[1.05rem] ${isActive(n.href) ? 'nav-active' : 'nav-link'}`}
+              className={`whitespace-nowrap rounded-full px-2.5 py-2 text-[0.95rem] font-extrabold transition-colors xl:px-3.5 xl:text-[1rem] ${isActive(n.href) ? 'nav-active' : 'nav-link'}`}
             >
               {n.label}
             </Link>
