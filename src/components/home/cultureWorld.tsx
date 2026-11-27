@@ -572,7 +572,7 @@ export default function CultureWorld() {
           <path d="M1136,760 Q1160,770 1172,780" stroke="#5a3a2e" strokeWidth="1" fill="none" />
         </g>
         {/* the jetty, with someone watching the light */}
-        <g data-spot="jetty" className="cw-spot">
+        <g data-spot="jetty" className="cw-spot" transform="translate(90 0)">
           <path d="M1150,768 L1236,792 L1250,782 L1168,760 Z" fill="#a8704a" />
           {[0, 1, 2, 3, 4, 5].map((k) => (
             <path key={k} d={`M${1156 + k * 15},${766 + k * 4} L${1172 + k * 14},${760 + k * 4}`} stroke="#6a4430" strokeWidth="1.5" />
@@ -580,6 +580,7 @@ export default function CultureWorld() {
           {[1158, 1196, 1234].map((x, k) => (
             <rect key={x} x={x} y={770 + k * 10} width="5" height={18 + k * 4} fill="#5a3a2a" />
           ))}
+          <Seated x={1194} y={772} h={48} g={G.herder} facing={1} cup />
           <rect x="1240" y="730" width="3" height="56" fill="#3a2a22" />
           <HangingLantern x={1252} y={744} r={6} i={2} string={8} color="#ffb03a" />
         </g>

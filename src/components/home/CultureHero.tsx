@@ -98,7 +98,7 @@ const LIGHTS: { x: number; y: number; d: number; r: number; c: 0 | 1; ry: number
   { x: 586, y: 503, d: 0.25, r: 0.35, c: 1, ry: 616, rl: 26 },
   { x: 595, y: 527, d: 0.25, r: 0.35, c: 1, ry: 616, rl: 26 },
   ...[930, 965, 1035, 1070].map((x) => ({ x, y: 584, d: 0.25, r: 0.4, c: 1 as const, ry: 614, rl: 30 })),
-  { x: 1252, y: 744, d: 0.68, r: 0.6, c: 1, ry: 770, rl: 34 },
+  { x: 1342, y: 744, d: 0.68, r: 0.6, c: 1, ry: 770, rl: 34 },
   ...([
     [712, 798, 0.7],
     [888, 798, 0.7],
@@ -117,7 +117,7 @@ const LIGHTS: { x: number; y: number; d: number; r: number; c: 0 | 1; ry: number
 const POOLS: [number, number, number, number, number][] = [
   [200, 790, 0.68, 380, 100],
   [800, 840, 1, 190, 100],
-  [1205, 772, 0.68, 120, 40],
+  [1295, 772, 0.68, 120, 40],
   [800, 604, 0.42, 200, 44],
   [1560, 800, 0.68, 100, 26],
   [1000, 588, 0.25, 170, 46],
@@ -893,7 +893,7 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
         puffT -= dt;
         if (puffT < 0) {
           puffT = 0.14;
-          puffs.push({ x: 284 + rand(-3, 3), y: 750, t: 0, d: 0.68, s: 1 });
+          puffs.push({ x: 284 + rand(-3, 3), y: 750, t: 0, d: 0.68, s: 1 }, { x: 1300 + rand(-2, 2), y: 748, t: 0, d: 0.68, s: 0.55 });
         }
       }
       for (let i = puffs.length - 1; i >= 0; i--) {
