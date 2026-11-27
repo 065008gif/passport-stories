@@ -1,26 +1,26 @@
 import type { Config } from 'tailwindcss';
 
-// Brand palette from the Passport Stories badge. Use these names everywhere
+// Sundowner palette (amber, tangerine, coral, rose, twilight violet, dusk plum). Use these names everywhere
 // (bg-ink, text-cream, ...) instead of raw hex values.
 const config: Config = {
   content: ['./src/**/*.{ts,tsx}'],
   theme: {
     extend: {
       colors: {
-        ink: '#1F2A44', // deep sea navy: text on bright colours and small dark details
+        ink: '#2B1B3D', // dusk plum: text on bright colours and small dark details
         night: 'rgb(var(--night) / <alpha-value>)', // the page background: warm ivory
-        sun: '#FFC233', // sunshine yellow
-        tang: '#FF8A4C', // soft orange
-        coral: '#FF6B5B', // coral
+        sun: '#FFB72B', // sundowner amber
+        tang: '#FF7A45', // tangerine
+        coral: '#FF5A6E', // coral rose
         cream: 'rgb(var(--cream) / <alpha-value>)', // main text colour: deep sea navy
         paper: '#FFFFFF', // cards and tickets
-        teal: '#12B5A6', // turquoise
-        sky: '#1AA3CF', // sky blue
+        teal: '#E84A7F', // dusk rose (sundowner palette)
+        sky: '#8A5CF6', // twilight violet
         panel: 'rgb(var(--panel) / <alpha-value>)',
-        violet: '#FFC9A8', // peach (kept the old name so every page picks it up)
-        peach: '#FFE3D3',
-        ivory: '#FFF8EF',
-        magenta: '#FF6B5B',
+        violet: '#FFC2A8', // peach (kept the old name so every page picks it up)
+        peach: '#FFDCC8',
+        ivory: '#FFF1E6',
+        magenta: '#E84A7F',
       },
       fontFamily: {
         chunk: ['"Bowlby One"', '"Bricolage Grotesque Variable"', 'system-ui', 'sans-serif'],
