@@ -13,7 +13,7 @@ import { flagSrc } from '@/components/Flag';
 import { useBoard } from '@/components/FlightProvider';
 import { track } from '@/lib/analytics';
 import { usePassport } from '@/lib/passport';
-import CultureScene, { SCENES } from '@/components/countries/CultureScene';
+import { COUNTRY_PHOTOS, photoSet, photoUrl } from '@/components/countries/countryPhotos';
 import type { SortOption } from '@/components/countries/CountryGrid';
 
 export interface DirCountry {
@@ -40,7 +40,7 @@ export default function CountryDirectory({ countries, regions, sorts }: { countr
   const [q, setQ] = useState('');
   const [sel, setSel] = useState(() => [...countries].sort((a, b) => a.name.localeCompare(b.name))[0]?.slug ?? '');
   const listRef = useRef<HTMLUListElement>(null);
-  const [stirred, setStirred] = useState(false);
+  const artRef = useRef<HTMLDivElement>(null);
 
   const list = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -102,10 +102,25 @@ export default function CountryDirectory({ countries, regions, sorts }: { countr
     el?.focus();
     el?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   };
-  const stir = () => {
-    setStirred(true);
-    window.setTimeout(() => setStirred(false), 1600);
+  // gentle parallax: the photo leans a little toward the pointer
+  const lean = (e: React.PointerEvent) => {
+    if (reduce || e.pointerType !== 'mouse' || !artRef.current) return;
+    const b = artRef.current.getBoundingClientRect();
+    artRef.current.style.setProperty('--px', (((e.clientX - b.left) / b.width) * 2 - 1).toFixed(3));
+    artRef.current.style.setProperty('--py', (((e.clientY - b.top) / b.height) * 2 - 1).toFixed(3));
   };
+  const unlean = () => {
+    artRef.current?.style.setProperty('--px', '0');
+    artRef.current?.style.setProperty('--py', '0');
+  };
+  // warm the next photos so switching feels instant
+  useEffect(() => {
+    const i = list.findIndex((x) => x.slug === sel);
+    [list[i + 1], list[i - 1]].forEach((x) => {
+      const p = x && COUNTRY_PHOTOS[x.slug];
+      if (p) new Image().src = photoUrl(p.id, 1280);
+    });
+  }, [list, sel]);
 
   return (
     <div data-section="country-directory">
@@ -200,27 +215,30 @@ export default function CountryDirectory({ countries, regions, sorts }: { countr
           )}
         </ul>
 
-        {/* the cultural preview */}
-        <div role="region" className={`wx-preview ${stirred ? 'is-stirred' : ''}`} aria-live="polite" aria-label={c ? `${c.name} preview` : 'Preview'}>
-          <AnimatePresence mode="popLayout" initial={false}>
+        {/* the photographic preview */}
+        <div role="region" className="wx-preview" aria-live="polite" aria-label={c ? `${c.name} preview` : 'Preview'} ref={artRef} onPointerMove={lean} onPointerLeave={unlean}>
+          <AnimatePresence initial={false}>
             {c && (
-              <motion.div key={c.slug} className="wx-card" initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 1.03 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: reduce ? 0.15 : 0.5, ease: EASE }}>
-                <div className="wx-art" onPointerDown={stir}>
-                  <CultureScene slug={c.slug} />
-                  <span className="wx-art-fade" aria-hidden />
-                  {stamps[c.slug] ? (
-                    <span className="wx-seal" aria-label="Stamped in your passport">
-                      <b>✓</b>
-                      Stamped
-                    </span>
-                  ) : (
-                    <span className="wx-seal is-new">Not yet visited</span>
-                  )}
-                </div>
-                <motion.div className="wx-body" initial={reduce ? false : { opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, delay: reduce ? 0 : 0.08, ease: EASE }}>
+              <motion.div key={c.slug} className="wx-card" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: reduce ? 0.15 : 0.7, ease: EASE }}>
+                {COUNTRY_PHOTOS[c.slug] && (
+                  <div className="wx-photo-wrap">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img className="wx-photo" src={photoUrl(COUNTRY_PHOTOS[c.slug].id, 1280)} srcSet={photoSet(COUNTRY_PHOTOS[c.slug].id)} sizes="(min-width: 1024px) 60vw, 100vw" alt={COUNTRY_PHOTOS[c.slug].alt} decoding="async" />
+                  </div>
+                )}
+                <span className="wx-shade" aria-hidden />
+                {stamps[c.slug] ? (
+                  <span className="wx-seal" aria-label="Stamped in your passport">
+                    <b>✓</b>
+                    Stamped
+                  </span>
+                ) : (
+                  <span className="wx-seal is-new">Not yet visited</span>
+                )}
+                <motion.div className="wx-body" initial={reduce ? false : { opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, delay: reduce ? 0 : 0.12, ease: EASE }}>
                   <div className="wx-title">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={flagSrc(c.slug)} alt="" width={44} height={44} />
+                    <img src={flagSrc(c.slug)} alt="" width={40} height={40} />
                     <div>
                       <p className="wx-kicker">
                         {c.region} · {c.capital}
@@ -228,22 +246,29 @@ export default function CountryDirectory({ countries, regions, sorts }: { countr
                       <h2>{c.name}</h2>
                     </div>
                   </div>
-                  <p className="wx-caption">{SCENES[c.slug]?.caption}</p>
+                  <p className="wx-caption">{COUNTRY_PHOTOS[c.slug]?.caption}</p>
                   <p className="wx-intro">{c.tagline}</p>
-                  <div className="wx-fact">
-                    <span>A lesser-known fact</span>
-                    <p>{c.fact}</p>
+                  <p className="wx-fact">
+                    <span>Did you know? </span>
+                    {c.fact}
+                  </p>
+                  <div className="wx-actions">
+                    <a href={`/countries/${c.slug}`} className="wx-cta" data-track={`country-card:${c.slug}`} onClick={(e) => {
+                      if (e.metaKey || e.ctrlKey || e.shiftKey) return;
+                      e.preventDefault();
+                      go(c);
+                    }}>
+                      Explore {c.name}
+                      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
+                        <path d="M2 12 22 3l-5 18-5-7-10-2z" fill="currentColor" />
+                      </svg>
+                    </a>
+                    {COUNTRY_PHOTOS[c.slug] && (
+                      <a className="wx-credit" href={`https://www.pexels.com/photo/${COUNTRY_PHOTOS[c.slug].id}/`} target="_blank" rel="noopener noreferrer">
+                        Photo: {COUNTRY_PHOTOS[c.slug].credit} / Pexels
+                      </a>
+                    )}
                   </div>
-                  <a href={`/countries/${c.slug}`} className="wx-cta" data-track={`country-card:${c.slug}`} onClick={(e) => {
-                    if (e.metaKey || e.ctrlKey || e.shiftKey) return;
-                    e.preventDefault();
-                    go(c);
-                  }}>
-                    Explore {c.name}
-                    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
-                      <path d="M2 12 22 3l-5 18-5-7-10-2z" fill="currentColor" />
-                    </svg>
-                  </a>
                 </motion.div>
               </motion.div>
             )}
