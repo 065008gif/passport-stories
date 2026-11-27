@@ -13,9 +13,9 @@
  * Layers, back to front:
  *   sky       gradient, sun, clouds, distant birds      (no parallax)
  *   far       Mount Fuji, far hills                      depth 0.12
- *   skyline   pagoda, palace, hill town with dome       depth 0.25
+ *   skyline   pagoda, palace, the Matterhorn            depth 0.25
  *   water     river, reflections, bridge, lantern pair  depth 0.42
- *   banks     blossom tree + tea, market street         depth 0.68
+ *   banks     blossom tree + tea, alpine shore + jetty  depth 0.68
  *   fore      path, pier, water lanterns, framing       depth 1
  */
 import React from 'react';
@@ -135,23 +135,6 @@ function HangingLantern({ x, y, r, color = '#e2483d', i = 0, string = 0 }: { x: 
         <rect x={x - r * 0.45} y={y - r * 1.3} width={r * 0.9} height={r * 0.22} fill="#3a2a3a" />
         <rect x={x - r * 0.45} y={y + r * 1.1} width={r * 0.9} height={r * 0.22} fill="#3a2a3a" />
         <line className="cw-tassel" x1={x} y1={y + r * 1.32} x2={x} y2={y + r * 2} stroke="#e8b04a" strokeWidth="1.4" />
-      </g>
-    </g>
-  );
-}
-
-/** A pierced metal lamp, like the ones in a Jaipur or Marrakech lane. */
-function BrassLamp({ x, y, s, i = 0, chain = 30 }: { x: number; y: number; s: number; i?: number; chain?: number }) {
-  return (
-    <g className="cw-lamp" style={{ '--i': i } as React.CSSProperties}>
-      <line x1={x} y1={y - chain} x2={x} y2={y - s * 1.1} stroke="#3a2a3a" strokeWidth="1.2" />
-      <g className="cw-sway" style={{ transformOrigin: `${x}px ${y - chain}px` }}>
-        <circle className="cw-glow" cx={x} cy={y} r={s * 3.4} fill="url(#cw-lampglow)" />
-        <path d={`M${x},${y - s * 1.2} L${x + s * 0.7},${y - s * 0.3} Q${x + s * 0.8},${y + s * 0.6} ${x},${y + s * 1.1} Q${x - s * 0.8},${y + s * 0.6} ${x - s * 0.7},${y - s * 0.3} Z`} fill="#b9802f" />
-        <path d={`M${x},${y - s * 0.7} L${x + s * 0.42},${y - s * 0.1} Q${x + s * 0.45},${y + s * 0.5} ${x},${y + s * 0.8} Q${x - s * 0.45},${y + s * 0.5} ${x - s * 0.42},${y - s * 0.1} Z`} fill="#ffd98a" />
-        {[-0.2, 0.15, 0.45].map((k, n) => (
-          <circle key={n} cx={x + (n - 1) * s * 0.2} cy={y + k * s} r={s * 0.07} fill="#b9802f" />
-        ))}
       </g>
     </g>
   );
@@ -297,6 +280,33 @@ export default function CultureWorld() {
           <stop offset=".6" stopColor="#ffbf6a" />
           <stop offset="1" stopColor="#d9783f" />
         </radialGradient>
+        <linearGradient id="cw-peak-lit" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#ffe0cf" />
+          <stop offset=".35" stopColor="#f4b2a6" />
+          <stop offset=".75" stopColor="#c98aa6" />
+          <stop offset="1" stopColor="#a47aa6" />
+        </linearGradient>
+        <linearGradient id="cw-peak-shade" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#b79ac2" />
+          <stop offset="1" stopColor="#7a6194" />
+        </linearGradient>
+        <linearGradient id="cw-meadow" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#9aa27a" />
+          <stop offset=".5" stopColor="#6c7a5a" />
+          <stop offset="1" stopColor="#4b4a52" />
+        </linearGradient>
+        <linearGradient id="cw-pine" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#8a8a76" />
+          <stop offset=".35" stopColor="#4b6466" />
+          <stop offset="1" stopColor="#35485a" />
+        </linearGradient>
+        <linearGradient id="cw-reflect" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#fff" stopOpacity=".55" />
+          <stop offset="1" stopColor="#fff" stopOpacity="0" />
+        </linearGradient>
+        <mask id="cw-reflect-mask" maskUnits="userSpaceOnUse" x="1100" y="612" width="600" height="260">
+          <rect x="1100" y="612" width="600" height="260" fill="url(#cw-reflect)" />
+        </mask>
         <linearGradient id="cw-trunk" x1="0" y1="0" x2="1" y2="0">
           <stop offset="0" stopColor="#3f2b40" />
           <stop offset=".7" stopColor="#5b3a4e" />
@@ -331,6 +341,8 @@ export default function CultureWorld() {
         {/* Fuji, soft and far */}
         <path d="M420,612 C560,520 640,430 712,388 Q742,372 772,388 C840,428 930,520 1080,612 Z" fill="url(#cw-fuji)" opacity=".85" />
         <path d="M712,388 Q742,372 772,388 L792,402 L776,410 L760,401 L744,414 L728,402 L708,412 L694,400 Z" fill="#f8e3ea" />
+        <path d="M1020,615 L1090,540 L1130,556 L1200,486 L1240,520 L1290,470 L1330,505 L1520,452 L1570,480 L1620,430 L1700,470 L1700,615 Z" fill="#b597c0" opacity=".9" />
+        <path d="M1200,486 L1216,502 L1206,506 L1196,498 Z M1290,470 L1304,486 L1292,490 L1282,482 Z M1620,430 L1640,450 L1626,454 L1612,446 Z M1520,452 L1536,466 L1522,470 Z" fill="#f6e6ef" />
         <path d={ridge(-60, 1660, 560, 26, 640, 7, 60)} fill="#c58fae" opacity=".7" />
         <rect x="-60" y="520" width="1720" height="120" fill="url(#cw-haze)" />
       </g>
@@ -373,28 +385,20 @@ export default function CultureWorld() {
             <path key={x} className="cw-window" style={{ '--i': i } as React.CSSProperties} d={`M${x - 6},-8 L${x - 6},-24 Q${x},-32 ${x + 6},-24 L${x + 6},-8 Z`} fill="#ffcf85" />
           ))}
         </g>
-        {/* right hill town with a dome and a bell tower (Italy) */}
-        <path d={ridge(1100, 1700, 440, 30, 640, 21, 50)} fill="#b27e9c" />
-        <g fill="#8a5c80">
-          <path d="M1330,450 Q1330,380 1380,370 Q1430,380 1430,450 Z" />
-          <rect x="1376" y="345" width="8" height="28" />
-          <circle cx="1380" cy="342" r="6" />
-          <rect x="1470" y="360" width="26" height="100" />
-          <path d="M1466,360 L1483,330 L1500,360 Z" />
-          {[
-            [1200, 450, 60, 40],
-            [1255, 432, 50, 52],
-            [1440, 440, 34, 30],
-            [1520, 430, 60, 46],
-            [1580, 448, 50, 34],
-            [1150, 470, 50, 30],
-          ].map(([x, y, w, h], i) => (
-            <g key={i}>
-              <rect x={x} y={y} width={w} height={h} />
-              <path d={`M${x - 4},${y} L${x + w / 2},${y - 14} L${x + w + 4},${y} Z`} />
-              <rect className="cw-window" style={{ '--i': i } as React.CSSProperties} x={x + w * 0.3} y={y + h * 0.35} width="6" height="9" fill="#ffd38c" />
-            </g>
-          ))}
+        {/* the Matterhorn in alpenglow (Switzerland) */}
+        <g data-spot="alps" className="cw-spot">
+          <polygon points="1170,615 1258,522 1298,472 1334,402 1361,332 1391,262 1402,256 1409,300 1417,352 1439,432 1420,520 1380,615" fill="url(#cw-peak-lit)" />
+          <polygon points="1402,256 1420,272 1450,340 1490,420 1540,500 1612,615 1380,615 1420,520 1439,432 1417,352 1409,300" fill="url(#cw-peak-shade)" />
+          <g fill="none" strokeLinecap="round" className="cw-snow">
+            <path d="M1391,264 L1372,318 L1352,372" stroke="#fff4f0" strokeWidth="5" opacity=".9" />
+            <path d="M1398,262 L1404,330 L1398,392" stroke="#ffe6e0" strokeWidth="3" opacity=".8" />
+            <path d="M1340,400 L1318,452 M1356,382 L1338,440 L1326,470" stroke="#fff1ea" strokeWidth="3" opacity=".75" />
+            <path d="M1300,474 L1272,514 M1320,470 L1296,520" stroke="#ffe9e2" strokeWidth="2.5" opacity=".6" />
+            <path d="M1430,300 L1452,360 L1478,412 M1446,340 L1470,410" stroke="#d9c2e2" strokeWidth="2.5" opacity=".55" />
+            <path d="M1500,440 L1536,500 L1560,540" stroke="#d6c0df" strokeWidth="2" opacity=".5" />
+          </g>
+          {/* a thin waterfall on the far cliff */}
+          <path className="cw-fall" d="M1588,520 C1590,550 1586,580 1592,612" stroke="#fdf3ee" strokeWidth="3" fill="none" strokeLinecap="round" />
         </g>
       </g>
 
@@ -421,6 +425,17 @@ export default function CultureWorld() {
             [1020, 660, 40],
           ].map(([x, y, r], i) => (
             <ellipse key={i} cx={x} cy={y} rx={r} ry={r * 0.08} fill="none" stroke="#ffe0c6" strokeWidth="1.4" opacity=".5" style={{ '--i': i } as React.CSSProperties} />
+          ))}
+        </g>
+
+        {/* the Matterhorn mirrored in the lake, broken by ripples */}
+        <g data-spot="alps" className="cw-spot cw-reflection" mask="url(#cw-reflect-mask)">
+          <g transform="translate(0 1230) scale(1 -1)">
+            <polygon points="1170,615 1258,522 1298,472 1334,402 1361,332 1391,262 1402,256 1409,300 1417,352 1439,432 1420,520 1380,615" fill="#f2b0a8" />
+            <polygon points="1402,256 1420,272 1450,340 1490,420 1540,500 1612,615 1380,615 1420,520 1439,432 1417,352 1409,300" fill="#9a7fb0" />
+          </g>
+          {Array.from({ length: 12 }, (_, i) => (
+            <rect key={i} className="cw-break" style={{ '--i': i } as React.CSSProperties} x={1170 + (i % 4) * 90} y={626 + i * 12} width={60 + (i % 3) * 40} height="2" rx="1" fill="#ffe3d6" opacity=".5" />
           ))}
         </g>
 
@@ -534,118 +549,64 @@ export default function CultureWorld() {
 
         </g>
         <g id="cw-bank-r">
-        {/* ---- right bank: market street ---- */}
-        <path d="M1000,700 Q1080,664 1200,656 Q1420,648 1660,660 L1660,960 L1000,960 Z" fill="url(#cw-ground-r)" />
-        {/* building A: arches and a flower balcony (Italy) */}
-        <g data-spot="balcony" className="cw-spot">
-          <path d="M1060,770 L1060,480 L1250,480 L1250,770 Z" fill="url(#cw-wall-a)" />
-          <path d="M1052,480 L1258,480 L1258,468 L1052,468 Z" fill="#8f4a46" />
-          {[1100, 1190].map((x) => (
-            <path key={x} d={`M${x - 26},770 L${x - 26},690 Q${x},650 ${x + 26},690 L${x + 26},770 Z`} fill="url(#cw-door)" className="cw-doorglow" />
+        {/* ---- right shore: pines, mist, a meadow and a jetty (Switzerland) ---- */}
+        <g className="cw-pines">
+          {[[1070,649.4,71.7],[1098.9,647.6,69.4],[1123.2,642.5,69.5],[1148.0,648.1,50.3],[1168.2,638.2,83.2],[1193.9,635.8,91.2],[1223.4,641.1,74.3],[1241.6,632.2,70.3],[1258.5,633.1,57.1],[1274.9,635.2,66.3],[1302.7,633.9,75.5],[1325.7,634.1,67.0],[1345.6,636.7,91.8],[1373.4,631.3,60.5],[1392.6,624.9,49.2],[1419.3,624.4,84.9],[1440.7,629.5,85.0],[1456.7,619.4,87.9],[1479.3,627.1,64.3],[1496.3,621.7,81.8],[1516.1,613.8,61.3],[1545.6,619.8,51.4],[1565.0,610.6,48.8],[1592.2,609.6,71.7],[1614.5,608.2,79.7],[1632.3,612.4,51.4],[1654.2,605.7,58.4]].map(([x, y, h], i) => (
+            <g key={i} className="cw-pine" style={{ '--i': i, transformOrigin: `${x}px ${y}px` } as React.CSSProperties}>
+              <path d={`M${x},${y - h} L${x + h * 0.16},${y - h * 0.62} L${x + h * 0.1},${y - h * 0.62} L${x + h * 0.24},${y - h * 0.3} L${x + h * 0.16},${y - h * 0.3} L${x + h * 0.3},${y} L${x - h * 0.3},${y} L${x - h * 0.16},${y - h * 0.3} L${x - h * 0.24},${y - h * 0.3} L${x - h * 0.1},${y - h * 0.62} L${x - h * 0.16},${y - h * 0.62} Z`} fill="url(#cw-pine)" />
+              <path d={`M${x},${y - h} L${x - h * 0.16},${y - h * 0.62} L${x - h * 0.08},${y - h * 0.6} Z`} fill="#e7b48e" opacity=".55" />
+            </g>
           ))}
-          {/* balcony with flowers */}
-          <rect x="1094" y="560" width="120" height="70" fill="#f6c98a" />
-          <rect x="1104" y="570" width="44" height="60" fill="#5a7e8a" />
-          <rect x="1160" y="570" width="44" height="60" fill="#5a7e8a" />
-          <rect x="1108" y="574" width="36" height="52" fill="url(#cw-door)" className="cw-window" />
-          <rect x="1086" y="628" width="136" height="6" fill="#4b3446" />
-          {[1094, 1112, 1130, 1148, 1166, 1184, 1202, 1218].map((x) => (
-            <rect key={x} x={x} y="634" width="2.5" height="22" fill="#4b3446" />
-          ))}
-          <rect x="1086" y="654" width="136" height="4" fill="#4b3446" />
-          <g className="cw-flowers">
-            {Array.from({ length: 14 }, (_, i) => {
-              const r = rng(500 + i);
-              return <circle key={i} cx={1092 + i * 9.5} cy={624 - r() * 10} r={4 + r() * 3} fill={['#e2485b', '#ff7a7a', '#f5a3c0', '#ffd166'][i % 4]} />;
-            })}
-            {Array.from({ length: 8 }, (_, i) => (
-              <path key={`v${i}`} d={`M${1096 + i * 17},630 q${-4 + (i % 3) * 3},18 ${2},${30 + (i % 3) * 8}`} stroke="#5d7a47" strokeWidth="2.4" fill="none" />
-            ))}
-          </g>
         </g>
-        {/* building B: keyhole arch, fabrics and a brass lamp (India / Morocco) */}
-        <g data-spot="bazaar" className="cw-spot">
-          <path d="M1250,780 L1250,430 L1450,430 L1450,780 Z" fill="url(#cw-wall-b)" />
-          <path d="M1244,430 L1456,430 L1456,416 L1244,416 Z" fill="#9a6131" />
-          {/* scalloped jharokha window */}
-          <path d="M1310,520 L1310,470 Q1350,436 1390,470 L1390,520 Z" fill="#8a4f2e" />
-          <path d="M1318,520 L1318,474 Q1350,446 1382,474 L1382,520 Z" fill="url(#cw-door)" className="cw-window" style={{ '--i': 3 } as React.CSSProperties} />
-          <path d="M1300,520 L1400,520 L1406,532 L1294,532 Z" fill="#7a4428" />
-          {/* keyhole door */}
-          <path d="M1318,780 L1318,700 Q1318,650 1350,636 Q1382,650 1382,700 L1382,780 Z" fill="url(#cw-door)" className="cw-doorglow" />
-          <path d="M1318,700 Q1318,650 1350,636 Q1382,650 1382,700" fill="none" stroke="#2f7f86" strokeWidth="5" />
-          {/* fabrics hanging from the balcony rail */}
-          <rect x="1256" y="560" width="190" height="5" fill="#5a3a2e" />
+        <path d="M1040,652 Q1300,628 1680,606 L1680,630 Q1300,652 1040,668 Z" fill="#4d5a5c" opacity=".8" />
+        {/* mist drifting low over the water and through the pines */}
+        <g className="cw-mist">
           {[
-            [1266, '#e8a33a', 110],
-            [1300, '#2e9a9a', 140],
-            [1334, '#c8436e', 96],
-            [1372, '#f2c14e', 128],
-            [1410, '#6a4fa0', 104],
-          ].map(([x, c, h], i) => (
-            <path
-              key={i}
-              className="cw-fabric"
-              style={{ '--i': i, transformOrigin: `${x}px 562px` } as React.CSSProperties}
-              d={`M${x},562 L${(x as number) + 30},562 Q${(x as number) + 34},${562 + (h as number) * 0.5} ${(x as number) + 28},${562 + (h as number)} L${(x as number) + 2},${562 + (h as number) - 6} Q${(x as number) - 4},${562 + (h as number) * 0.5} ${x},562 Z`}
-              fill={c as string}
-            />
+            [1250, 640, 220, 16],
+            [1480, 622, 260, 14],
+            [1150, 676, 180, 12],
+            [1560, 660, 200, 12],
+          ].map(([x, y, rx, ry], i) => (
+            <ellipse key={i} className="cw-mist-band" style={{ '--i': i } as React.CSSProperties} cx={x} cy={y} rx={rx} ry={ry} fill="#fff3ee" opacity=".42" />
           ))}
-          <BrassLamp x={1300} y={690} s={13} i={1} chain={60} />
-          <BrassLamp x={1402} y={680} s={11} i={4} chain={50} />
         </g>
-        {/* building C: a rose house with a lit window */}
-        <path d="M1450,790 L1450,450 L1640,450 L1640,790 Z" fill="url(#cw-wall-c)" />
-        <path d="M1444,450 L1646,450 L1646,436 L1444,436 Z" fill="#8a3e52" />
-        <rect className="cw-window" style={{ '--i': 5 } as React.CSSProperties} x="1494" y="520" width="40" height="56" rx="20" fill="url(#cw-door)" />
-        <rect className="cw-window" style={{ '--i': 6 } as React.CSSProperties} x="1566" y="520" width="40" height="56" rx="20" fill="url(#cw-door)" />
-        <path d="M1480,790 L1480,700 Q1520,676 1560,700 L1560,790 Z" fill="#6b3a4f" />
-
-        {/* papel picado strung across the street (Mexico) */}
-        <g data-spot="picado" className="cw-spot">
-          <path d="M1060,500 Q1260,560 1460,494 Q1560,470 1660,488" fill="none" stroke="#3a2a3a" strokeWidth="1.3" />
-          {Array.from({ length: 20 }, (_, i) => {
-            const t = i / 19;
-            const x = 1072 + t * 570;
-            const y = x < 1460 ? 500 + Math.sin(((x - 1060) / 400) * Math.PI) * 34 : 494 - (x - 1460) * 0.08;
-            const c = ['#ff6b5b', '#ffc233', '#12b5a6', '#f2a0c0', '#6a8fe6', '#ff8a4c'][i % 6];
+        {/* the meadow */}
+        <path d="M1010,960 C1060,860 1140,810 1240,792 C1380,768 1520,760 1680,750 L1680,960 Z" fill="url(#cw-meadow)" />
+        <path d="M1060,880 C1120,826 1180,806 1240,794 C1380,770 1520,762 1680,752" fill="none" stroke="#d9c08c" strokeWidth="2.5" opacity=".5" />
+        {/* a rowboat tied to the jetty */}
+        <g className="cw-floater cw-boat" style={{ '--i': 2 } as React.CSSProperties}>
+          <ellipse cx="1090" cy="772" rx="46" ry="5" fill="#3b2b4a" opacity=".25" />
+          <path d="M1046,760 Q1090,778 1136,760 L1128,770 Q1090,786 1052,770 Z" fill="#8a4d3a" />
+          <path d="M1046,760 Q1090,774 1136,760" stroke="#c98a5a" strokeWidth="2" fill="none" />
+          <path d="M1136,760 Q1160,770 1172,780" stroke="#5a3a2e" strokeWidth="1" fill="none" />
+        </g>
+        {/* the jetty, with someone watching the light */}
+        <g data-spot="jetty" className="cw-spot">
+          <path d="M1150,768 L1236,792 L1250,782 L1168,760 Z" fill="#a8775a" />
+          {[0, 1, 2, 3, 4, 5].map((k) => (
+            <path key={k} d={`M${1156 + k * 15},${766 + k * 4} L${1172 + k * 14},${760 + k * 4}`} stroke="#7d5640" strokeWidth="1.5" />
+          ))}
+          {[1158, 1196, 1234].map((x, k) => (
+            <rect key={x} x={x} y={770 + k * 10} width="5" height={18 + k * 4} fill="#5c3f33" />
+          ))}
+          <Seated x={1180} y={766} h={40} g={{ robe: '#3f6f7a', trim: '#f2c46a', skin: '#c48a6a', hair: '#2a1c25' }} facing={1} cup />
+          <Steam x={1194} y={744} s={0.5} className="cw-steam-jetty" />
+        </g>
+        {/* alpine flowers that sway */}
+        <g className="cw-flowers-alp">
+          {Array.from({ length: 46 }, (_, i) => {
+            const r = rng(1200 + i);
+            const x = 1080 + r() * 590;
+            const y = 800 + r() * 150 + (x < 1200 ? (1200 - x) * 0.4 : 0);
+            const h = 10 + r() * 18;
+            const c = ['#ffffff', '#f3eaff', '#8f6ad8', '#ffd25a', '#f39ab8'][i % 5];
             return (
-              <path
-                key={i}
-                className="cw-picado"
-                style={{ '--i': i, transformOrigin: `${x}px ${y}px` } as React.CSSProperties}
-                d={`M${x - 11},${y} L${x + 11},${y} L${x + 11},${y + 20} L${x + 6},${y + 24} L${x},${y + 20} L${x - 6},${y + 24} L${x - 11},${y + 20} Z`}
-                fill={c}
-              />
+              <g key={i} className="cw-flower" style={{ '--i': i, transformOrigin: `${x}px ${y}px` } as React.CSSProperties}>
+                <path d={`M${x},${y} q${-2 + r() * 4},${-h / 2} 0,${-h}`} stroke="#5d7044" strokeWidth="1.4" fill="none" />
+                <circle cx={x} cy={y - h} r={2 + r() * 2.2} fill={c} />
+              </g>
             );
           })}
-        </g>
-
-        {/* the chai stall and the street */}
-        <g data-spot="chai" className="cw-spot cw-chai">
-          <path d="M1050,730 L1180,716 L1196,748 L1040,764 Z" fill="#c64a4f" />
-          {[0, 1, 2, 3, 4].map((k) => (
-            <path key={k} d={`M${1050 + k * 30},${729 - k * 3} L${1046 + k * 32},${762 - k * 3}`} stroke="#f6dcc0" strokeWidth="7" opacity=".85" />
-          ))}
-          <rect x="1056" y="764" width="128" height="44" fill="#7a4a3a" />
-          <rect x="1050" y="760" width="140" height="8" fill="#5c3529" />
-          <path d="M1098,760 q0,-18 14,-18 q14,0 14,18 Z" fill="#b9802f" />
-          <path d="M1126,750 q10,-2 12,6" stroke="#b9802f" strokeWidth="3" fill="none" />
-          <Steam x={1112} y={740} s={1.1} className="cw-steam-chai" />
-          {[1070, 1080, 1150, 1162].map((x) => (
-            <rect key={x} x={x} y="752" width="7" height="9" rx="1.5" fill="#f6ead8" />
-          ))}
-          <Standing x={1120} y={812} h={70} g={G.saffron} arm="forward" className="cw-idle" />
-          <BrassLamp x={1100} y={712} s={8} i={2} chain={0} />
-        </g>
-        <g className="cw-walkers">
-          <g className="cw-walk cw-walk-a">
-            <Standing x={1290} y={850} h={84} g={G.plum} />
-            <Standing x={1326} y={852} h={78} g={G.cream} lean={2} />
-          </g>
-          <g className="cw-walk cw-walk-b">
-            <Standing x={1530} y={862} h={88} g={G.indigo} lean={-1} />
-          </g>
         </g>
         </g>
       </g>
@@ -684,7 +645,7 @@ export default function CultureWorld() {
             const left = i < 13;
             const x = left ? -20 + r() * 260 : 1360 + r() * 280;
             const h = 50 + r() * 80;
-            return <path key={i} style={{ '--i': i, transformOrigin: `${x}px 900px` } as React.CSSProperties} d={`M${x},905 q${-8 + r() * 16},${-h / 2} ${-10 + r() * 20},${-h} q${4},${h / 2} ${10},${h}`} fill={left ? '#55613f' : '#6a3f52'} />;
+            return <path key={i} style={{ '--i': i, transformOrigin: `${x}px 900px` } as React.CSSProperties} d={`M${x},905 q${-8 + r() * 16},${-h / 2} ${-10 + r() * 20},${-h} q${4},${h / 2} ${10},${h}`} fill={left ? '#55613f' : '#4f6146'} />;
           })}
         </g>
         {/* an overhanging blossom branch, close to the camera */}
@@ -718,13 +679,11 @@ export default function CultureWorld() {
 }
 
 /** Places the hero names on hover. Each maps to a country on the globe. */
-export const SPOTS: Record<string, { label: string; place: string; slug: string }> = {
-  bridge: { label: 'Lantern night', place: 'China', slug: 'china' },
+export const SPOTS: Record<string, { label: string; place: string; slug: string | null }> = {
+  bridge: { label: 'A wish, let go at twilight', place: 'China', slug: 'china' },
   blossom: { label: 'Hanami under the cherry trees', place: 'Japan', slug: 'japan' },
   tea: { label: 'Tea, poured slowly', place: 'Japan', slug: 'japan' },
-  balcony: { label: 'A balcony on the Amalfi Coast', place: 'Italy', slug: 'italy' },
-  bazaar: { label: 'An evening bazaar', place: 'India', slug: 'india' },
-  chai: { label: 'Chai at the corner stall', place: 'India', slug: 'india' },
-  picado: { label: 'Papel picado for a fiesta', place: 'Mexico', slug: 'mexico' },
-  water: { label: 'Wishes floating downstream', place: 'Many places', slug: 'india' },
+  alps: { label: 'Alpenglow on the Matterhorn', place: 'Switzerland', slug: null },
+  jetty: { label: 'Quiet hours by an alpine lake', place: 'Switzerland', slug: null },
+  water: { label: 'Wishes floating downstream', place: 'Many places', slug: null },
 };

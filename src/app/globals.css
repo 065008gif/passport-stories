@@ -2406,11 +2406,12 @@ footer.bg-ink {
 /* ==================================================================
    HOME · The Culture Map hero (illustrated world, three states)
    ================================================================== */
-.culture-hero { height: 230vh; }
-@media (max-width: 767px) { .culture-hero { height: 200vh; } }
+.culture-hero { height: 560vh; }
+@media (max-width: 767px) { .culture-hero { height: 480vh; } }
 .culture-stage {
   --dim: 0;
   --words: 0;
+  --start: 1;
   --close: 0;
   --mist: 0;
   position: sticky;
@@ -2520,18 +2521,32 @@ footer.bg-ink {
 .culture-tip-go { margin-top: 0.35rem; align-self: flex-start; font-size: 0.78rem; font-weight: 800; color: #2e7d83; }
 @media (hover: hover) { .culture-tip-go { pointer-events: none; } .culture-tip-go::before { content: 'Click to '; } }
 @media (hover: none) { .culture-tip.is-on { pointer-events: auto; } }
-.culture-skip {
-  position: absolute; z-index: 8; right: 1.2rem; bottom: 1.2rem;
-  border-radius: 9999px; padding: 0.45rem 0.9rem;
-  background: rgba(255, 249, 240, 0.18);
-  color: #fff6e8; font-size: 0.8rem; font-weight: 700;
-  border: 1px solid rgba(255, 246, 232, 0.4);
-  backdrop-filter: blur(6px);
+
+/* before the journey */
+.culture-start {
+  position: absolute; z-index: 6; left: 50%; bottom: 9%;
+  translate: -50% 0;
+  text-align: center;
+  pointer-events: none;
+  opacity: var(--start);
+  transform: translateY(calc((1 - var(--start)) * -30px));
 }
+.culture-start-cue {
+  margin-top: 1rem;
+  display: flex; flex-direction: column; align-items: center; gap: 0.7rem;
+  font-size: 0.95rem; font-weight: 600; color: rgba(255, 246, 232, 0.92);
+  text-shadow: 0 2px 14px rgba(40, 20, 60, 0.6);
+}
+.culture-start-line {
+  width: 2px; height: 46px; border-radius: 2px;
+  background: linear-gradient(180deg, rgba(255, 236, 200, 0), #ffe8bf);
+  animation: cw-cue 1.8s var(--ps-ease) infinite;
+  transform-origin: top;
+}
+@keyframes cw-cue { 0% { transform: scaleY(0); opacity: 1; } 70% { transform: scaleY(1); opacity: 1; } 100% { transform: scaleY(1); opacity: 0; } }
 
 /* hotspots */
 .cw-spot { cursor: pointer; }
-.culture-stage.is-intro .cw-spot { cursor: default; }
 
 /* ---- ambient life in the painting ---- */
 .cw-cloud { animation: cw-drift 46s ease-in-out infinite alternate; animation-delay: calc(var(--i) * -7s); }
@@ -2598,6 +2613,23 @@ footer.bg-ink {
 .cw-sky-lantern { animation: cw-release 14s ease-in-out infinite; }
 @keyframes cw-release { 0%, 30% { transform: translateY(0); opacity: 1; } 75% { opacity: 0.9; } 100% { transform: translateY(-420px) translateX(30px); opacity: 0; } }
 .cw-spot:hover > path, .cw-spot.is-touched > path { filter: brightness(1.05); }
+
+/* Switzerland */
+.cw-pine { animation: cw-pine 6s ease-in-out infinite alternate; animation-delay: calc(var(--i) * -0.37s); }
+@keyframes cw-pine { from { transform: skewX(-1.2deg); } to { transform: skewX(1.4deg); } }
+.cw-mist-band { animation: cw-mist 26s ease-in-out infinite alternate; animation-delay: calc(var(--i) * -6.5s); }
+@keyframes cw-mist { 0% { transform: translateX(-60px); opacity: 0.25; } 50% { opacity: 0.5; } 100% { transform: translateX(80px); opacity: 0.3; } }
+.cw-break { animation: cw-break 3.4s ease-in-out infinite alternate; animation-delay: calc(var(--i) * -0.5s); }
+@keyframes cw-break { from { transform: translateX(-14px); opacity: 0.15; } to { transform: translateX(16px); opacity: 0.6; } }
+.cw-reflection polygon { animation: cw-wobble 4s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: center top; }
+@keyframes cw-wobble { from { transform: skewX(-0.6deg) scaleY(1); } to { transform: skewX(0.6deg) scaleY(0.985); } }
+.cw-fall { stroke-dasharray: 8 10; animation: cw-fall 0.9s linear infinite; opacity: 0.8; }
+@keyframes cw-fall { to { stroke-dashoffset: -36; } }
+.cw-flower { animation: cw-flower 3.2s ease-in-out infinite alternate; animation-delay: calc(var(--i) * -0.29s); }
+@keyframes cw-flower { from { transform: rotate(-5deg); } to { transform: rotate(6deg); } }
+.culture-stage[data-hover='jetty'] .cw-flower, .culture-stage[data-hover='alps'] .cw-mist-band { animation-duration: 1.4s; }
+.cw-boat { transform-box: fill-box; transform-origin: center; }
+.cw-snow { animation: cw-window 6s ease-in-out infinite alternate; }
 
 @media (prefers-reduced-motion: reduce) {
   .culture-stage *, .culture-stage *::before { animation: none !important; transition: none !important; }
