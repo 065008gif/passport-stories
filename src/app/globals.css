@@ -2429,13 +2429,13 @@ footer.bg-ink {
 /* a plain vignette (no blend mode: blending a full screen layer over moving art is what made scrolling stutter) */
 .culture-vignette {
   position: absolute; inset: 0; z-index: 5; pointer-events: none;
-  background: radial-gradient(ellipse 85% 75% at 50% 45%, transparent 55%, rgba(6, 2, 18, 0.55) 100%);
+  background: radial-gradient(ellipse 90% 80% at 50% 50%, transparent 62%, rgba(10, 4, 30, 0.38) 100%);
   opacity: calc(1 - var(--close) * 1.6);
 }
 
 /* the words */
 .culture-copy {
-  position: absolute; z-index: 6; left: 50%; top: 9%;
+  position: absolute; z-index: 6; left: 50%; top: 6%;
   width: min(54rem, 92vw);
   translate: -50% 0;
   text-align: center;
@@ -2455,11 +2455,11 @@ footer.bg-ink {
   text-shadow: 0 2px 12px rgba(60, 20, 70, 0.45);
 }
 .culture-title {
-  margin-top: 0.9rem;
+  margin-top: 0;
   font-family: var(--ps-font-display);
   font-weight: 650;
-  font-size: clamp(2.5rem, 6.2vw, 5.6rem);
-  line-height: 0.98;
+  font-size: clamp(2.1rem, 4.6vw, 4.2rem);
+  line-height: 1;
   letter-spacing: -0.035em;
   text-wrap: balance;
   text-shadow: 0 2px 0 rgba(90, 40, 80, 0.18), 0 14px 44px rgba(50, 20, 70, 0.45);
@@ -2476,10 +2476,10 @@ footer.bg-ink {
   text-shadow: 0 2px 16px rgba(50, 20, 70, 0.55);
 }
 .culture-cta {
-  margin-top: 1.6rem;
+  margin-top: 1.2rem;
   display: inline-flex; align-items: center; gap: 0.6rem;
   border-radius: 9999px;
-  padding: 0.95rem 1.6rem;
+  padding: 0.8rem 1.4rem;
   background: #fff6e8;
   color: #3a2647;
   font-weight: 800;

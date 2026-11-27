@@ -191,10 +191,10 @@ export default function CultureWorld() {
           <stop offset="1" stopColor="#ff5a2a" stopOpacity="0" />
         </radialGradient>
         <linearGradient id="cw-water" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#5a1d66" />
-          <stop offset=".1" stopColor="#2a1048" />
-          <stop offset=".45" stopColor="#120a2c" />
-          <stop offset="1" stopColor="#06041a" />
+          <stop offset="0" stopColor="#8a6ad8" />
+          <stop offset=".08" stopColor="#5a4cb8" />
+          <stop offset=".4" stopColor="#2f2a86" />
+          <stop offset="1" stopColor="#120f48" />
         </linearGradient>
         <radialGradient id="cw-sunpath" cx=".5" cy="0" r="1">
           <stop offset="0" stopColor="#ff7ac0" stopOpacity=".45" />
@@ -206,23 +206,24 @@ export default function CultureWorld() {
           <stop offset="1" stopColor="#ff5aa8" stopOpacity=".38" />
         </linearGradient>
         <linearGradient id="cw-fuji" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#f3eeff" />
-          <stop offset=".16" stopColor="#c2b2ff" />
-          <stop offset=".55" stopColor="#4b3a9a" />
-          <stop offset="1" stopColor="#1d1440" />
+          <stop offset="0" stopColor="#ffffff" />
+          <stop offset=".16" stopColor="#d6caff" />
+          <stop offset=".55" stopColor="#7a66d0" />
+          <stop offset="1" stopColor="#3e2f8a" />
         </linearGradient>
         <linearGradient id="cw-ground-l" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#26363e" />
-          <stop offset=".5" stopColor="#131c26" />
-          <stop offset="1" stopColor="#080a12" />
+          <stop offset="0" stopColor="#3f9a6e" />
+          <stop offset=".35" stopColor="#21684c" />
+          <stop offset="1" stopColor="#0c2b24" />
         </linearGradient>
         <linearGradient id="cw-ground-r" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#b9826e" />
           <stop offset="1" stopColor="#6b4a5e" />
         </linearGradient>
         <linearGradient id="cw-path" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#5a3050" />
-          <stop offset="1" stopColor="#1d1024" />
+          <stop offset="0" stopColor="#d8946e" />
+          <stop offset=".5" stopColor="#9a5a6a" />
+          <stop offset="1" stopColor="#4a2a50" />
         </linearGradient>
         <linearGradient id="cw-wall-a" x1="0" y1="0" x2="1" y2="0">
           <stop offset="0" stopColor="#c76b52" />
@@ -254,14 +255,15 @@ export default function CultureWorld() {
           <stop offset="1" stopColor="#0d0a2c" />
         </linearGradient>
         <linearGradient id="cw-meadow" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#24483c" />
-          <stop offset=".5" stopColor="#11261f" />
-          <stop offset="1" stopColor="#070d10" />
+          <stop offset="0" stopColor="#4aa874" />
+          <stop offset=".45" stopColor="#226a4c" />
+          <stop offset="1" stopColor="#0b2a22" />
         </linearGradient>
         <linearGradient id="cw-pine" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stopColor="#6d8ad0" />
-          <stop offset=".28" stopColor="#173a40" />
-          <stop offset="1" stopColor="#07141a" />
+          <stop offset="0" stopColor="#a9c8ff" />
+          <stop offset=".22" stopColor="#2a8a68" />
+          <stop offset=".6" stopColor="#14523f" />
+          <stop offset="1" stopColor="#0a2a26" />
         </linearGradient>
         <linearGradient id="cw-reflect" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#fff" stopOpacity=".55" />
@@ -270,6 +272,11 @@ export default function CultureWorld() {
         <mask id="cw-reflect-mask" maskUnits="userSpaceOnUse" x="1100" y="612" width="600" height="260">
           <rect x="1100" y="612" width="600" height="260" fill="url(#cw-reflect)" />
         </mask>
+        <linearGradient id="cw-foothill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#3a8a6a" />
+          <stop offset=".6" stopColor="#1c5544" />
+          <stop offset="1" stopColor="#123c34" />
+        </linearGradient>
         <linearGradient id="cw-trunk" x1="0" y1="0" x2="1" y2="0">
           <stop offset="0" stopColor="#14081a" />
           <stop offset=".7" stopColor="#2e1430" />
@@ -282,14 +289,14 @@ export default function CultureWorld() {
         {/* long painted clouds */}
         <g className="cw-clouds">
           {[
-            [300, 250, 260, 22, 1, '#3a1652'],
-            [1200, 190, 300, 20, 2, '#2c1046'],
-            [760, 330, 380, 18, 3, '#4a1a60'],
-            [1380, 330, 220, 16, 4, '#3f1858'],
-            [120, 380, 200, 14, 5, '#521c62'],
-            [980, 420, 260, 12, 6, '#5e1f66'],
+            [300, 250, 260, 22, 1, '#5a3a8a'],
+            [1200, 190, 300, 20, 2, '#4a2f7a'],
+            [760, 330, 380, 18, 3, '#6a3a92'],
+            [1380, 330, 220, 16, 4, '#5e3690'],
+            [120, 380, 200, 14, 5, '#7a3a8e'],
+            [980, 420, 260, 12, 6, '#7e3a8a'],
           ].map(([x, y, rx, ry, s, c], i) => (
-            <path key={i} className="cw-cloud" style={{ '--i': i } as React.CSSProperties} d={blob(x as number, y as number, rx as number, ry as number, s as number, 12, 0.35)} fill={c as string} opacity=".5" />
+            <path key={i} className="cw-cloud" style={{ '--i': i } as React.CSSProperties} d={blob(x as number, y as number, rx as number, ry as number, s as number, 12, 0.35)} fill={c as string} opacity=".45" />
           ))}
         </g>
       </g>
@@ -300,17 +307,17 @@ export default function CultureWorld() {
         <path d="M420,612 C560,520 640,430 712,388 Q742,372 772,388 C840,428 930,520 1080,612 Z" fill="url(#cw-fuji)" />
         <path d="M772,388 C840,428 930,520 1080,612 L900,612 C850,540 808,452 772,388 Z" fill="#120b34" opacity=".6" />
         <path d="M712,388 Q742,372 772,388 L792,402 L776,410 L760,401 L744,414 L728,402 L708,412 L694,400 Z" fill="#ffffff" />
-        <path d="M1020,615 L1090,540 L1130,556 L1200,486 L1240,520 L1290,470 L1330,505 L1520,452 L1570,480 L1620,430 L1700,470 L1700,615 Z" fill="#2b2064" />
+        <path d="M1020,615 L1090,540 L1130,556 L1200,486 L1240,520 L1290,470 L1330,505 L1520,452 L1570,480 L1620,430 L1700,470 L1780,440 L1900,480 L1900,615 Z" fill="#3d3488" />
         <path d="M1200,486 L1216,502 L1206,506 L1196,498 Z M1290,470 L1304,486 L1292,490 L1282,482 Z M1620,430 L1640,450 L1626,454 L1612,446 Z M1520,452 L1536,466 L1522,470 Z" fill="#ffffff" />
-        <path d={ridge(-60, 1660, 560, 26, 640, 7, 60)} fill="#170e32" opacity=".95" />
-        <rect x="-60" y="520" width="1720" height="120" fill="url(#cw-haze)" />
+        <path d={ridge(-300, 1900, 560, 26, 640, 7, 60)} fill="#2a2068" />
+        <rect x="-300" y="520" width="2200" height="120" fill="url(#cw-haze)" />
       </g>
 
       {/* ================= SKYLINE ================= */}
       <g id="cw-skyline" data-depth="0.25">
         {/* left hill with a pagoda */}
-        <path d={ridge(380, 760, 560, 18, 640, 11, 40)} fill="#140c2a" />
-        <g transform="translate(590 560)" fill="#0f0820">
+        <path d={ridge(380, 760, 560, 18, 640, 11, 40)} fill="url(#cw-foothill)" />
+        <g transform="translate(590 560)" fill="#6a2a5e" stroke="#ffb64d" strokeWidth="1.4" strokeLinejoin="round">
           <rect x="-5" y="-120" width="10" height="120" />
           {[0, 1, 2, 3, 4].map((t) => {
             const w = 58 - t * 9;
@@ -327,7 +334,7 @@ export default function CultureWorld() {
           <rect x="3" y="-36" width="4" height="7" fill="#ffc65a" className="cw-window" style={{ '--i': 2 } as React.CSSProperties} />
         </g>
         {/* palace with domes and chhatris behind the bridge */}
-        <g transform="translate(1000 600)" fill="#130a26">
+        <g transform="translate(1000 600)" fill="#7a3364" stroke="#ffc861" strokeWidth="1.6" strokeLinejoin="round">
           <rect x="-110" y="-46" width="220" height="46" />
           <path d="M-46,-46 Q-46,-108 0,-118 Q46,-108 46,-46 Z" />
           <rect x="-2" y="-138" width="4" height="22" />
@@ -361,11 +368,17 @@ export default function CultureWorld() {
           {/* a thin waterfall on the far cliff */}
           <path className="cw-fall" d="M1588,520 C1590,550 1586,580 1592,612" stroke="#fdf3ee" strokeWidth="3" fill="none" strokeLinecap="round" />
         </g>
+        {/* green foothills: the mountains stand on land, not on the water */}
+        <path d="M1100,616 C1160,596 1220,588 1290,592 C1360,572 1440,566 1520,582 C1600,560 1700,552 1800,566 L1900,560 L1900,620 L1100,620 Z" fill="url(#cw-foothill)" />
+        <path d="M1100,616 C1160,596 1220,588 1290,592 C1360,572 1440,566 1520,582 C1600,560 1700,552 1800,566 L1900,560" fill="none" stroke="#9fd8ff" strokeWidth="2" opacity=".45" />
+        <path d="M400,614 C470,600 540,596 600,602 C700,592 820,596 900,604 C980,598 1060,600 1120,612 L1120,620 L400,620 Z" fill="url(#cw-foothill)" opacity=".9" />
       </g>
 
       {/* ================= WATER + BRIDGE ================= */}
       <g id="cw-water" data-depth="0.42">
-        <rect x="-60" y="608" width="1720" height="520" fill="url(#cw-water)" />
+        <rect x="-300" y="608" width="2200" height="520" fill="url(#cw-water)" />
+        <path d="M-300,606 L1900,606 L1900,614 C1500,618 1200,620 900,616 C600,620 300,618 -300,615 Z" fill="#1d5a48" />
+        <path d="M-300,615 C300,618 600,620 900,616 C1200,620 1500,618 1900,614" fill="none" stroke="#c8b8ff" strokeWidth="1.6" opacity=".55" />
         {/* a magenta glow from the horizon on the water */}
         <ellipse cx="905" cy="612" rx="520" ry="90" fill="url(#cw-sunpath)" />
 
@@ -379,16 +392,16 @@ export default function CultureWorld() {
 
         {/* the lantern bridge (China) */}
         <g data-spot="bridge" className="cw-spot">
-          <path d="M610,628 Q800,548 990,628 L990,644 Q800,574 610,644 Z" fill="#2a1530" />
-          <path d="M600,630 Q800,552 1000,630" fill="none" stroke="#ffa05c" strokeWidth="2.6" opacity=".9" />
+          <path d="M610,628 Q800,548 990,628 L990,644 Q800,574 610,644 Z" fill="#7a2e3e" />
+          <path d="M600,630 Q800,552 1000,630" fill="none" stroke="#ffd27a" strokeWidth="3" opacity="1" />
           {/* reflection of the arch */}
           <path d="M640,646 Q800,700 960,646" fill="none" stroke="#2a1530" strokeWidth="10" opacity=".4" />
           {/* railing posts */}
           {[620, 680, 740, 800, 860, 920, 980].map((x) => {
             const y = 628 - Math.sin(((x - 610) / 380) * Math.PI) * 44;
-            return <rect key={x} x={x - 3} y={y - 22} width="6" height="24" fill="#1f0f26" />;
+            return <rect key={x} x={x - 3} y={y - 22} width="6" height="24" fill="#9a3a3a" />;
           })}
-          <path d="M610,606 Q800,526 990,606" fill="none" stroke="#1f0f26" strokeWidth="4" />
+          <path d="M610,606 Q800,526 990,606" fill="none" stroke="#c24a3a" strokeWidth="4" />
           {/* lantern posts and the string of lanterns */}
           <rect x="626" y="520" width="7" height="100" fill="#1a0c22" />
           <rect x="967" y="520" width="7" height="100" fill="#1a0c22" />
@@ -412,8 +425,8 @@ export default function CultureWorld() {
       <g id="cw-banks" data-depth="0.68">
         <g id="cw-bank-l">
         {/* ---- left bank: blossom tree and tea (Japan) ---- */}
-        <path d="M-60,650 Q200,632 420,660 Q560,676 640,720 L640,960 L-60,960 Z" fill="url(#cw-ground-l)" />
-        <path d="M-60,652 Q200,634 420,662 Q560,678 640,722" fill="none" stroke="#8a7ae8" strokeWidth="2.5" opacity=".55" />
+        <path d="M-300,656 L-60,650 Q200,632 420,660 Q560,676 640,720 L640,960 L-300,960 Z" fill="url(#cw-ground-l)" />
+        <path d="M-300,658 L-60,652 Q200,634 420,662 Q560,678 640,722" fill="none" stroke="#b8f0c8" strokeWidth="2.5" opacity=".55" />
         <g data-spot="blossom" className="cw-spot">
           {/* trunk and branches */}
           <path d="M262,830 C270,760 250,700 286,640 C300,612 296,580 300,548 L316,548 C318,590 322,620 312,650 C290,712 302,770 300,830 Z" fill="url(#cw-trunk)" />
@@ -460,6 +473,8 @@ export default function CultureWorld() {
               return Array.from({ length: 10 }, (_, j) => <circle key={`d${i}-${j}`} cx={c.x + (r() - 0.5) * c.rx * 1.6} cy={c.y + (r() - 0.3) * c.ry * 1.4} r={1.2 + r() * 1.6} fill="#5a0f3a" opacity=".45" />);
             })}
           </g>
+          <HangingLantern x={432} y={640} r={10} i={1} string={62} color="#ff4a2a" />
+          <HangingLantern x={178} y={648} r={9} i={3} string={56} color="#ff7a1f" />
           {/* petals already on the grass */}
           {Array.from({ length: 40 }, (_, i) => {
             const r = rng(900 + i);
@@ -469,12 +484,12 @@ export default function CultureWorld() {
 
         {/* tea under the blossoms */}
         <g data-spot="tea" className="cw-spot cw-tea">
-          <path d="M150,760 L420,748 L460,800 L120,814 Z" fill="#c9953e" />
-          <path d="M150,760 L420,748 L460,800 L120,814 Z" fill="none" stroke="#8a6224" strokeWidth="2" />
+          <path d="M150,760 L420,748 L460,800 L120,814 Z" fill="#f0b850" />
+          <path d="M150,760 L420,748 L460,800 L120,814 Z" fill="none" stroke="#b07a2a" strokeWidth="2" />
           {[0, 1, 2, 3].map((k) => (
-            <path key={k} d={`M${160 + k * 70},${759 - k * 3} L${140 + k * 82},${812 - k * 3}`} stroke="#a87a35" strokeWidth="2" />
+            <path key={k} d={`M${160 + k * 70},${759 - k * 3} L${140 + k * 82},${812 - k * 3}`} stroke="#d8a040" strokeWidth="2" />
           ))}
-          <path d="M240,772 L330,768 L336,784 L236,788 Z" fill="#3a1e1c" />
+          <path d="M240,772 L330,768 L336,784 L236,788 Z" fill="#6a2e26" />
           <path d="M270,768 q14,-16 28,0 Z" fill="#2f4c5e" />
           <rect x="282" y="752" width="4" height="6" fill="#2f4c5e" />
           <circle cx="252" cy="767" r="4" fill="#f6ead8" />
@@ -488,17 +503,17 @@ export default function CultureWorld() {
         <g id="cw-bank-r">
         {/* ---- right shore: pines, mist, a meadow and a jetty (Switzerland) ---- */}
         <g className="cw-pines">
-          {[[1070,649.4,71.7],[1098.9,647.6,69.4],[1123.2,642.5,69.5],[1148.0,648.1,50.3],[1168.2,638.2,83.2],[1193.9,635.8,91.2],[1223.4,641.1,74.3],[1241.6,632.2,70.3],[1258.5,633.1,57.1],[1274.9,635.2,66.3],[1302.7,633.9,75.5],[1325.7,634.1,67.0],[1345.6,636.7,91.8],[1373.4,631.3,60.5],[1392.6,624.9,49.2],[1419.3,624.4,84.9],[1440.7,629.5,85.0],[1456.7,619.4,87.9],[1479.3,627.1,64.3],[1496.3,621.7,81.8],[1516.1,613.8,61.3],[1545.6,619.8,51.4],[1565.0,610.6,48.8],[1592.2,609.6,71.7],[1614.5,608.2,79.7],[1632.3,612.4,51.4],[1654.2,605.7,58.4]].map(([x, y, h], i) => (
+          {[[1070,649.4,71.7],[1098.9,647.6,69.4],[1123.2,642.5,69.5],[1148.0,648.1,50.3],[1168.2,638.2,83.2],[1193.9,635.8,91.2],[1223.4,641.1,74.3],[1241.6,632.2,70.3],[1258.5,633.1,57.1],[1274.9,635.2,66.3],[1302.7,633.9,75.5],[1325.7,634.1,67.0],[1345.6,636.7,91.8],[1373.4,631.3,60.5],[1392.6,624.9,49.2],[1419.3,624.4,84.9],[1440.7,629.5,85.0],[1456.7,619.4,87.9],[1479.3,627.1,64.3],[1496.3,621.7,81.8],[1516.1,613.8,61.3],[1545.6,619.8,51.4],[1565.0,610.6,48.8],[1592.2,609.6,71.7],[1614.5,608.2,79.7],[1632.3,612.4,51.4],[1654.2,605.7,58.4],[1678,604,72],[1702,606,60],[1726,601,84],[1752,604,66],[1778,600,78],[1804,603,62],[1830,599,88],[1858,602,70],[1884,600,64]].map(([x, y, h], i) => (
             <g key={i} className="cw-pine" style={{ '--i': i, transformOrigin: `${x}px ${y}px` } as React.CSSProperties}>
               <path d={`M${x},${y - h} L${x + h * 0.16},${y - h * 0.62} L${x + h * 0.1},${y - h * 0.62} L${x + h * 0.24},${y - h * 0.3} L${x + h * 0.16},${y - h * 0.3} L${x + h * 0.3},${y} L${x - h * 0.3},${y} L${x - h * 0.16},${y - h * 0.3} L${x - h * 0.24},${y - h * 0.3} L${x - h * 0.1},${y - h * 0.62} L${x - h * 0.16},${y - h * 0.62} Z`} fill="url(#cw-pine)" />
               <path d={`M${x},${y - h} L${x - h * 0.16},${y - h * 0.62} L${x - h * 0.08},${y - h * 0.6} Z`} fill="#a9b8ff" opacity=".55" />
             </g>
           ))}
         </g>
-        <path d="M1040,652 Q1300,628 1680,606 L1680,630 Q1300,652 1040,668 Z" fill="#0b1a1e" />
+        <path d="M1040,652 Q1300,628 1680,606 L1900,600 L1900,626 L1680,630 Q1300,652 1040,668 Z" fill="#1a5040" />
         {/* the meadow */}
-        <path d="M1010,960 C1060,860 1140,810 1240,792 C1380,768 1520,760 1680,750 L1680,960 Z" fill="url(#cw-meadow)" />
-        <path d="M1060,880 C1120,826 1180,806 1240,794 C1380,770 1520,762 1680,752" fill="none" stroke="#6f8fd0" strokeWidth="2" opacity=".45" />
+        <path d="M1010,960 C1060,860 1140,810 1240,792 C1380,768 1520,760 1680,750 L1900,746 L1900,960 Z" fill="url(#cw-meadow)" />
+        <path d="M1060,880 C1120,826 1180,806 1240,794 C1380,770 1520,762 1680,752" fill="none" stroke="#bff0c0" strokeWidth="2" opacity=".5" />
         {/* a rowboat tied to the jetty */}
         <g className="cw-floater cw-boat" style={{ '--i': 2 } as React.CSSProperties}>
           <ellipse cx="1090" cy="772" rx="46" ry="5" fill="#3b2b4a" opacity=".25" />
@@ -508,13 +523,15 @@ export default function CultureWorld() {
         </g>
         {/* the jetty, with someone watching the light */}
         <g data-spot="jetty" className="cw-spot">
-          <path d="M1150,768 L1236,792 L1250,782 L1168,760 Z" fill="#6b4632" />
+          <path d="M1150,768 L1236,792 L1250,782 L1168,760 Z" fill="#a8704a" />
           {[0, 1, 2, 3, 4, 5].map((k) => (
-            <path key={k} d={`M${1156 + k * 15},${766 + k * 4} L${1172 + k * 14},${760 + k * 4}`} stroke="#3e271c" strokeWidth="1.5" />
+            <path key={k} d={`M${1156 + k * 15},${766 + k * 4} L${1172 + k * 14},${760 + k * 4}`} stroke="#6a4430" strokeWidth="1.5" />
           ))}
           {[1158, 1196, 1234].map((x, k) => (
-            <rect key={x} x={x} y={770 + k * 10} width="5" height={18 + k * 4} fill="#2a1a14" />
+            <rect key={x} x={x} y={770 + k * 10} width="5" height={18 + k * 4} fill="#5a3a2a" />
           ))}
+          <rect x="1240" y="730" width="3" height="56" fill="#3a2a22" />
+          <HangingLantern x={1252} y={744} r={6} i={2} string={8} color="#ffb03a" />
           <Seated x={1180} y={766} h={40} g={{ robe: '#3f6f7a', trim: '#f2c46a', skin: '#c48a6a', hair: '#2a1c25' }} facing={1} cup />
         </g>
         {/* alpine flowers that sway */}
@@ -546,8 +563,22 @@ export default function CultureWorld() {
           const half = 52 + t * 250;
           return <path key={i} d={`M${800 - half},${y} Q800,${y + 6 + t * 10} ${800 + half},${y}`} stroke="#ff9a6a" strokeWidth={1 + t * 1.2} fill="none" opacity=".16" strokeDasharray={`${20 + t * 40} ${12 + t * 30}`} />;
         })}
+        {/* stone lanterns lighting the path */}
+        {[
+          [712, 826, 0.8],
+          [888, 826, 0.8],
+          [640, 902, 1.15],
+          [960, 902, 1.15],
+        ].map(([x, y, s], i) => (
+          <g key={i}>
+            <rect x={x - 9 * s} y={y - 6 * s} width={18 * s} height={6 * s} rx={1.5} fill="#8a7a9a" />
+            <rect x={x - 3.5 * s} y={y - 26 * s} width={7 * s} height={20 * s} fill="#9a8aaa" />
+            <rect x={x - 9 * s} y={y - 44 * s} width={18 * s} height={18 * s} rx={2} fill="#ffd27a" stroke="#7a6a8a" strokeWidth={2 * s} />
+            <path d={`M${x - 15 * s},${y - 44 * s} L${x},${y - 56 * s} L${x + 15 * s},${y - 44 * s} Z`} fill="#6a5a7a" />
+          </g>
+        ))}
         {/* the pier and floating lanterns */}
-        <path d="M740,772 L860,772 L870,782 L730,782 Z" fill="#3a2030" />
+        <path d="M740,772 L860,772 L870,782 L730,782 Z" fill="#8a5a4a" />
         <g data-spot="water" className="cw-spot cw-floaters">
           {[
             [690, 748, 1],
@@ -570,7 +601,7 @@ export default function CultureWorld() {
             const left = i < 13;
             const x = left ? -20 + r() * 260 : 1360 + r() * 280;
             const h = 50 + r() * 80;
-            return <path key={i} style={{ '--i': i, transformOrigin: `${x}px 900px` } as React.CSSProperties} d={`M${x},905 q${-8 + r() * 16},${-h / 2} ${-10 + r() * 20},${-h} q${4},${h / 2} ${10},${h}`} fill={left ? '#0f1d18' : '#102018'} />;
+            return <path key={i} style={{ '--i': i, transformOrigin: `${x}px 900px` } as React.CSSProperties} d={`M${x},905 q${-8 + r() * 16},${-h / 2} ${-10 + r() * 20},${-h} q${4},${h / 2} ${10},${h}`} fill={left ? '#1f5a3e' : '#1d5a44'} />;
           })}
         </g>
         {/* an overhanging blossom branch, close to the camera */}

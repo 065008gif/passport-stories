@@ -43,16 +43,25 @@ type Puff = { x: number; y: number; t: number; d: number; s: number };
 type Ring = { x: number; y: number; t: number; s: number };
 
 /** The camera path through the world, keyed by scroll progress. */
-const PATH = (phone: boolean): Shot[] => {
-  const f = phone ? 0.82 : 1;
+/**
+ * visW / visH: how much of the world shows at zoom 1 (preserveAspectRatio slice).
+ * Wide, short windows crop the bottom of the world, so the overview zooms out a
+ * little (the art is drawn wider than 1600 for this) and keeps the people, the
+ * boat and the lake in frame; the close shots ease their zoom the same way.
+ */
+const PATH = (phone: boolean, visW: number, visH: number): Shot[] => {
+  const f = (phone ? 0.82 : 1) * clamp(visH / 820, 0.72, 1);
+  const so = Math.max(visW / 2100, Math.min(1, visH / 740));
+  const hw = visH / so;
+  const co = hw >= 900 ? 450 : 850 - hw / 2;
   return [
     { p: 0.0, cx: 792, cy: 548, s: 2.7 * f },
-    { p: 0.1, cx: 795, cy: 548, s: 2.4 * f },
-    { p: 0.22, cx: 300, cy: 640, s: 2.15 * f },
-    { p: 0.32, cx: 330, cy: 630, s: 2.25 * f },
-    { p: 0.44, cx: 1360, cy: 520, s: 1.95 * f },
-    { p: 0.54, cx: 1330, cy: 520, s: 2.05 * f },
-    { p: 0.68, cx: 800, cy: 450, s: 1 },
+    { p: 0.1, cx: 795, cy: 556, s: 2.4 * f },
+    { p: 0.22, cx: 300, cy: 650, s: 2.15 * f },
+    { p: 0.32, cx: 320, cy: 645, s: 2.25 * f },
+    { p: 0.44, cx: 1360, cy: 540, s: 1.95 * f },
+    { p: 0.54, cx: 1320, cy: 560, s: 2.05 * f },
+    { p: 0.68, cx: 800, cy: co, s: so },
   ];
 };
 const CLOSE_AT = 0.8;
@@ -86,6 +95,15 @@ const LIGHTS: { x: number; y: number; d: number; r: number; c: 0 | 1; ry: number
   { x: 586, y: 503, d: 0.25, r: 0.35, c: 1, ry: 616, rl: 26 },
   { x: 595, y: 527, d: 0.25, r: 0.35, c: 1, ry: 616, rl: 26 },
   ...[930, 965, 1035, 1070].map((x) => ({ x, y: 584, d: 0.25, r: 0.4, c: 1 as const, ry: 614, rl: 30 })),
+  { x: 432, y: 640, d: 0.68, r: 0.9, c: 0, ry: 0, rl: 0 },
+  { x: 178, y: 648, d: 0.68, r: 0.85, c: 0, ry: 0, rl: 0 },
+  { x: 1252, y: 744, d: 0.68, r: 0.6, c: 1, ry: 770, rl: 34 },
+  ...([
+    [712, 798, 0.7],
+    [888, 798, 0.7],
+    [640, 862, 0.95],
+    [960, 862, 0.95],
+  ] as const).map(([x, y, r]) => ({ x, y, d: 1, r, c: 1 as const, ry: 0, rl: 0 })),
   ...([
     [690, 748, 1],
     [905, 752, 0.9],
@@ -94,11 +112,21 @@ const LIGHTS: { x: number; y: number; d: number; r: number; c: 0 | 1; ry: number
   ] as const).map(([x, y, s]) => ({ x, y, d: 1, r: s * 1.1, c: 1 as const, ry: y + 12 * s, rl: 36 * s })),
 ];
 
+/* warm pools of light on the ground: [x, y, depth, rx, ry] */
+const POOLS: [number, number, number, number, number][] = [
+  [290, 790, 0.68, 250, 80],
+  [800, 840, 1, 190, 100],
+  [1205, 772, 0.68, 120, 40],
+  [800, 604, 0.42, 230, 56],
+  [1000, 588, 0.25, 170, 46],
+  [590, 530, 0.25, 70, 100],
+];
+
 /* where the water shows, in world units (between the banks, around the path) */
 const WATER: [number, number][] = [
-  [-60, 610], [1040, 610], [1040, 668], [1300, 652], [1700, 628], [1700, 750], [1520, 760], [1380, 768], [1240, 792],
+  [-300, 618], [1040, 618], [1040, 668], [1300, 652], [1680, 632], [1900, 628], [1900, 746], [1700, 750], [1520, 760], [1380, 768], [1240, 792],
   [1140, 810], [1060, 860], [1010, 905], [980, 880], [900, 820], [852, 772], [748, 772], [700, 820], [648, 858],
-  [640, 720], [560, 676], [420, 660], [200, 642], [-60, 650],
+  [640, 720], [560, 676], [420, 660], [200, 642], [-60, 652], [-300, 658],
 ];
 
 export default function CultureHero({ onPick }: { onPick?: (slug: string) => void }) {
@@ -175,7 +203,7 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
     const fore = sv.querySelector<SVGGElement>('#cw-fore');
 
     /* ------------------------------ state ------------------------------ */
-    let path = PATH(phone());
+    let path = PATH(phone(), 1600, 900);
     const c = { ...path[0] };
     const ptr = { x: 0, y: 0, tx: 0, ty: 0, sx: -1, sy: -1, over: false };
     let Ps = -1;
@@ -215,7 +243,7 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
       k = Math.max(vw / W, vh / H);
       ox = (vw - W * k) / 2;
       oy = (vh - H * k) / 2;
-      path = PATH(phone());
+      path = PATH(phone(), vw / k, vh / k);
       // the cloud curtain: three bands of soft bumps, sized to the screen
       curtain = [0, 1, 2].map((layer) => {
         const out: { x: number; r: number; dy: number }[] = [];
@@ -345,7 +373,7 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
     /* ----------------------------- particles ----------------------------- */
     const lanterns: Lantern[] = [];
     const newLantern = (low: boolean): Lantern => ({
-      x: low ? rand(560, 1060) : rand(-100, 1700),
+      x: low ? rand(560, 1060) : rand(-300, 1900),
       y: low ? rand(540, 640) : rand(40, 600),
       vy: rand(7, 14),
       ph: rand(0, Math.PI * 2),
@@ -378,7 +406,7 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
         va: rand(1.8, 4.8) * (Math.random() < 0.5 ? -1 : 1),
         rot: rand(0, 6.28),
         vr: rand(-1.4, 1.4),
-        size: rand(5, 8) * (blur ? rand(1.5, 2.3) : 1),
+        size: rand(5, 8) * (blur ? rand(1.3, 1.9) : 1),
         d,
         sp: (Math.random() * PETAL_COLS.length) | 0,
         blur,
@@ -386,18 +414,6 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
         life: 1,
       });
     };
-    const gust = (n: number) => {
-      for (let i = 0; i < n; i++) {
-        const w = toWorld(rand(vw * 0.6, vw * 1.2), rand(-vh * 0.1, vh * 0.9), 1.2);
-        addPetal(w.x, w.y, 1.2, 0, true);
-        const pe = petals[petals.length - 1];
-        if (pe) {
-          pe.vx = rand(-620, -320);
-          pe.vy = rand(30, 130);
-        }
-      }
-    };
-
     // twinkles in the blossom canopy
     const canopy = [
       [150, 470, 92, 70],
@@ -580,7 +596,7 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
         const segLen = (24 + f * 70) * sc;
         const gap = 150 + (r % 3) * 37;
         const a = (0.1 + (1 - f) * 0.22) * (reduce ? 0.7 : 1);
-        ctx.strokeStyle = `rgba(${Math.round(190 + pink * 60)},${Math.round(170 - pink * 40)},255,${a.toFixed(3)})`;
+        ctx.strokeStyle = `rgba(${Math.round(170 + pink * 60)},${Math.round(190 - pink * 50)},255,${(a * 1.25).toFixed(3)})`;
         ctx.lineWidth = Math.max(0.7, (0.8 + f * 1.4) * sc * 0.55);
         ctx.beginPath();
         const off = ((r * 97 + T * speed * (r % 2 ? 1 : -0.6)) % gap + gap) % gap;
@@ -614,8 +630,8 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
           ctx.stroke();
         }
       };
-      col(1215, 618, 230, 0.42, 22, '225,215,255', 0.5 * (1 - pink * 0.5), 1.3);
-      LIGHTS.forEach((L, i) => col(L.x, L.ry, L.rl, L.d === 1 ? 1 : 0.42, 7 * L.r + 3, L.c ? '255,200,110' : '255,120,60', L.c ? 0.55 : 0.75, i * 2.1));
+      col(1215, 622, 230, 0.42, 22, '210,215,255', 0.5 * (1 - pink * 0.5), 1.3);
+      LIGHTS.forEach((L, i) => L.rl > 0 && col(L.x, L.ry, L.rl, L.d === 1 ? 1 : 0.42, 7 * L.r + 3, L.c ? '255,200,110' : '255,120,60', L.c ? 0.55 : 0.75, i * 2.1));
       // ripples
       for (let i = rings.length - 1; i >= 0; i--) {
         const g = rings[i];
@@ -755,8 +771,8 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
       const starVis = 1 - pink * 0.75;
 
       // petal gusts carry the camera between moments; stronger when you scroll faster
-      const inTransit = (Ps > 0.11 && Ps < 0.23) || (Ps > 0.33 && Ps < 0.45);
-      if (inTransit && !reduce && speed > 0.01 && Math.random() < Math.min(1, speed * 3)) gust(ph ? 2 : 4);
+      // a burst from the tree when you scroll into the blossom
+      if (!reduce && blossom > 0.05 && speed > 0.01 && Math.random() < Math.min(1, speed * 3)) for (let i = 0; i < 3; i++) addPetal(rand(60, 560), rand(360, 560), 0.68, 20);
 
       ptr.x += (ptr.tx - ptr.x) * (1 - Math.exp(-dt * 4));
       ptr.y += (ptr.ty - ptr.y) * (1 - Math.exp(-dt * 4));
@@ -770,7 +786,7 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
         if (!reduce) drift += dt * 0.12;
         const span = Math.max(0, (W - vw / k) / 2 - 30);
         tcx = 800 + Math.sin(drift) * span * 0.7 * (1 - closeP) * smooth(clamp((Ps - 0.68) / 0.06));
-        tcy = 450 + 20 * smooth(clamp((Ps - 0.68) / 0.06));
+        tcy = shot.cy + 20 * smooth(clamp((Ps - 0.68) / 0.06));
       }
       const q = ease(clamp(closeP / 0.9));
       c.cx = tcx + (800 - tcx) * q;
@@ -801,8 +817,12 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
       }
       ctx.globalAlpha = 1;
 
-      // warm halos round every lamp and window, flickering
+      // warm halos round every lamp and window, flickering; pools of light on the ground
       ctx.globalCompositeOperation = 'lighter';
+      POOLS.forEach(([x, y, d, rx, ry], i) => {
+        ctx.globalAlpha = (reduce ? 0.3 : 0.27 + Math.sin(T * 2.3 + i * 1.9) * 0.03) * (1 - closeP);
+        ctx.drawImage(haloCool, sx(x, d) - rx * sc, sy(y, d) - ry * sc, rx * 2 * sc, ry * 2 * sc);
+      });
       LIGHTS.forEach((L, i) => {
         const fl = reduce ? 0.9 : 0.78 + Math.sin(T * 7 + i * 1.7) * 0.1 + Math.sin(T * 17 + i) * 0.06;
         const hw = (L.c ? 80 : 96) * L.r * sc * fl * (spotHot('bridge') && L.d === 0.42 ? 1.45 : 1);
@@ -906,12 +926,9 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
           }
           n -= 1;
         }
-        if (Math.random() < dt * (0.6 + blossom * 5) * (1 - closeP)) {
-          const w = toWorld(rand(-vw * 0.1, vw * 0.7), rand(-vh * 0.2, vh * 0.3), 1.25);
-          addPetal(w.x, w.y, 1.25, 0, true);
-        }
+        if (Math.random() < dt * (0.5 + blossom * 3) * (1 - closeP)) addPetal(rand(40, 520), rand(380, 560), 0.95, 0, true);
       }
-      const wind = 18 + Math.sin(T / 2.3) * 12 + Math.max(0, Math.sin(T / 5.1)) * 34;
+      const wind = 8 + Math.sin(T / 2.3) * 8 + Math.max(0, Math.sin(T / 5.1)) * 12;
       for (let i = petals.length - 1; i >= 0; i--) {
         const pe = petals[i];
         if (pe.flat) {
@@ -925,7 +942,8 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
             continue;
           }
         } else if (!reduce) {
-          const target = pe.vx < -150 ? pe.vx : wind + Math.sin(pe.y * 0.02 + T * 1.1) * 26;
+          // petals stay under their tree: the wind turns back near its edge
+          const target = wind + Math.sin(pe.y * 0.02 + T * 1.1) * 18 - Math.max(0, pe.x - 520) * 0.6;
           pe.vx += (target - pe.vx) * Math.min(1, dt * 0.9);
           pe.vy += (16 + Math.sin(pe.a * 2) * 12 + Math.cos(pe.x * 0.015 + T) * 6 - pe.vy) * Math.min(1, dt * 1.2);
           pe.x += pe.vx * dt;
@@ -933,11 +951,8 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
           pe.a += pe.va * dt;
           pe.rot += pe.vr * dt;
           // land on the water, or settle on the grass
-          if (pe.d < 0.9 && pe.y > 690 && pe.x > 650 && pe.x < 1030 && pe.y < 770) {
-            pe.flat = 0.001;
-            pe.a = 0;
-            if (rings.length < 12 && Math.random() < 0.35) rings.push({ x: pe.x, y: pe.y, t: 0, s: 0.35 });
-          } else if (pe.d < 0.9 && pe.y > 700 && pe.x < 600) pe.life -= dt * 1.5;
+          if (pe.y > 690 + (pe.d - 0.68) * 200) pe.life -= dt * 1.2;
+          if (pe.x > 600) pe.life -= dt * 2;
         }
         const x = sx(pe.x, pe.d);
         const y = sy(pe.y, pe.d);
@@ -1102,11 +1117,9 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
 
         {/* the words, once the whole world is in view */}
         <div className="culture-copy">
-          <p className="culture-intro">Passport Stories Presents</p>
           <h1 id="hero-title" className="culture-title">
             One World. <span>Endless Ways to Live.</span>
           </h1>
-          <p className="culture-sub">Discover the extraordinary in someone else’s everyday.</p>
           <button type="button" className="culture-cta" onClick={explore} tabIndex={revealed ? 0 : -1}>
             Explore the Culture Map
             <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
