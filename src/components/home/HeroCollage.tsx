@@ -1,56 +1,52 @@
 'use client';
 
 /**
- * HERO: a three leg flight across twelve landmarks, then into the globe.
+ * HERO: the sunlit aero window corridor.
  *
- * The 3D world lives in heroDiorama.ts (plain three.js): twelve landmarks on
- * porcelain discs, four per leg, one in each corner of the view, and a jet
- * that glides its route from country to country. This shell owns the DOM:
- * the words, a flag pill on every disc, the spotlight card, the flight
- * itinerary pill, pointer input and the GSAP ScrollTrigger flight.
+ * A 500vh runway (300vh on phones) with a sticky stage inside it. Native
+ * scroll sets the target progress; the 3D scene (heroCorridor.ts) eases
+ * toward it with weight, so one wheel notch moves only a few percent and the
+ * whole flight takes several calm scrolls. Nothing hijacks the wheel.
  *
- *  - Scrolling pins the hero and flies three legs: Asia and wonders, Europe
- *    and icons, the Americas and Oceania, then hands off to the globe.
- *  - While anything scrolls, hover is locked; it unlocks 260ms after the
- *    scroll stops and only once the pointer deliberately moves.
- *  - Hover (or tap) a landmark or its pill: a ring lights its disc, it lifts,
- *    and a card offers "Fly to Globe".
- *  - Drag tilts the sky a little; it coasts and settles.
+ *  - Sixteen airplane window portals line a corridor into the horizon; the
+ *    jet glides ahead of the camera and dives into the atlas at the end.
+ *  - Each window in range wears a flag badge on its rim. Hovering a window
+ *    (once nothing is scrolling and the pointer has moved on purpose) lifts
+ *    it and offers "Explore on Globe"; a click flies to the globe.
+ *  - A glass telemetry strip counts destinations and jumps between chapters.
  *
- * Native scrolling is never touched: ScrollTrigger only reads the position.
- * Reduced motion: a still panorama of the first leg; hover still works.
+ * Reduced motion: the camera follows the scroll without easing, and nothing
+ * drifts on its own.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { flagSrc } from '@/components/Flag';
 import { track } from '@/lib/analytics';
-import type { Flight, HeroDiorama, IslandSpec, Landmark } from '@/components/home/heroDiorama';
+import { PLACES, pexels } from '@/data/places';
+import { COUNTRY_CLIPS } from '@/data/media';
+import type { Flight, HeroCorridor, PortalSpec } from '@/components/home/heroCorridor';
 
-const ISLANDS: { slug: string; landmark: Landmark; place: string }[] = [
-  { slug: 'india', landmark: 'india', place: 'Taj Mahal, Agra' },
-  { slug: 'japan', landmark: 'japan', place: 'Mount Fuji, Fujiyoshida' },
-  { slug: 'egypt', landmark: 'egypt', place: 'Pyramids of Giza' },
-  { slug: 'uae', landmark: 'uae', place: 'Burj Khalifa, Dubai' },
-  { slug: 'france', landmark: 'france', place: 'Eiffel Tower, Paris' },
-  { slug: 'italy', landmark: 'italy', place: 'Colosseum, Rome' },
-  { slug: 'united-kingdom', landmark: 'uk', place: 'Big Ben, London' },
-  { slug: 'china', landmark: 'china', place: 'Temple of Heaven, Beijing' },
-  { slug: 'usa', landmark: 'usa', place: 'Golden Gate Bridge, San Francisco' },
-  { slug: 'brazil', landmark: 'brazil', place: 'Christ the Redeemer, Rio' },
-  { slug: 'australia', landmark: 'australia', place: 'Sydney Opera House' },
-  { slug: 'singapore', landmark: 'singapore', place: 'Marina Bay Sands' },
+/** The corridor, nearest first, grouped into the telemetry chapters. */
+const ROUTE: { slug: string; chapter: number }[] = [
+  { slug: 'india', chapter: 0 },
+  { slug: 'japan', chapter: 0 },
+  { slug: 'china', chapter: 0 },
+  { slug: 'singapore', chapter: 0 },
+  { slug: 'uae', chapter: 0 },
+  { slug: 'australia', chapter: 0 },
+  { slug: 'france', chapter: 1 },
+  { slug: 'italy', chapter: 1 },
+  { slug: 'united-kingdom', chapter: 1 },
+  { slug: 'netherlands', chapter: 1 },
+  { slug: 'sweden', chapter: 1 },
+  { slug: 'egypt', chapter: 1 },
+  { slug: 'south-africa', chapter: 1 },
+  { slug: 'usa', chapter: 2 },
+  { slug: 'mexico', chapter: 2 },
+  { slug: 'brazil', chapter: 2 },
 ];
-const INFO = Object.fromEntries(ISLANDS.map((s) => [s.landmark, s]));
-
-/** The flight plan, in scroll progress through the pinned hero. */
-const LEGS = [
-  { id: 'asia', n: '1', label: 'Asia & Wonders', from: 0, to: 0.32, icon: 'M4 20h16M6 20l6-12 6 12M9 14h6' },
-  { id: 'europe', n: '2', label: 'Europe & Icons', from: 0.32, to: 0.66, icon: 'M12 3v4M9 20l3-13 3 13M7 20h10M10 13h4' },
-  { id: 'americas', n: '3', label: 'Americas & Oceania', from: 0.66, to: 0.94, icon: 'M12 21V10M12 10c-3 0-6-2-7-5 3 0 6 1 7 5zM12 10c3 0 6-2 7-5-3 0-6 1-7 5zM8 21h8' },
-  { id: 'globe', n: '', label: 'Globe · 20 Countries', from: 0.94, to: 1, icon: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18' },
-];
+const CHAPTERS = ['Asia', 'Europe', 'Americas', 'Globe'];
+const CLIP: Record<string, keyof typeof COUNTRY_CLIPS> = { india: 'india', japan: 'japan', italy: 'italy' };
+const clamp = (v: number) => Math.min(1, Math.max(0, v));
 
 export default function HeroCollage({
   headline,
@@ -63,23 +59,31 @@ export default function HeroCollage({
   names: Record<string, string>;
   onPick: (slug: string) => void;
 }) {
-  const root = useRef<HTMLElement>(null);
+  const section = useRef<HTMLElement>(null);
+  const stage = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const copy = useRef<HTMLDivElement>(null);
-  const card = useRef<HTMLDivElement>(null);
-  const wash = useRef<HTMLDivElement>(null);
-  const hint = useRef<HTMLDivElement>(null);
-  const itin = useRef<HTMLDivElement>(null);
-  const pills = useRef<(HTMLButtonElement | null)[]>([]);
-  const sceneRef = useRef<HeroDiorama | null>(null);
-  const placedRef = useRef<IslandSpec[]>([]);
-  const stRef = useRef<ScrollTrigger | null>(null);
-  const flight = useRef<Flight>({ p: 0 });
+  const count = useRef<HTMLSpanElement>(null);
+  const tele = useRef<HTMLDivElement>(null);
+  const foot = useRef<HTMLDivElement>(null);
+  const badges = useRef<(HTMLButtonElement | null)[]>([]);
+  const sceneRef = useRef<HeroCorridor | null>(null);
+  const flight = useRef<Flight>({ target: 0, p: 0 });
+  const chapterP = useRef<number[]>([0, 0.3, 0.62, 1]);
 
-  const [placed, setPlaced] = useState<IslandSpec[]>([]);
   const [focus, setFocus] = useState<number | null>(null);
-  const [kbd, setKbd] = useState(false);
-  const [touched, setTouched] = useState(false);
+
+  const specs: PortalSpec[] = useMemo(
+    () =>
+      ROUTE.map(({ slug }) => ({
+        slug,
+        name: names[slug] ?? slug,
+        spot: PLACES[slug].spot,
+        image: pexels(PLACES[slug].photo, 1100),
+        video: CLIP[slug] ? COUNTRY_CLIPS[CLIP[slug]].video : undefined,
+      })),
+    [names],
+  );
 
   // "Same planet. Different lives." The second sentence gets the sunlit gold.
   const [lead, glow] = useMemo(() => {
@@ -89,103 +93,148 @@ export default function HeroCollage({
 
   const pick = useCallback(
     (i: number) => {
-      const s = placedRef.current[i];
+      const s = ROUTE[i];
       if (s) onPick(s.slug);
     },
     [onPick],
   );
 
-  /* --------------------------- The 3D world --------------------------- */
+  /* --------------------------- Native scroll progress --------------------------- */
+  const measure = useCallback(() => {
+    const sec = section.current;
+    const st = stage.current;
+    if (!sec || !st) return null;
+    // the scroll position where the stage starts to stick under the header
+    const top = sec.getBoundingClientRect().top + window.scrollY - (parseFloat(getComputedStyle(st).top) || 0);
+    const runway = Math.max(1, sec.offsetHeight - st.offsetHeight);
+    return { top, runway };
+  }, []);
+  // the sticky stage sits right under the measured header
   useEffect(() => {
-    const el = root.current;
+    const head = document.querySelector('header');
+    if (!head) return;
+    const set = () => document.documentElement.style.setProperty('--header-h', `${Math.round(head.getBoundingClientRect().height)}px`);
+    set();
+    const ro = new ResizeObserver(set);
+    ro.observe(head);
+    return () => ro.disconnect();
+  }, []);
+  useEffect(() => {
+    const update = () => {
+      const m = measure();
+      if (!m) return;
+      flight.current.target = clamp((window.scrollY - m.top) / m.runway);
+    };
+    const lock = () => sceneRef.current?.lockHover();
+    const onScroll = () => {
+      update();
+      lock();
+    };
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('wheel', lock, { passive: true });
+    window.addEventListener('resize', update);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('wheel', lock);
+      window.removeEventListener('resize', update);
+    };
+  }, [measure]);
+
+  /* --------------------------- The 3D corridor --------------------------- */
+  useEffect(() => {
+    const el = stage.current;
     const cv = canvas.current;
     if (!el || !cv) return;
     const phone = window.innerWidth < 768;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const specs: IslandSpec[] = ISLANDS.map((s) => ({ key: s.landmark, slug: s.slug, landmark: s.landmark, name: names[s.slug] ?? s.slug }));
-
-    let scene: HeroDiorama | null = null;
+    let scene: HeroCorridor | null = null;
     let disposed = false;
     let io: IntersectionObserver | null = null;
     let ro: ResizeObserver | null = null;
-
-    import('@/components/home/heroDiorama')
+    let videoTimer = 0;
+    import('@/components/home/heroCorridor')
       .then((mod) => {
         if (disposed) return;
         try {
-          scene = new mod.HeroDiorama(cv, specs, { phone, reduce, flight: flight.current });
+          scene = new mod.HeroCorridor(cv, specs, { phone, reduce, flight: flight.current });
         } catch {
           return; // no WebGL: the CSS sky and the words still stand on their own
         }
         sceneRef.current = scene;
-        placedRef.current = scene.placed;
-        setPlaced(scene.placed);
+        // test hook: the jet on screen, in viewport pixels
+        (window as unknown as { __heroJet?: () => unknown }).__heroJet = () => {
+          const j = scene?.jetScreen();
+          const r = el.getBoundingClientRect();
+          return j && { x: Math.round(j.x + r.left), y: Math.round(j.y + r.top), inView: j.x > 0 && j.x < r.width && j.y > 0 && j.y < r.height };
+        };
         scene.onFocus = (i) => setFocus(i);
-        scene.setCard(card.current);
+        scene.setBadges(badges.current);
+        chapterP.current = [0, scene.progressFor(ROUTE.findIndex((r) => r.chapter === 1)), scene.progressFor(ROUTE.findIndex((r) => r.chapter === 2)), 1];
+        scene.onProgress = (p, reached) => {
+          const c = copy.current;
+          if (c) {
+            const k = Math.min(1, p / 0.14);
+            c.style.opacity = String(1 - k);
+            c.style.transform = `translate3d(0, ${(-k * 60).toFixed(1)}px, 0) scale(${(1 + k * 0.04).toFixed(3)})`;
+          }
+          const n = reached;
+          if (count.current) count.current.textContent = String(n).padStart(2, '0');
+          const t = tele.current;
+          if (t) {
+            const ch = p >= 0.85 ? 3 : ROUTE[reached - 1].chapter;
+            if (t.dataset.chapter !== String(ch)) t.dataset.chapter = String(ch);
+            t.style.setProperty('--progress', p.toFixed(3));
+          }
+          if (foot.current) foot.current.style.opacity = String(Math.min(1, Math.max(0, (p - 0.9) / 0.1)));
+        };
         scene.resize(el.clientWidth, el.clientHeight);
         el.dataset.ready = 'true';
+        if (!reduce) videoTimer = window.setTimeout(() => scene?.startVideos(), 1500);
         ro = new ResizeObserver(() => scene?.resize(el.clientWidth, el.clientHeight));
         ro.observe(el);
-        // Draw only while the hero (or its pinned flight) is on screen.
+        // draw only while the hero is on screen
         io = new IntersectionObserver(([e]) => (e.isIntersecting ? scene?.start() : scene?.stop()));
         io.observe(el);
       })
       .catch(() => {});
-
     return () => {
       disposed = true;
+      window.clearTimeout(videoTimer);
       io?.disconnect();
       ro?.disconnect();
       scene?.dispose();
       sceneRef.current = null;
     };
-  }, [names]);
-
-  useEffect(() => {
-    sceneRef.current?.setPills(pills.current);
-  }, [placed]);
-
-  /* ---------------------- Scroll locks hover, briefly ---------------------- */
-  useEffect(() => {
-    const lock = () => sceneRef.current?.lockHover();
-    window.addEventListener('scroll', lock, { passive: true });
-    window.addEventListener('wheel', lock, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', lock);
-      window.removeEventListener('wheel', lock);
-    };
-  }, []);
+  }, [specs]);
 
   /* ------------------------------ Pointer ------------------------------ */
   useEffect(() => {
-    const el = root.current;
+    const el = stage.current;
     if (!el) return;
     const local = (e: PointerEvent) => {
       const r = el.getBoundingClientRect();
       return [e.clientX - r.left, e.clientY - r.top] as const;
     };
-    const onUi = (e: Event) => !!(e.target as Element | null)?.closest?.('.sky-pill, .spot-anchor, .itinerary');
+    const onUi = (e: Event) => !!(e.target as Element | null)?.closest?.('.window-badge, .telemetry');
+    let down: { x: number; y: number } | null = null;
     const move = (e: PointerEvent) => {
-      const s = sceneRef.current;
-      if (!s) return;
       const [x, y] = local(e);
-      s.pointerMove(x, y, e.pointerType);
-      if (s.dragDistance > 10) setTouched(true);
+      sceneRef.current?.pointerMove(x, y, e.pointerType);
     };
-    const down = (e: PointerEvent) => {
-      const s = sceneRef.current;
-      if (!s || onUi(e) || e.button > 0) return;
-      setKbd(false);
+    const press = (e: PointerEvent) => {
+      if (onUi(e)) return;
+      down = { x: e.clientX, y: e.clientY };
       const [x, y] = local(e);
-      s.pointerMove(x, y, e.pointerType);
-      s.pointerDown(x, y);
+      sceneRef.current?.pointerMove(x, y, e.pointerType);
     };
-    const up = (e: PointerEvent) => {
+    const release = (e: PointerEvent) => {
       const s = sceneRef.current;
-      if (!s) return;
-      const { tap, hit } = s.pointerUp(e.type === 'pointercancel');
-      if (!tap || onUi(e)) return;
-      setTouched(true);
+      if (!s || !down || onUi(e)) return;
+      const tap = Math.hypot(e.clientX - down.x, e.clientY - down.y) < 8;
+      down = null;
+      if (!tap) return;
+      const hit = s.hit();
       if (e.pointerType === 'mouse') {
         if (hit !== null) pick(hit);
       } else if (hit === null) s.setFocus(null);
@@ -194,218 +243,111 @@ export default function HeroCollage({
     };
     const leave = () => sceneRef.current?.pointerLeave();
     el.addEventListener('pointermove', move);
-    el.addEventListener('pointerdown', down);
-    window.addEventListener('pointerup', up);
-    window.addEventListener('pointercancel', up);
+    el.addEventListener('pointerdown', press);
+    el.addEventListener('pointerup', release);
     el.addEventListener('pointerleave', leave);
     return () => {
       el.removeEventListener('pointermove', move);
-      el.removeEventListener('pointerdown', down);
-      window.removeEventListener('pointerup', up);
-      window.removeEventListener('pointercancel', up);
+      el.removeEventListener('pointerdown', press);
+      el.removeEventListener('pointerup', release);
       el.removeEventListener('pointerleave', leave);
     };
   }, [pick]);
 
-  /* ------------------------ Scroll: the three legs ------------------------ */
-  useEffect(() => {
-    const el = root.current;
-    if (!el) return;
-    gsap.registerPlugin(ScrollTrigger);
-    // The header is sticky, so the hero starts right under it.
-    const header = () => {
-      const cs = getComputedStyle(document.documentElement);
-      return parseFloat(cs.getPropertyValue('--header')) * parseFloat(cs.fontSize) || 0;
-    };
-    const fill = (p: number) => {
-      const bar = itin.current;
-      if (!bar) return;
-      LEGS.forEach((l) => bar.style.setProperty(`--${l.id}`, Math.min(1, Math.max(0, (p - l.from) / (l.to - l.from))).toFixed(3)));
-      const found = LEGS.findIndex((l) => p < l.to);
-      const now = found < 0 ? 3 : found;
-      if (bar.dataset.leg !== String(now)) bar.dataset.leg = String(now);
-    };
-    fill(0);
-    const ctx = gsap.context(() => {
-      const mm = gsap.matchMedia();
-      const build = (desktop: boolean) => {
-        const f = flight.current;
-        const tl = gsap.timeline({
-          defaults: { ease: 'none' },
-          scrollTrigger: {
-            trigger: el,
-            start: () => `top top+=${header()}`,
-            end: desktop ? '+=240%' : '+=150%',
-            scrub: 0.55,
-            pin: true,
-            anticipatePin: 1,
-            invalidateOnRefresh: true,
-            onUpdate: (st) => fill(st.progress),
-          },
-        });
-        stRef.current = tl.scrollTrigger ?? null;
-        tl.to(f, { p: 1, duration: 1 }, 0)
-          .to(copy.current, { yPercent: -16, scale: 1.06, opacity: 0, duration: 0.18, ease: 'power2.in' }, 0)
-          .to(hint.current, { opacity: 0, duration: 0.05 }, 0)
-          .to(wash.current, { opacity: 1, duration: 0.03, ease: 'power1.in' }, 0.97);
-        return () => {
-          f.p = 0;
-          stRef.current = null;
-        };
-      };
-      mm.add('(min-width: 768px) and (prefers-reduced-motion: no-preference)', () => build(true));
-      mm.add('(max-width: 767px) and (prefers-reduced-motion: no-preference)', () => build(false));
-    }, el);
-    return () => ctx.revert();
-  }, []);
-
-  const jump = (i: number) => {
-    const leg = LEGS[i];
-    track('hero_leg_jump', { leg: leg.id });
+  const jump = (ch: number) => {
+    track('hero_leg_jump', { leg: CHAPTERS[ch].toLowerCase() });
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const st = stRef.current;
-    if (leg.id === 'globe' || !st) {
+    if (ch === 3) {
       document.getElementById('explore')?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
       return;
     }
-    // land a little into the leg, when its four landmarks are in place
-    const at = leg.from === 0 ? 0 : leg.from + 0.03;
-    window.scrollTo({ top: st.start + (st.end - st.start) * at, behavior: reduce ? 'auto' : 'smooth' });
+    const m = measure();
+    if (m) window.scrollTo({ top: m.top + m.runway * chapterP.current[ch], behavior: reduce ? 'auto' : 'smooth' });
   };
 
-  const focused = focus !== null ? placed[focus] : null;
-  const info = focused ? INFO[focused.landmark] : null;
-
   return (
-    <section ref={root} className="hero-diorama relative isolate overflow-hidden" aria-labelledby="hero-title">
-      <canvas ref={canvas} aria-hidden className="diorama-canvas absolute inset-0 h-full w-full" />
+    <section ref={section} className="relative h-[500vh] max-md:h-[300vh]" aria-labelledby="hero-title">
+      <div ref={stage} className="hero-stage sticky top-[var(--header-h,72px)] h-[calc(100svh-var(--header-h,72px))] w-full overflow-hidden">
+        <canvas ref={canvas} aria-hidden className="corridor-canvas absolute inset-0 h-full w-full" />
 
-      {/* The words, in the open corridor between the four landmarks */}
-      <div ref={copy} className="diorama-copy pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center px-5 text-center">
-        <h1 id="hero-title" className="diorama-title">
-          <span className="block">{lead}</span>
-          {glow && <span className="diorama-gold block">{glow}</span>}
-        </h1>
-        <p className="diorama-tagline mx-auto">{tagline}</p>
-      </div>
+        {/* The words, in the open sky at the start of the corridor */}
+        <div ref={copy} className="corridor-copy pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center px-5 text-center">
+          <h1 id="hero-title" className="diorama-title">
+            <span className="block">{lead}</span>
+            {glow && <span className="diorama-gold block">{glow}</span>}
+          </h1>
+          <p className="diorama-tagline mx-auto">{tagline}</p>
+        </div>
 
-      {/* A flag pill on the front rim of every disc; the scene places them */}
-      {placed.map((s, i) => (
-        <button
-          key={s.key}
-          ref={(n) => {
-            pills.current[i] = n;
-          }}
-          type="button"
-          tabIndex={-1}
-          aria-hidden
-          className="sky-pill absolute left-0 top-0 z-20"
-          style={{ opacity: 0, transform: 'translate3d(-999px, -999px, 0)' }}
-          onPointerEnter={(e) => {
-            const sc = sceneRef.current;
-            if (!sc || (e.pointerType === 'mouse' && !sc.canHover)) return;
-            sc.holdFocus = true;
-            sc.setFocus(i);
-          }}
-          onPointerLeave={() => {
-            if (sceneRef.current) sceneRef.current.holdFocus = false;
-          }}
-          onClick={() => {
-            const sc = sceneRef.current;
-            if (sc && sc.focus !== i) sc.setFocus(i);
-            else pick(i);
-          }}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={flagSrc(s.slug)} alt="" width={22} height={22} />
-          {s.name}
-        </button>
-      ))}
-
-      {/* The spotlight card beside the focused landmark */}
-      <div
-        ref={card}
-        className="spot-anchor absolute left-0 top-0 z-30"
-        style={{ transform: 'translate3d(-999px, -999px, 0)', pointerEvents: focused ? 'auto' : 'none' }}
-        onPointerEnter={() => {
-          if (sceneRef.current) sceneRef.current.holdFocus = true;
-        }}
-        onPointerLeave={() => {
-          if (sceneRef.current) sceneRef.current.holdFocus = false;
-        }}
-      >
-        <AnimatePresence initial={false}>
-          {focused && info && (
-            <motion.div
-              key={focused.key}
-              className={`spot-card ${kbd ? 'is-kbd' : ''}`}
-              initial={{ opacity: 0, scale: 0.92 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.96, transition: { duration: 0.12, ease: [0.23, 1, 0.32, 1] } }}
-              transition={{ type: 'spring', stiffness: 460, damping: 34 }}
-            >
-              <div className="spot-head">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={flagSrc(focused.slug)} alt="" width={40} height={40} />
-                <div className="min-w-0">
-                  <p className="spot-name">{focused.name}</p>
-                  <p className="spot-place">{info.place}</p>
-                </div>
-              </div>
-              <button type="button" className="spot-fly" onClick={() => focus !== null && pick(focus)} tabIndex={-1}>
-                Fly to Globe
-                <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden>
-                  <path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Keyboard and screen reader route to every landmark */}
-      <ul className="sr-only">
-        {placed.map((s, i) => (
-          <li key={s.key}>
-            <button
-              type="button"
-              onFocus={() => {
-                setKbd(true);
-                sceneRef.current?.setFocus(i);
-              }}
-              onBlur={() => sceneRef.current?.setFocus(null)}
-              onClick={() => pick(i)}
-            >
-              Fly to {s.name} on the globe
-            </button>
-          </li>
-        ))}
-      </ul>
-
-      {/* GSAP fades the wrapper on scroll; the pill itself fades after the first touch. */}
-      <div ref={hint} aria-hidden className="diorama-hint-wrap pointer-events-none absolute inset-x-0 z-20 flex justify-center">
-        <p className={`diorama-hint ${touched || focused ? 'is-gone' : ''}`}>
-          <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden>
-            <path d="M8 9l-4 3 4 3M16 9l4 3-4 3M4 12h16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          Drag to tilt the sky
-        </p>
-      </div>
-
-      {/* The flight itinerary: where the scroll takes you, and a way to jump there */}
-      <nav ref={itin} data-leg="0" className="itinerary absolute bottom-4 left-1/2 z-30 -translate-x-1/2" aria-label="Flight legs">
-        {LEGS.map((l, i) => (
-          <button key={l.id} type="button" className="itinerary-leg" data-i={i} onClick={() => jump(i)} style={{ '--fill': `var(--${l.id}, 0)` } as React.CSSProperties}>
-            <span className="itinerary-fill" aria-hidden />
-            <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden>
-              <path d={l.icon} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            {l.n && <span className="itinerary-n">{l.n}</span>}
-            <span className="itinerary-label">{l.label}</span>
+        {/* A flag badge on the rim of every window in range; the scene places them */}
+        {specs.map((s, i) => (
+          <button
+            key={s.slug}
+            ref={(n) => {
+              badges.current[i] = n;
+            }}
+            type="button"
+            className="window-badge absolute left-0 top-0 z-20"
+            style={{ opacity: 0, transform: 'translate3d(-999px, -999px, 0)' }}
+            aria-label={`${s.name}, ${s.spot}. Explore on the globe`}
+            onPointerEnter={(e) => {
+              const sc = sceneRef.current;
+              if (!sc || (e.pointerType === 'mouse' && !sc.canHover)) return;
+              sc.holdFocus = true;
+              sc.setFocus(i);
+            }}
+            onPointerMove={(e) => {
+              // the lockout may have ended while the pointer was already on the badge
+              const sc = sceneRef.current;
+              if (!sc || e.pointerType !== 'mouse' || sc.focus === i || !sc.canHover) return;
+              sc.holdFocus = true;
+              sc.setFocus(i);
+            }}
+            onPointerLeave={() => {
+              if (sceneRef.current) sceneRef.current.holdFocus = false;
+            }}
+            onFocus={() => sceneRef.current?.setFocus(i)}
+            onClick={() => pick(i)}
+          >
+            <span className="window-badge-main">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={flagSrc(s.slug)} alt="" width={22} height={22} />
+              <span className="window-badge-name">{s.name}</span>
+              <span className="window-badge-spot">{s.spot}</span>
+            </span>
+            <span className={`window-badge-cta ${focus === i ? 'is-on' : ''}`} aria-hidden>
+              Explore on Globe
+              <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden>
+                <path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
           </button>
         ))}
-      </nav>
-      <div ref={wash} aria-hidden className="diorama-wash pointer-events-none absolute inset-0 z-40" />
+
+        {/* Glass telemetry: where you are, and the chapters */}
+        <div ref={tele} data-chapter="0" className="telemetry absolute bottom-4 left-1/2 z-30 -translate-x-1/2">
+          <span className="telemetry-count" aria-live="off">
+            <span ref={count}>01</span>
+            <span className="telemetry-of"> / 16 Destinations</span>
+          </span>
+          <span className="telemetry-rule" aria-hidden />
+          <nav className="telemetry-chapters" aria-label="Flight chapters">
+            {CHAPTERS.map((c, i) => (
+              <button key={c} type="button" data-i={i} onClick={() => jump(i)}>
+                <span className="telemetry-dot" aria-hidden />
+                {c}
+              </button>
+            ))}
+          </nav>
+          <span className="telemetry-cue" aria-hidden>
+            <svg width="16" height="16" viewBox="0 0 24 24">
+              <path d="M12 5v14M6 13l6 6 6-6" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </span>
+          <span className="telemetry-bar" aria-hidden />
+        </div>
+        <div ref={foot} aria-hidden className="corridor-foot pointer-events-none absolute inset-x-0 bottom-0 z-[5]" />
+      </div>
     </section>
   );
 }

@@ -14,6 +14,8 @@
  * Earth images: NASA Blue Marble / Black Marble (public domain).
  */
 import * as THREE from 'three';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+import { luxuryJet } from '@/components/home/luxuryJet';
 
 // Colours and textures are authored in plain sRGB and drawn as-is, like CSS.
 THREE.ColorManagement.enabled = false;
@@ -96,6 +98,16 @@ export class FlightWorld {
   private gUp = new THREE.Vector3();
   private gM = new THREE.Matrix4();
   private gQ = new THREE.Quaternion();
+  // cursor steering (home page): where the jet is heading on the orbital shell
+  private aim: THREE.Vector3 | null = null;
+  private gDir = new THREE.Vector3(0, 0, 1);
+  private gHead = new THREE.Vector3(1, 0, 0);
+  private gBank = 0;
+  private gLast = -1;
+  private gRay = new THREE.Raycaster();
+  private gSphere = new THREE.Sphere();
+  private gInv = new THREE.Matrix4();
+  private vapor: { mesh: THREE.Mesh; pts: { p: THREE.Vector3; h: THREE.Vector3; t: number }[] } | null = null;
   // scratch objects, so the render loop allocates nothing
   private a = new THREE.Vector3();
   private b = new THREE.Vector3();
@@ -316,6 +328,58 @@ export class FlightWorld {
     (this.ring.material as THREE.MeshBasicMaterial).color.set(picked ? 0xff6b5b : 0xfff4e0);
 
     // The home page guide: glides along its curve (0.75 s, eased out), nose on the tangent, level over the surface.
+    const gdt = this.gLast < 0 ? 0 : Math.min(0.05, Math.max(0, f.time - this.gLast));
+    this.gLast = f.time;
+    if (this.guide && this.guide.visible && !this.guideCurve) {
+      // great circle steering on the orbital shell, nose along the motion, banking with the turn
+      const g = this.guide;
+      this.gDir.copy(g.position).normalize();
+      if (this.aim) {
+        const angle = Math.acos(THREE.MathUtils.clamp(this.gDir.dot(this.aim), -1, 1));
+        if (angle > 1e-4) {
+          const stepA = Math.min(angle, gdt * Math.min(2.4, angle * 5 + 0.15));
+          const axis = this.gTan.crossVectors(this.gDir, this.aim).normalize();
+          this.gDir.applyAxisAngle(axis, stepA);
+          const head = this.gUp.crossVectors(axis, this.gDir).normalize();
+          const turn = gdt > 0 ? Math.atan2(this.gHead.clone().cross(head).dot(this.gDir), this.gHead.dot(head)) / gdt : 0;
+          this.gHead.lerp(head, 1 - Math.exp(-gdt * 10)).normalize();
+          this.gBank += (THREE.MathUtils.clamp(-turn * 0.12, -26 * (Math.PI / 180), 26 * (Math.PI / 180)) - this.gBank) * (1 - Math.exp(-gdt * 6));
+        } else this.gBank *= Math.exp(-gdt * 4);
+      } else this.gBank *= Math.exp(-gdt * 4);
+      g.position.copy(this.gDir).multiplyScalar(1.08);
+      this.gHead.addScaledVector(this.gDir, -this.gHead.dot(this.gDir)).normalize();
+      this.gM.lookAt(this.c.set(0, 0, 0), this.gHead, this.gDir);
+      this.gQ.setFromRotationMatrix(this.gM).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), this.gBank));
+      g.quaternion.slerp(this.gQ, 1 - Math.exp(-gdt * 12));
+    }
+    // the vapor ribbon follows the jet across the surface
+    if (this.guide && this.vapor) {
+      const v = this.vapor;
+      const head = v.pts[0];
+      if (this.guide.visible && (!head || head.p.distanceToSquared(this.guide.position) > 0.00012)) {
+        v.pts.unshift({ p: this.guide.position.clone().setLength(1.07), h: this.gHead.clone(), t: f.time });
+        if (v.pts.length > 40) v.pts.length = 40;
+      }
+      const pos = v.mesh.geometry.getAttribute('position') as THREE.BufferAttribute;
+      const colr = v.mesh.geometry.getAttribute('color') as THREE.BufferAttribute;
+      for (let i = 0; i < 40; i++) {
+        const pt = v.pts[Math.min(i, v.pts.length - 1)];
+        if (!pt) {
+          colr.setXYZW(i * 2, 0, 0, 0, 0);
+          colr.setXYZW(i * 2 + 1, 0, 0, 0, 0);
+          continue;
+        }
+        const side = this.gTan.crossVectors(pt.h, pt.p).normalize().multiplyScalar(0.008 * (1 - i / 40));
+        pos.setXYZ(i * 2, pt.p.x + side.x, pt.p.y + side.y, pt.p.z + side.z);
+        pos.setXYZ(i * 2 + 1, pt.p.x - side.x, pt.p.y - side.y, pt.p.z - side.z);
+        const a = i < v.pts.length ? Math.pow(1 - i / 40, 1.4) * Math.max(0, 1 - (f.time - pt.t) / 1.8) : 0;
+        const k = i / 40;
+        colr.setXYZW(i * 2, 1, 0.42 + k * 0.35, 0.36 - k * 0.1, a);
+        colr.setXYZW(i * 2 + 1, 1, 0.42 + k * 0.35, 0.36 - k * 0.1, a);
+      }
+      pos.needsUpdate = true;
+      colr.needsUpdate = true;
+    }
     if (this.guide && this.guide.visible && this.guideCurve) {
       if (this.guideStart < 0) this.guideStart = f.time;
       const k = Math.min(1, (f.time - this.guideStart) / 0.75);
@@ -333,6 +397,10 @@ export class FlightWorld {
       this.gM.lookAt(this.c.set(0, 0, 0), this.guideDir, this.gUp);
       this.gQ.setFromRotationMatrix(this.gM);
       this.guide.quaternion.slerp(this.gQ, k < 1 ? 0.35 : 0.15);
+      if (k >= 1) {
+        this.gHead.copy(this.guideDir);
+        this.guideCurve = null;
+      }
     }
     // The home page flight arc, if one is showing.
     if (this.arcGroup && this.arcCurve) {
@@ -409,29 +477,33 @@ export class FlightWorld {
     const key = new THREE.DirectionalLight(0xfff4e0, 2.2);
     key.position.set(-2, 3, 4);
     this.scene.add(key);
-    const std = (c: number, rough = 0.32) => new THREE.MeshStandardMaterial({ color: c, roughness: rough, metalness: 0.1 });
+    // the hero's jet in miniature, with its own studio reflections (the globe keeps its look)
+    const pm = new THREE.PMREMGenerator(this.renderer);
+    const env = pm.fromScene(new RoomEnvironment(), 0.04).texture;
+    pm.dispose();
     const g = new THREE.Group();
-    const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.13, 0.78, 8, 20), std(0xfffaf3, 0.25));
-    body.rotation.x = Math.PI / 2;
-    const nose = new THREE.Mesh(new THREE.SphereGeometry(0.132, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), std(0xff6b5b));
-    nose.rotation.x = -Math.PI / 2;
-    nose.position.z = -0.52;
-    const wing = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.035, 0.3), std(0xff6b5b));
-    wing.position.set(0, -0.03, -0.02);
-    const stab = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.03, 0.16), std(0xff6b5b));
-    stab.position.set(0, 0.02, 0.46);
-    const fin = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.3, 0.2), std(0xffc233));
-    fin.position.set(0, 0.17, 0.44);
-    const tips = [-0.75, 0.75].map((x) => {
-      const t = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.14, 0.16), std(0x12b5a6));
-      t.position.set(x, 0.05, 0.02);
-      return t;
+    const jet = luxuryJet((h) => new THREE.Color(h));
+    jet.traverse((o) => {
+      const m = (o as THREE.Mesh).material as THREE.MeshStandardMaterial | undefined;
+      if (m && 'envMap' in m) m.envMap = env;
     });
-    g.add(body, nose, wing, stab, fin, ...tips);
-    g.scale.setScalar(0.17);
+    g.add(jet);
+    g.scale.setScalar(0.05);
     g.visible = false;
     this.guide = g;
     this.globe.add(g);
+    // a delicate coral and gold vapor ribbon that hugs the surface behind the jet
+    const n = 40;
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(n * 6), 3).setUsage(THREE.DynamicDrawUsage));
+    geo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(n * 8), 4).setUsage(THREE.DynamicDrawUsage));
+    const idx: number[] = [];
+    for (let i = 0; i < n - 1; i++) idx.push(i * 2, i * 2 + 1, i * 2 + 2, i * 2 + 1, i * 2 + 3, i * 2 + 2);
+    geo.setIndex(idx);
+    const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }));
+    mesh.frustumCulled = false;
+    this.vapor = { mesh, pts: [] };
+    this.globe.add(mesh);
   }
 
   /** Home page helper: fly the guide to a country along a glowing arc (or swoop in from space). */
@@ -446,14 +518,54 @@ export class FlightWorld {
     const north = n.clone().cross(east).normalize();
     const to = n.multiplyScalar(1.1).addScaledVector(east, 0.11).addScaledVector(north, -0.07);
     const fresh = enter || !g.visible;
-    const from = fresh ? this.places[index].clone().multiplyScalar(2.6).add(new THREE.Vector3(0, 0.8, 0)) : g.position.clone();
+    let from: THREE.Vector3;
+    if (fresh) {
+      this.globe.updateMatrixWorld();
+      const r = this.globe.scale.x;
+      from = new THREE.Vector3(0, r * 1.45, 0).add(this.globe.position).applyMatrix4(this.gInv.copy(this.globe.matrixWorld).invert());
+    } else from = g.position.clone();
     if (from.distanceTo(to) < 1e-3) return;
     const mid = from.clone().add(to).multiplyScalar(0.5);
     mid.setLength(Math.max(from.length(), to.length()) + 0.06 + from.distanceTo(to) * 0.2);
     this.guideCurve = new THREE.QuadraticBezierCurve3(from, mid, to);
     this.guideStart = -1;
+    this.aim = null;
     g.visible = true;
     if (!fresh) this.arcVec(from, to);
+  }
+
+  /**
+   * Home page helper: steer the jet toward the cursor. `ndc` is the pointer in
+   * the canvas (-1..1), or null when the pointer leaves the globe. The jet only
+   * ever flies on the orbital shell; off the sphere it eases to a poised hover.
+   * Returns true while the pointer is over the globe.
+   */
+  guideAim(ndc: { x: number; y: number } | null) {
+    if (!this.guide || !this.guide.visible || !ndc) {
+      this.aim = null;
+      return false;
+    }
+    this.globe.updateMatrixWorld();
+    this.gRay.setFromCamera(new THREE.Vector2(ndc.x, ndc.y), this.camera);
+    this.gSphere.set(this.globe.position, 1.08 * this.globe.scale.x);
+    const hit = this.gRay.ray.intersectSphere(this.gSphere, new THREE.Vector3());
+    if (!hit) {
+      this.aim = null;
+      return false;
+    }
+    this.aim = hit.applyMatrix4(this.gInv.copy(this.globe.matrixWorld).invert()).normalize();
+    return true;
+  }
+
+  /** Home page helper: glide up beside a country's beacon and hold there. */
+  guideBeside(index: number) {
+    if (!this.guide || !this.guide.visible || index < 0) return;
+    const n = this.places[index].clone().normalize();
+    const east = new THREE.Vector3(0, 1, 0).cross(n);
+    if (east.lengthSq() < 1e-6) east.set(1, 0, 0);
+    east.normalize();
+    const north = n.clone().cross(east).normalize();
+    this.aim = n.addScaledVector(east, 0.1).addScaledVector(north, -0.06).normalize();
   }
 
   /**

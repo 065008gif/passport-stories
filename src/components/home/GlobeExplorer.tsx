@@ -5,11 +5,13 @@
  * width observatory stage, a flat world map, a tethered passport ticket and
  * a country slider, all kept in step.
  *
- *  - At rest the stage is open: the whole Earth and its glow sit at about
- *    sixty percent of the stage height, with room all round.
- *  - A miniature jet, the hero plane's little sibling, swoops onto the globe
- *    when the section arrives and flies a glowing arc to every country you
- *    hover or pick. On the flat map an SVG plane flies the same routes.
+ *  - At rest the stage is open: the Earth fills about four fifths of the
+ *    stage height, poles clear, continents easy to read.
+ *  - A miniature jet, the hero jet's little sibling, glides down from the top
+ *    of the globe when the section arrives, then follows the cursor across the
+ *    globe (and only the globe) on great circles, parks beside any flag you
+ *    hover, and flies a glowing arc to every country you pick. On the flat
+ *    map an SVG jet follows the cursor with a fading dotted trail.
  *  - Hover a beacon (globe or flat map) and a passport ticket springs out
  *    beside it on a glowing tether. A short grace period lets the pointer
  *    travel from the beacon onto the ticket.
@@ -55,7 +57,7 @@ export interface ExploreCountry {
 const TEXTURES = { day: '/textures/earth-day.webp', night: '/textures/earth-night.webp' };
 const IDLE = 0.08;
 const ZMIN = 1;
-const ZMAX = 2.2;
+const ZMAX = 2.3;
 const DEG = Math.PI / 180;
 // The flat map is cropped to 75°N to 45°S, so it is 3:1.
 const N = 75;
@@ -128,13 +130,24 @@ export default function GlobeExplorer({
     window.clearTimeout(closeTimer.current);
     setHover(i);
     setHinted(true);
-    if (refs.current.mode === 'globe') worldRef.current?.guideFly(i);
+    const w = worldRef.current;
+    if (w && refs.current.mode === 'globe') {
+      w.guideBeside(i);
+      w.highlight = i; // a coral landing ring at the hovered flag
+    }
   }, []);
   const closeSoon = useCallback(() => {
     window.clearTimeout(closeTimer.current);
-    closeTimer.current = window.setTimeout(() => setHover(null), GRACE);
+    closeTimer.current = window.setTimeout(() => {
+      setHover(null);
+      if (worldRef.current) worldRef.current.highlight = refs.current.pick ?? -1;
+    }, GRACE);
   }, []);
-  const keepOpen = useCallback(() => window.clearTimeout(closeTimer.current), []);
+  /** The pointer is on the ticket: keep it open and let the jet hold still. */
+  const keepOpen = useCallback(() => {
+    window.clearTimeout(closeTimer.current);
+    worldRef.current?.guideAim(null);
+  }, []);
   useEffect(() => () => window.clearTimeout(closeTimer.current), []);
 
   /** Turn the globe so a country faces the viewer. */
@@ -220,8 +233,8 @@ export default function GlobeExplorer({
     const order = countries.map((_, i) => i);
     const kept: number[] = [];
 
-    // Framing: the Earth plus its glow (1.16 x the radius) fills about 63% of the
-    // stage height, never more than 84% of its width, so the poles never crop.
+    // Framing: the Earth fills about 81% of the stage height, never more than 90%
+    // of its width, so the poles stay clear.
     const fit = () => {
       if (!world || !canvas.current) return;
       const w = el.clientWidth;
@@ -231,7 +244,15 @@ export default function GlobeExplorer({
       frame.scale = 1;
       world.render(frame);
       world.disc(disc);
-      base = Math.min(h * 0.272, w * 0.36) / disc.r;
+      // the Earth fills about 81% of the stage height (never wider than 90% of it)
+      base = Math.min(h * 0.405, w * 0.45) / disc.r;
+    };
+    // test hook: the Earth's measured diameter against the stage height
+    (window as unknown as { __globeDisc?: () => unknown }).__globeDisc = () => {
+      if (!world) return null;
+      const d = { x: 0, y: 0, r: 0 };
+      world.disc(d);
+      return { diameter: Math.round(d.r * 2), stage: el.clientHeight, ratio: +((d.r * 2) / el.clientHeight).toFixed(3) };
     };
 
     /** Beacons grow with zoom and fade near the back limb; crowded ones shrink to a dot. */
@@ -466,6 +487,12 @@ export default function GlobeExplorer({
     (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
   };
   const move = (e: React.PointerEvent) => {
+    // steer the jet toward the cursor while it is over the globe (not on a flag or the ticket)
+    const cv = canvas.current;
+    if (cv && e.pointerType === 'mouse' && refs.current.mode === 'globe' && refs.current.hover === null && !spin.current.dragging && !(e.target as HTMLElement).closest('.passport-anchor, button, a')) {
+      const r = cv.getBoundingClientRect();
+      worldRef.current?.guideAim({ x: ((e.clientX - r.left) / r.width) * 2 - 1, y: -(((e.clientY - r.top) / r.height) * 2 - 1) });
+    }
     if (touches.current.has(e.pointerId)) touches.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (pinch.current && touches.current.size === 2) {
       const [a, b] = [...touches.current.values()];
@@ -610,7 +637,15 @@ export default function GlobeExplorer({
       </div>
 
       {/* The full width observatory stage */}
-      <div ref={stageEl} className="observatory explore-stage-h relative mt-7 overflow-hidden sm:mt-9" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}>
+      <div
+        ref={stageEl}
+        className="observatory explore-stage-h relative mt-7 overflow-hidden sm:mt-9"
+        onPointerDown={down}
+        onPointerMove={move}
+        onPointerUp={up}
+        onPointerCancel={up}
+        onPointerLeave={() => worldRef.current?.guideAim(null)}
+      >
         {/* Globe */}
         <motion.div ref={globeEl} initial={false} animate={{ opacity: mode === 'globe' ? 1 : 0 }} transition={{ duration: 0.45, ease: EASE }} className={`absolute inset-0 touch-none select-none ${mode === 'globe' ? '' : 'hidden'}`}>
           <canvas ref={canvas} aria-hidden className={`absolute inset-0 h-full w-full cursor-grab transition-opacity duration-500 active:cursor-grabbing ${ready ? 'opacity-100' : 'opacity-0'}`} />
@@ -682,8 +717,8 @@ export default function GlobeExplorer({
         />
         <p className={`stage-hint pointer-events-none absolute left-1/2 top-4 z-10 -translate-x-1/2 ${hinted ? 'is-gone' : ''}`}>
           <span className="stage-hint-dot" aria-hidden />
-          <span className="hidden sm:inline">Hover any glowing beacon to fly there</span>
-          <span className="sm:hidden">Tap any glowing beacon to fly there</span>
+          <span className="hidden sm:inline">Move your cursor across the globe to fly and hover any flag</span>
+          <span className="sm:hidden">Tap any flag to fly there</span>
         </p>
       </div>
 
@@ -898,38 +933,83 @@ function FlatMap({
 }) {
   const box = useRef<HTMLDivElement>(null);
   const planeG = useRef<SVGGElement>(null);
-  const at = useRef<{ x: number; y: number }>({ x: fx(countries[start]) * 3, y: fy(countries[start]) });
+  const svg = useRef<SVGSVGElement>(null);
+  const dots = useRef<(SVGCircleElement | null)[]>([]);
+  const goal = useRef<{ x: number; y: number }>({ x: fx(countries[start]) * 3, y: fy(countries[start]) });
+  const at = useRef<{ x: number; y: number }>({ ...goal.current });
+  const prevPick = useRef<number | null>(null);
   const [route, setRoute] = useState<{ d: string; key: number } | null>(null);
   const target = ticket ?? pick ?? start;
-  // Fly the little plane from wherever it is to the target along a lifted curve (0.75 s, eased out).
+  // a hovered or picked flag pulls the jet beside it
   useEffect(() => {
-    const g = planeG.current;
-    const x1 = at.current.x;
-    const y1 = at.current.y;
-    const x2 = fx(countries[target]) * 3;
-    const y2 = fy(countries[target]);
+    goal.current = { x: fx(countries[target]) * 3 + 2.6, y: fy(countries[target]) - 1.8 };
+  }, [target, countries]);
+  // a new pick draws the route from the last one
+  useEffect(() => {
+    const prev = prevPick.current;
+    prevPick.current = pick;
+    if (pick === null || prev === null || prev === pick) return;
+    const x1 = fx(countries[prev]) * 3;
+    const y1 = fy(countries[prev]);
+    const x2 = fx(countries[pick]) * 3;
+    const y2 = fy(countries[pick]);
     const lift = Math.min(28, Math.hypot(x2 - x1, y2 - y1) * 0.35);
-    const cx = (x1 + x2) / 2;
-    const cy = Math.min(y1, y2) - lift;
-    if (Math.hypot(x2 - x1, y2 - y1) > 0.5) setRoute({ d: `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`, key: performance.now() });
+    setRoute({ d: `M ${x1} ${y1} Q ${(x1 + x2) / 2} ${Math.min(y1, y2) - lift} ${x2} ${y2}`, key: performance.now() });
+  }, [pick, countries]);
+  // the flight loop: ease toward the goal, nose along the motion, drop a dot every few frames
+  useEffect(() => {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const t0 = performance.now();
+    const trail: { x: number; y: number }[] = [];
+    let angle = 0;
+    let last = performance.now();
+    let since = 0;
     let raf = 0;
     const tick = (now: number) => {
-      const k = reduce ? 1 : Math.min(1, (now - t0) / 750);
-      const e = 1 - Math.pow(1 - k, 3);
-      const u = 1 - e;
-      const x = u * u * x1 + 2 * u * e * cx + e * e * x2;
-      const y = u * u * y1 + 2 * u * e * cy + e * e * y2;
-      const dx = 2 * u * (cx - x1) + 2 * e * (x2 - cx);
-      const dy = 2 * u * (cy - y1) + 2 * e * (y2 - cy);
-      at.current = { x, y };
-      if (g) g.setAttribute('transform', `translate(${x.toFixed(2)} ${y.toFixed(2)}) rotate(${((Math.atan2(dy, dx || 0.001) * 180) / Math.PI).toFixed(1)})`);
-      if (k < 1) raf = requestAnimationFrame(tick);
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      const a = at.current;
+      const g = goal.current;
+      const k = reduce ? 1 : 1 - Math.exp(-dt * 4.5);
+      const nx = a.x + (g.x - a.x) * k;
+      const ny = a.y + (g.y - a.y) * k;
+      const vx = nx - a.x;
+      const vy = ny - a.y;
+      if (Math.hypot(vx, vy) > 0.02) {
+        const want = Math.atan2(vy, vx);
+        let d = want - angle;
+        while (d > Math.PI) d -= Math.PI * 2;
+        while (d < -Math.PI) d += Math.PI * 2;
+        angle += d * (1 - Math.exp(-dt * 8));
+      }
+      at.current = { x: nx, y: ny };
+      planeG.current?.setAttribute('transform', `translate(${nx.toFixed(2)} ${ny.toFixed(2)}) rotate(${((angle * 180) / Math.PI).toFixed(1)})`);
+      since += dt;
+      if (since > 0.05 && Math.hypot(vx, vy) > 0.01) {
+        since = 0;
+        trail.unshift({ x: nx, y: ny });
+        if (trail.length > 12) trail.length = 12;
+      }
+      dots.current.forEach((c, i) => {
+        if (!c) return;
+        const pt = trail[i];
+        if (!pt) return c.setAttribute('opacity', '0');
+        c.setAttribute('cx', pt.x.toFixed(2));
+        c.setAttribute('cy', pt.y.toFixed(2));
+        c.setAttribute('opacity', ((1 - i / 12) * 0.85).toFixed(2));
+      });
+      raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [target, countries]);
+  }, []);
+  /** The cursor, in the map's 300 x 100 space. */
+  const followCursor = (e: React.PointerEvent) => {
+    if (e.pointerType !== 'mouse' || ticket !== null || !svg.current) return;
+    const m = svg.current.getScreenCTM();
+    if (!m) return;
+    const pt = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse());
+    goal.current = { x: Math.max(2, Math.min(298, pt.x)), y: Math.max(2, Math.min(98, pt.y)) };
+  };
   const focus = pick ?? 0;
   const ox = pick !== null ? fx(countries[focus]) : 50;
   const oy = pick !== null ? fy(countries[focus]) : 50;
@@ -943,14 +1023,25 @@ function FlatMap({
 
   return (
     <div ref={box} className="flat-scroll h-full overflow-x-auto overscroll-x-contain [scrollbar-width:none]">
-      <div className="flat-frame relative overflow-hidden">
+      <div className="flat-frame relative overflow-hidden" onPointerMove={followCursor}>
         <div className="absolute inset-0 transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none" style={{ transform: `scale(${zoom})`, transformOrigin: `${ox}% ${oy}%` }}>
           <div className="absolute inset-x-0" style={{ top: `${(-(90 - N) / (N - S)) * 100}%`, height: `${(180 / (N - S)) * 100}%` }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/textures/earth-day.webp" alt="" className="flat-img block h-full w-full" draggable={false} />
           </div>
-          <svg className="pointer-events-none absolute inset-0 z-[6] h-full w-full" viewBox="0 0 300 100" preserveAspectRatio="none" aria-hidden>
+          <svg ref={svg} className="pointer-events-none absolute inset-0 z-[6] h-full w-full" viewBox="0 0 300 100" preserveAspectRatio="none" aria-hidden>
             {route && <motion.path key={route.key} d={route.d} fill="none" stroke="#ffc233" strokeWidth="0.55" strokeLinecap="round" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 0.75, ease: EASE }} />}
+            {Array.from({ length: 12 }, (_, i) => (
+              <circle
+                key={i}
+                ref={(c) => {
+                  dots.current[i] = c;
+                }}
+                r={0.45 - i * 0.025}
+                fill="#ffc233"
+                opacity="0"
+              />
+            ))}
             <g ref={planeG}>
               <g transform="scale(0.32) rotate(90) translate(-12 -12)">
                 <path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z" fill="#fffaf3" stroke="#ff6b5b" strokeWidth="1.2" strokeLinejoin="round" />
