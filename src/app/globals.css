@@ -2402,3 +2402,204 @@ footer.bg-ink {
   .telemetry-cue { animation: none; }
   .window-badge-cta, .telemetry-dot { transition: none; }
 }
+
+/* ==================================================================
+   HOME · The Culture Map hero (illustrated world, three states)
+   ================================================================== */
+.culture-hero { height: 230vh; }
+@media (max-width: 767px) { .culture-hero { height: 200vh; } }
+.culture-stage {
+  --dim: 0;
+  --words: 0;
+  --close: 0;
+  --mist: 0;
+  position: sticky;
+  top: var(--header);
+  height: calc(100svh - var(--header));
+  min-height: 34rem;
+  overflow: hidden;
+  isolation: isolate;
+  background: #f6b384;
+  touch-action: pan-y;
+}
+.culture-svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 1; }
+.culture-dusk { position: absolute; inset: 0; z-index: 2; pointer-events: none; background: linear-gradient(180deg, #1d1847 0%, #3a2a5e 60%, #2a1f45 100%); opacity: var(--dim); mix-blend-mode: multiply; }
+.culture-mist {
+  position: absolute; inset: 0; z-index: 3; pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 248, 239, 0) 0%, rgba(255, 236, 218, 0.7) 35%, var(--ps-ivory) 70%);
+  opacity: var(--mist);
+  transform: translateY(calc((1 - var(--mist)) * 30%));
+}
+.culture-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 4; pointer-events: none; }
+.culture-paper {
+  position: absolute; inset: 0; z-index: 5; pointer-events: none;
+  background-image:
+    radial-gradient(ellipse 80% 70% at 50% 45%, transparent 55%, rgba(60, 30, 70, 0.28) 100%),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='p'><feTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.45  0 0 0 0 0.32  0 0 0 0 0.28  0 0 0 0.9 0'/></filter><rect width='100%' height='100%' filter='url(%23p)'/></svg>"),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='w'><feTurbulence type='fractalNoise' baseFrequency='0.012' numOctaves='3' seed='7'/><feColorMatrix values='0 0 0 0 0.6  0 0 0 0 0.4  0 0 0 0 0.45  0 0 0 0.55 0'/></filter><rect width='100%' height='100%' filter='url(%23w)'/></svg>");
+  mix-blend-mode: multiply;
+  opacity: calc(0.32 * (1 - var(--mist)));
+}
+
+/* the words */
+.culture-copy {
+  position: absolute; z-index: 6; left: 50%; top: 9%;
+  width: min(54rem, 92vw);
+  translate: -50% 0;
+  text-align: center;
+  color: #fff;
+  pointer-events: none;
+  opacity: calc(var(--words) - var(--close) * 3.2);
+  transform: translateY(calc((1 - var(--words)) * 26px - var(--close) * 120px));
+}
+.culture-stage.is-revealed .culture-copy > * { pointer-events: auto; }
+.culture-intro {
+  font-family: var(--ps-font-body);
+  font-size: clamp(0.72rem, 1vw, 0.85rem);
+  font-weight: 700;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: #ffe4b0;
+  text-shadow: 0 2px 12px rgba(60, 20, 70, 0.45);
+}
+.culture-title {
+  margin-top: 0.9rem;
+  font-family: var(--ps-font-display);
+  font-weight: 650;
+  font-size: clamp(2.5rem, 6.2vw, 5.6rem);
+  line-height: 0.98;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+  text-shadow: 0 2px 0 rgba(90, 40, 80, 0.18), 0 14px 44px rgba(50, 20, 70, 0.45);
+}
+.culture-title span { display: block; color: #ffe8c2; }
+.culture-sub {
+  margin: 1.1rem auto 0;
+  max-width: 32rem;
+  font-size: clamp(1rem, 1.5vw, 1.25rem);
+  font-weight: 500;
+  line-height: 1.45;
+  color: rgba(255, 250, 242, 0.95);
+  text-wrap: balance;
+  text-shadow: 0 2px 16px rgba(50, 20, 70, 0.55);
+}
+.culture-cta {
+  margin-top: 1.6rem;
+  display: inline-flex; align-items: center; gap: 0.6rem;
+  border-radius: 9999px;
+  padding: 0.95rem 1.6rem;
+  background: #fff6e8;
+  color: #3a2647;
+  font-weight: 800;
+  font-size: 1rem;
+  box-shadow: 0 0 0 6px rgba(255, 230, 180, 0.18), 0 18px 40px -14px rgba(255, 150, 90, 0.9), 0 0 60px 6px rgba(255, 200, 130, 0.35);
+  transition: translate 0.35s var(--ps-ease), box-shadow 0.35s var(--ps-ease);
+}
+.culture-cta:hover { translate: 0 -2px; box-shadow: 0 0 0 8px rgba(255, 230, 180, 0.25), 0 22px 44px -14px rgba(255, 150, 90, 1), 0 0 80px 10px rgba(255, 200, 130, 0.45); }
+.culture-cta svg { transition: translate 0.35s var(--ps-ease); }
+.culture-cta:hover svg { translate: 3px 0; }
+.culture-cta:focus-visible { outline: 3px solid #ffe2a8; outline-offset: 4px; }
+
+/* place label */
+.culture-tip {
+  position: absolute; z-index: 7; left: 0; top: 0;
+  display: flex; flex-direction: column; gap: 0.15rem;
+  max-width: 15rem;
+  border-radius: 1rem;
+  padding: 0.65rem 0.85rem;
+  background: rgba(255, 249, 240, 0.94);
+  color: #3a2647;
+  box-shadow: 0 18px 36px -18px rgba(50, 20, 70, 0.6);
+  opacity: 0; scale: 0.96;
+  pointer-events: none;
+  transition: opacity 0.25s var(--ps-ease), scale 0.25s var(--ps-ease);
+}
+.culture-tip.is-on { opacity: calc(1 - var(--close) * 25); scale: 1; }
+.culture-tip-label { font-family: var(--ps-font-display); font-weight: 700; font-size: 0.95rem; line-height: 1.2; }
+.culture-tip-place { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: #c4506f; }
+.culture-tip-go { margin-top: 0.35rem; align-self: flex-start; font-size: 0.78rem; font-weight: 800; color: #2e7d83; }
+@media (hover: hover) { .culture-tip-go { pointer-events: none; } .culture-tip-go::before { content: 'Click to '; } }
+@media (hover: none) { .culture-tip.is-on { pointer-events: auto; } }
+.culture-skip {
+  position: absolute; z-index: 8; right: 1.2rem; bottom: 1.2rem;
+  border-radius: 9999px; padding: 0.45rem 0.9rem;
+  background: rgba(255, 249, 240, 0.18);
+  color: #fff6e8; font-size: 0.8rem; font-weight: 700;
+  border: 1px solid rgba(255, 246, 232, 0.4);
+  backdrop-filter: blur(6px);
+}
+
+/* hotspots */
+.cw-spot { cursor: pointer; }
+.culture-stage.is-intro .cw-spot { cursor: default; }
+
+/* ---- ambient life in the painting ---- */
+.cw-cloud { animation: cw-drift 46s ease-in-out infinite alternate; animation-delay: calc(var(--i) * -7s); }
+@keyframes cw-drift { to { transform: translateX(46px); } }
+.cw-birds-a { animation: cw-fly-a 38s linear infinite; }
+.cw-birds-b { animation: cw-fly-b 52s linear infinite; animation-delay: -20s; }
+@keyframes cw-fly-a { from { transform: translate(-1500px, 60px); } to { transform: translate(700px, -80px); } }
+@keyframes cw-fly-b { from { transform: translate(1400px, 20px) scaleX(-1); } to { transform: translate(-700px, -40px) scaleX(-1); } }
+.cw-bird { animation: cw-flap 0.7s ease-in-out infinite alternate; animation-delay: calc(var(--i) * -0.17s); }
+@keyframes cw-flap { to { transform: scaleY(0.35); } }
+.cw-window { animation: cw-window 5s ease-in-out infinite alternate; animation-delay: calc(var(--i, 0) * -1.3s); }
+@keyframes cw-window { from { opacity: 0.65; } to { opacity: 1; } }
+.cw-doorglow { animation: cw-window 3.2s ease-in-out infinite alternate; }
+
+.cw-glow { transform-box: fill-box; transform-origin: center; animation: cw-flicker 2.6s ease-in-out infinite alternate; animation-delay: calc(var(--i, 0) * -0.43s); transition: transform 0.5s var(--ps-ease); }
+@keyframes cw-flicker { 0% { opacity: 0.7; } 35% { opacity: 0.95; } 55% { opacity: 0.78; } 100% { opacity: 1; } }
+.cw-sway { animation: cw-sway 4.2s ease-in-out infinite alternate; animation-delay: calc(var(--i, 0) * -0.9s); }
+@keyframes cw-sway { from { transform: rotate(-4deg); } to { transform: rotate(4deg); } }
+.cw-lamp:hover .cw-glow, .cw-spot.is-touched .cw-glow, .culture-stage[data-hover='bridge'] #cw-water .cw-lamp .cw-glow, .culture-stage[data-hover='bazaar'] .cw-lamp .cw-glow, .culture-stage[data-hover='chai'] .cw-lamp .cw-glow { transform: scale(1.6); opacity: 1; animation-play-state: paused; }
+
+.cw-canopy { animation: cw-canopy 7s ease-in-out infinite alternate; transform-origin: 300px 600px; }
+.cw-canopy-mid { animation-delay: -2s; animation-duration: 6s; }
+.cw-canopy-lit { animation-delay: -4s; animation-duration: 5.5s; }
+@keyframes cw-canopy { from { transform: rotate(-0.7deg); } to { transform: rotate(0.8deg) translateY(-2px); } }
+.culture-stage[data-hover='blossom'] .cw-canopy { animation-duration: 2.2s; }
+.cw-branch { transform-origin: -60px 40px; animation: cw-branch 6s ease-in-out infinite alternate; }
+@keyframes cw-branch { to { transform: rotate(1.6deg); } }
+.cw-grass path { animation: cw-grass 4.5s ease-in-out infinite alternate; animation-delay: calc(var(--i) * -0.35s); }
+@keyframes cw-grass { to { transform: skewX(-6deg); } }
+
+.cw-fabric { animation: cw-fabric 3.4s ease-in-out infinite alternate; animation-delay: calc(var(--i) * -0.6s); }
+@keyframes cw-fabric { 0% { transform: skewX(-3deg) scaleX(0.97); } 50% { transform: skewX(3deg) scaleX(1.03); } 100% { transform: skewX(-1deg) scaleX(1); } }
+.culture-stage[data-hover='bazaar'] .cw-fabric { animation-duration: 1.4s; }
+.cw-picado { animation: cw-picado 2.6s ease-in-out infinite alternate; animation-delay: calc(var(--i) * -0.23s); }
+@keyframes cw-picado { from { transform: rotate(-9deg); } to { transform: rotate(9deg); } }
+.culture-stage[data-hover='picado'] .cw-picado { animation-duration: 0.9s; }
+
+.cw-steam path { opacity: 0; animation: cw-steam 3.4s ease-out infinite; animation-delay: calc(var(--k) * -1.1s); transform-box: fill-box; transform-origin: bottom center; }
+@keyframes cw-steam { 0% { opacity: 0; transform: translateY(6px) scaleX(0.8); } 30% { opacity: 0.6; } 100% { opacity: 0; transform: translateY(-16px) scaleX(1.3); } }
+.culture-stage[data-hover='tea'] .cw-steam-tea path,
+.culture-stage[data-hover='blossom'] .cw-steam-tea path,
+.culture-stage[data-hover='chai'] .cw-steam-chai path,
+.cw-spot.is-touched .cw-steam path { animation-duration: 1.6s; stroke-width: 3.6; }
+
+.cw-ripples ellipse { transform-box: fill-box; transform-origin: center; animation: cw-ripple 5s ease-out infinite; animation-delay: calc(var(--i) * -1.25s); }
+@keyframes cw-ripple { from { transform: scale(0.5); opacity: 0.6; } to { transform: scale(1.4); opacity: 0; } }
+.cw-shimmer rect { animation: cw-shimmer 2.2s ease-in-out infinite alternate; animation-delay: calc(var(--i) * -0.3s); }
+@keyframes cw-shimmer { from { opacity: 0.25; } to { opacity: 0.8; } }
+.cw-floater { animation: cw-bob 3.6s ease-in-out infinite alternate; animation-delay: calc(var(--i) * -0.9s); }
+@keyframes cw-bob { from { transform: translateY(-2px); } to { transform: translateY(3px); } }
+
+.cw-idle .cw-head { transform-box: fill-box; transform-origin: 50% 90%; animation: cw-head 5s ease-in-out infinite alternate; }
+.cw-idle-b .cw-head { animation-delay: -2.5s; }
+@keyframes cw-head { from { transform: rotate(-3deg); } to { transform: rotate(3deg); } }
+.cw-seated .cw-head { transform-box: fill-box; transform-origin: 50% 90%; animation: cw-head 6s ease-in-out infinite alternate; }
+.cw-pour { transform-box: fill-box; transform-origin: 0% 50%; animation: cw-pour 4s ease-in-out infinite alternate; }
+@keyframes cw-pour { from { transform: rotate(-6deg); } to { transform: rotate(4deg); } }
+.cw-walk-a { animation: cw-walk 26s ease-in-out infinite alternate; }
+.cw-walk-b { animation: cw-walk-b 32s ease-in-out infinite alternate; }
+@keyframes cw-walk { from { transform: translateX(0); } to { transform: translateX(-120px); } }
+@keyframes cw-walk-b { from { transform: translateX(0); } to { transform: translateX(-90px); } }
+.cw-walk .cw-person { animation: cw-step 0.9s ease-in-out infinite alternate; }
+@keyframes cw-step { to { transform: translateY(-1.5px); } }
+.cw-sky-lantern { animation: cw-release 14s ease-in-out infinite; }
+@keyframes cw-release { 0%, 30% { transform: translateY(0); opacity: 1; } 75% { opacity: 0.9; } 100% { transform: translateY(-420px) translateX(30px); opacity: 0; } }
+.cw-spot:hover > path, .cw-spot.is-touched > path { filter: brightness(1.05); }
+
+@media (prefers-reduced-motion: reduce) {
+  .culture-stage *, .culture-stage *::before { animation: none !important; transition: none !important; }
+  .culture-copy { transform: none; }
+}

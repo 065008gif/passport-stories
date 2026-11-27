@@ -41,7 +41,9 @@ export type EventName =
   | 'map_country_opened'
   | 'hero_country_picked'
   | 'explore_country_clicked'
-  | 'hero_leg_jump';
+  | 'hero_leg_jump'
+  | 'hero_intro_skipped'
+  | 'hero_spot_touched';
 
 type Params = Record<string, string | number | boolean | undefined>;
 

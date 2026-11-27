@@ -6,16 +6,13 @@
  * which turns to that country and the slider centres its card.
  */
 import { useCallback, useState } from 'react';
-import HeroCollage from '@/components/home/HeroCollage';
+import CultureHero from '@/components/home/CultureHero';
 import GlobeExplorer, { type ExploreCountry } from '@/components/home/GlobeExplorer';
-import JetBridge from '@/components/home/JetBridge';
 import { track } from '@/lib/analytics';
 
 export default function HomeAtlas({ countries, startIndex }: { countries: ExploreCountry[]; startIndex: number }) {
   // `n` changes on every pick, so picking the same country twice still turns the globe.
   const [request, setRequest] = useState<{ slug: string; n: number } | null>(null);
-
-  const names = Object.fromEntries(countries.map((c) => [c.slug, c.name]));
 
   const pickFromHero = useCallback((slug: string) => {
     track('hero_country_picked', { country: slug });
@@ -26,21 +23,13 @@ export default function HomeAtlas({ countries, startIndex }: { countries: Explor
 
   return (
     <>
-      <HeroCollage
-        names={names}
-        onPick={pickFromHero}
-        headline="Same planet. Different lives."
-        tagline="Step into the streets, festivals, kitchens and everyday moments of twenty countries."
-      />
+      <CultureHero onPick={pickFromHero} />
 
       <section id="explore" className="explore-section relative scroll-mt-[var(--header)] pb-16 pt-10 sm:pb-24 sm:pt-14" aria-labelledby="explore-title">
         <div className="container-x">
           <GlobeExplorer countries={countries} startIndex={startIndex} request={request} />
         </div>
       </section>
-
-      {/* the one jet across the seam: pops out of the hero, glides with the scroll, lands on the globe */}
-      <JetBridge />
     </>
   );
 }
