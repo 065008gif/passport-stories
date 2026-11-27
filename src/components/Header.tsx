@@ -81,7 +81,7 @@ export default function Header() {
               key={n.href}
               href={n.href}
               aria-current={isActive(n.href) ? 'page' : undefined}
-              className={`whitespace-nowrap rounded-full px-2.5 py-2 text-[0.98rem] font-extrabold transition-colors xl:px-4 xl:text-[1.05rem] ${isActive(n.href) ? 'bg-sun text-ink shadow-[0_3px_0_#FF7A45]' : 'text-cream hover:bg-cream/15 hover:text-sun'}`}
+              className={`whitespace-nowrap rounded-full px-2.5 py-2 text-[0.98rem] font-extrabold transition-colors xl:px-4 xl:text-[1.05rem] ${isActive(n.href) ? 'nav-active text-ink' : 'text-cream hover:bg-cream/15 hover:text-[#0f9d8f]'}`}
             >
               {n.label}
             </Link>

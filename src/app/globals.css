@@ -1864,7 +1864,7 @@ footer.bg-ink {
 .explore-sky {
   position: relative;
   margin-inline: calc(50% - 50vw);
-  padding: clamp(3rem, 7vw, 5.5rem) calc(50vw - 50%) clamp(3rem, 6vw, 4.5rem);
+  padding: clamp(1.5rem, 3vw, 2.25rem) calc(50vw - 50%) clamp(3rem, 6vw, 4.5rem);
   background:
     radial-gradient(1.2px 1.2px at 12% 18%, rgba(255, 255, 255, 0.9), transparent),
     radial-gradient(1px 1px at 28% 8%, rgba(255, 255, 255, 0.7), transparent),
@@ -1921,23 +1921,22 @@ footer.bg-ink {
 }
 .view-toggle button[aria-pressed='true'] { color: var(--ps-ink); }
 .view-toggle button:active { transform: scale(0.96); }
-.view-pill { position: absolute; inset: 0; border-radius: 9999px; background: linear-gradient(180deg, #ffe1b8, #ffc9a0); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 6px 14px -6px color-mix(in srgb, var(--ps-tang) 80%, transparent); }
+.nav-active { background: linear-gradient(135deg, #7ff0e0 0%, #2fd3c1 45%, #0fa89a 100%); box-shadow: 0 3px 0 #0b7f75, inset 0 1px 0 rgba(255, 255, 255, 0.55); }
+.view-pill { position: absolute; inset: 0; border-radius: 9999px; background: linear-gradient(135deg, #7ff0e0 0%, #2fd3c1 45%, #0fa89a 100%); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 6px 14px -6px color-mix(in srgb, var(--ps-tang) 80%, transparent); }
 
 /* The observatory stage: deep turquoise to midnight so the v8 globe reads as it did */
 .observatory {
   /* no box: the globe floats in the section's sky, edge to edge */
   margin-inline: calc(50% - 50vw);
-  background: radial-gradient(circle at 50% 48%, rgba(120, 80, 220, 0.28) 0%, rgba(60, 30, 120, 0.12) 38%, transparent 62%);
+  background: radial-gradient(ellipse 34% 44% at 50% 50%, rgba(140, 90, 240, 0.26) 0%, rgba(110, 60, 200, 0.1) 60%, transparent 100%);
   will-change: transform;
   touch-action: pan-y;
 }
 /* phones: the stage follows the width, so the Earth still fills about four fifths of it */
-.explore-stage-h { height: clamp(24rem, 104vw, 40rem); }
+.explore-stage-h { height: min(clamp(24rem, 104vw, 40rem), calc(100svh - var(--header) - 9rem)); min-height: 22rem; }
 @media (min-width: 768px) {
-  .explore-stage-h { height: 640px; }
-}
-@media (min-width: 1024px) {
-  .explore-stage-h { height: 720px; }
+  /* the whole Earth shows in one screen, under the title row */
+  .explore-stage-h { height: clamp(26rem, calc(100svh - var(--header) - 8.5rem), 720px); }
 }
 .observatory-placeholder { background: radial-gradient(circle at 35% 30%, #4a3a8c, #1a1040); }
 .stage-hint {
@@ -2506,7 +2505,7 @@ footer.bg-ink {
 /* The globe section rises over the closing hero: its night sky fades in from
    below through a long, soft edge while the hero camera tilts up into its own
    stars, so the two skies meet with no seam and no gap. */
-.culture-hero + .explore-section { position: relative; z-index: 2; margin-top: calc(var(--header) - 100svh); padding-top: 0; background: transparent; }
+.culture-hero + .explore-section { position: relative; z-index: 2; margin-top: calc(var(--header) - 100svh); padding-top: 0; background: var(--ps-ivory); }
 .culture-hero + .explore-section::before {
   content: ''; position: absolute; left: 0; right: 0; bottom: 100%; height: 55vh; pointer-events: none;
   background: linear-gradient(180deg, rgba(15, 7, 38, 0) 0%, rgba(15, 7, 38, 0.35) 40%, rgba(15, 7, 38, 0.8) 75%, #0f0726 100%);

@@ -661,7 +661,7 @@ export default function GlobeExplorer({
       {/* The full width observatory stage */}
       <div
         ref={stageEl}
-        className="observatory explore-stage-h relative mt-7 overflow-hidden sm:mt-9"
+        className="observatory explore-stage-h relative mt-3 overflow-hidden sm:mt-4"
         onPointerDown={down}
         onPointerMove={move}
         onPointerUp={up}
