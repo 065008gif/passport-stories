@@ -371,9 +371,9 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
     const lanterns: Lantern[] = [];
     // only the lanterns the couple on the bridge let go: a few, rising slowly and fading high up
     const newLantern = (low: boolean): Lantern => ({
-      x: rand(774, 812),
+      x: rand(700, 900),
       y: low ? rand(500, 516) : rand(200, 500),
-      vy: rand(5, 9),
+      vy: rand(8, 13),
       ph: rand(0, Math.PI * 2),
       size: rand(0.8, 1.05),
       d: 0.42,
@@ -381,7 +381,7 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
       hot: 0,
       tilt: rand(-0.12, 0.12),
     });
-    const nLanterns = reduce ? 3 : phone() ? 3 : 5;
+    const nLanterns = reduce ? 4 : phone() ? 5 : 8;
     for (let i = 0; i < nLanterns; i++) lanterns.push(newLantern(false));
     lanterns.sort((a, b) => a.d - b.d);
 
@@ -914,7 +914,7 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
         if (!reduce) {
           L.y -= L.vy * dt * rush * (0.6 + L.d * 0.6);
           L.ph += dt * 0.8;
-          L.x += (Math.sin(L.ph * 0.6) * 4 + 3) * dt;
+          L.x += (Math.sin(L.ph * 0.6) * 6 + (L.x < 800 ? -4 : 4)) * dt;
         }
         const x = sx(L.x + Math.sin(L.ph) * 8, L.d);
         const y = sy(L.y, L.d);
@@ -935,7 +935,7 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
 
       // petals: from the canopy, in depth (back, mid, out-of-focus front), on a swirling wind
       if (!reduce) {
-        const rate = ((ph ? 3 : 6) + blossom * (ph ? 9 : 16)) * (1 - closeP);
+        const rate = ((ph ? 2.2 : 4.5) + blossom * (ph ? 7 : 12)) * (1 - closeP);
         let n = rate * dt;
         while (n > 0) {
           if (Math.random() < n) {

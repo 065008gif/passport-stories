@@ -22,7 +22,7 @@
 import React from 'react';
 
 /* ------------------------------ helpers ------------------------------ */
-function rng(seed: number) {
+export function rng(seed: number) {
   let s = seed >>> 0;
   return () => {
     s = (s * 1664525 + 1013904223) >>> 0;
@@ -30,7 +30,7 @@ function rng(seed: number) {
   };
 }
 /** An organic closed blob, like a brush dab: n points round a circle, jittered, smoothed. */
-function blob(cx: number, cy: number, rx: number, ry: number, seed: number, n = 9, j = 0.22) {
+export function blob(cx: number, cy: number, rx: number, ry: number, seed: number, n = 9, j = 0.22) {
   const r = rng(seed);
   const pts = Array.from({ length: n }, (_, i) => {
     const a = (i / n) * Math.PI * 2 + r() * 0.3;
@@ -62,10 +62,10 @@ function ridge(x0: number, x1: number, y: number, amp: number, base: number, see
 }
 
 /* ------------------------------ people ------------------------------ */
-type Garb = { robe: string; trim?: string; skin: string; hair: string; rim?: string; obi?: string; collar?: string };
+export type Garb = { robe: string; trim?: string; skin: string; hair: string; rim?: string; obi?: string; collar?: string };
 
 /** A standing figure: slender, long garment, small head. (x, y) is the feet; h is height. */
-function Standing({ x, y, h, g, lean = 0, arm = 'down', className = '', parasol }: { x: number; y: number; h: number; g: Garb; lean?: number; arm?: 'down' | 'up' | 'forward'; className?: string; parasol?: string }) {
+export function Standing({ x, y, h, g, lean = 0, arm = 'down', className = '', parasol }: { x: number; y: number; h: number; g: Garb; lean?: number; arm?: 'down' | 'up' | 'forward'; className?: string; parasol?: string }) {
   const hr = h * 0.075;
   const top = y - h;
   const sh = top + hr * 2.3;
@@ -101,7 +101,7 @@ function Standing({ x, y, h, g, lean = 0, arm = 'down', className = '', parasol 
 }
 
 /** A figure sitting cross-legged on the ground. (x, y) is the seat. */
-function Seated({ x, y, h, g, facing = 1, pour = false, cup = false }: { x: number; y: number; h: number; g: Garb; facing?: 1 | -1; pour?: boolean; cup?: boolean }) {
+export function Seated({ x, y, h, g, facing = 1, pour = false, cup = false }: { x: number; y: number; h: number; g: Garb; facing?: 1 | -1; pour?: boolean; cup?: boolean }) {
   const hr = h * 0.12;
   const top = y - h;
   const sh = top + hr * 2.2;
@@ -579,6 +579,13 @@ export default function CultureWorld() {
           <rect x="1524" y="762" width="20" height="16" rx="2" fill="#ffd27a" />
           <rect x="1576" y="762" width="20" height="16" rx="2" fill="#ffd27a" />
           <rect x="1551" y="778" width="18" height="24" rx="2" fill="#5a2e1e" />
+        </g>
+        {/* the Swiss flag beside the chalet */}
+        <g>
+          <rect x="1470" y="712" width="3" height="92" fill="#f1e8da" />
+          <rect x="1473" y="714" width="28" height="28" rx="1.5" fill="#e52b2b" />
+          <rect x="1484" y="719" width="6" height="18" fill="#ffffff" />
+          <rect x="1478" y="725" width="18" height="6" fill="#ffffff" />
         </g>
         {/* alpine flowers that sway */}
         <g className="cw-flowers-alp">
