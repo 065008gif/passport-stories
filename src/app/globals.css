@@ -2634,8 +2634,8 @@ footer.bg-ink {
 }
 .culture-title {
   margin-top: 0;
-  font-family: var(--ps-font-display);
-  font-weight: 650;
+  font-family: 'Ranade', var(--ps-font-display);
+  font-weight: 700;
   font-size: clamp(2.1rem, 4.6vw, 4.2rem);
   line-height: 1;
   letter-spacing: -0.035em;

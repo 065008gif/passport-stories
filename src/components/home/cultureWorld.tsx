@@ -197,8 +197,8 @@ const G = {
   k6: { robe: '#fdf3e7', obi: '#d32f2f', collar: '#d32f2f', skin: '#e6ba98', hair: '#140e16', trim: '#d32f2f' },
   yukata: { robe: '#283593', obi: '#b0bec5', collar: '#e8eaf6', skin: '#d8a984', hair: '#181216' },
   // hanfu on the lantern bridge
-  hanfuRed: { robe: '#d32f2f', collar: '#ffcc4d', skin: '#f3d6b8', hair: '#0e0a10', trim: '#ffcc4d', twinBuns: '#ffd24a', frogs: '#ffd24a' },
-  hanfuJade: { robe: '#1d4fa0', collar: '#ffd27a', skin: '#efcfb0', hair: '#0e0a10', cap: '#141018', frogs: '#ffd27a' },
+  hanfuRed: { robe: '#d32f2f', obi: '#ffcc4d', collar: '#fff3d6', skin: '#f1d0b0', hair: '#141016', trim: '#ffcc4d', bun: '#ffd24a' },
+  hanfuJade: { robe: '#1f8a6e', obi: '#ffd27a', collar: '#fdf3e0', skin: '#ecc8a6', hair: '#161016', topknot: true },
   // Switzerland: a dirndl and an alpine herder's jacket
   dirndl: { robe: '#c62828', obi: '#ffffff', collar: '#ffffff', skin: '#f6dac2', hair: '#e6be6a', trim: '#2e7d32', braids: true },
   herder: { robe: '#d7263d', obi: '#ffffff', collar: '#ffffff', skin: '#f4d2b4', hair: '#c89a4a', trim: '#ffd24a' },

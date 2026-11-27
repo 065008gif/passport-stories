@@ -29,6 +29,11 @@ export const viewport: Viewport = { themeColor: '#FFF1E6', width: 'device-width'
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Ranade (Indian Type Foundry, free via Fontshare) for the hero headline */}
+        <link rel="preconnect" href="https://api.fontshare.com" crossOrigin="anonymous" />
+        <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=ranade@500,700&display=swap" />
+      </head>
       <body>
         {/* Scroll reveals only hide content once we know scripts run. */}
         <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
