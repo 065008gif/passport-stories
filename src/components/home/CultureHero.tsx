@@ -58,8 +58,8 @@ const PATH = (phone: boolean, visW: number, visH: number): Shot[] => {
   return [
     { p: 0.0, cx: 792, cy: 548, s: 2.7 * f },
     { p: 0.1, cx: 795, cy: 556, s: 2.4 * f },
-    { p: 0.22, cx: 300, cy: 650, s: 2.15 * f },
-    { p: 0.32, cx: 320, cy: 645, s: 2.25 * f },
+    { p: 0.22, cx: 150, cy: 650, s: 2.05 * f },
+    { p: 0.32, cx: 180, cy: 645, s: 2.15 * f },
     { p: 0.44, cx: 1360, cy: 540, s: 1.95 * f },
     { p: 0.54, cx: 1320, cy: 560, s: 2.05 * f },
     { p: 0.68, cx: 800, cy: co, s: so },
@@ -96,10 +96,7 @@ const LIGHTS: { x: number; y: number; d: number; r: number; c: 0 | 1; ry: number
   { x: 586, y: 503, d: 0.25, r: 0.35, c: 1, ry: 616, rl: 26 },
   { x: 595, y: 527, d: 0.25, r: 0.35, c: 1, ry: 616, rl: 26 },
   ...[930, 965, 1035, 1070].map((x) => ({ x, y: 584, d: 0.25, r: 0.4, c: 1 as const, ry: 614, rl: 30 })),
-  { x: 432, y: 640, d: 0.68, r: 0.9, c: 0, ry: 0, rl: 0 },
-  { x: 178, y: 648, d: 0.68, r: 0.85, c: 0, ry: 0, rl: 0 },
   { x: 1252, y: 744, d: 0.68, r: 0.6, c: 1, ry: 770, rl: 34 },
-  { x: 556, y: 782, d: 0.68, r: 0.6, c: 1, ry: 0, rl: 0 },
   ...([
     [712, 798, 0.7],
     [888, 798, 0.7],
@@ -116,8 +113,7 @@ const LIGHTS: { x: number; y: number; d: number; r: number; c: 0 | 1; ry: number
 
 /* warm pools of light on the ground: [x, y, depth, rx, ry] */
 const POOLS: [number, number, number, number, number][] = [
-  [290, 790, 0.68, 300, 90],
-  [545, 800, 0.68, 90, 40],
+  [200, 790, 0.68, 380, 100],
   [800, 840, 1, 190, 100],
   [1205, 772, 0.68, 120, 40],
   [800, 604, 0.42, 230, 56],
@@ -422,13 +418,13 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
     };
     // twinkles in the blossom canopy
     const canopy = [
-      [150, 470, 92, 70],
-      [260, 405, 120, 86],
-      [395, 420, 118, 82],
-      [505, 480, 78, 58],
-      [95, 545, 70, 52],
-      [330, 500, 120, 70],
-      [215, 525, 95, 58],
+      [-30, 470, 92, 70],
+      [80, 405, 120, 86],
+      [215, 420, 118, 82],
+      [325, 480, 78, 58],
+      [-85, 545, 70, 52],
+      [150, 500, 120, 70],
+      [35, 525, 95, 58],
     ];
     const twinkles = Array.from({ length: phone() ? 30 : 60 }, () => {
       const [x, y, rx, ry] = canopy[(Math.random() * canopy.length) | 0];
@@ -781,7 +777,7 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
 
       // petal gusts carry the camera between moments; stronger when you scroll faster
       // a burst from the tree when you scroll into the blossom
-      if (!reduce && blossom > 0.05 && speed > 0.01 && Math.random() < Math.min(1, speed * 3)) for (let i = 0; i < 3; i++) addPetal(rand(60, 560), rand(360, 560), 0.68, 20);
+      if (!reduce && blossom > 0.05 && speed > 0.01 && Math.random() < Math.min(1, speed * 3)) for (let i = 0; i < 3; i++) addPetal(rand(-120, 380), rand(360, 560), 0.68, 20);
 
       ptr.x += (ptr.tx - ptr.x) * (1 - Math.exp(-dt * 4));
       ptr.y += (ptr.ty - ptr.y) * (1 - Math.exp(-dt * 4));
@@ -839,7 +835,7 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
         ctx.drawImage(L.c ? haloCool : halo, sx(L.x, L.d) - hw / 2, sy(L.y, L.d) - hw / 2, hw, hw);
       });
       // the blossom glows from within, and sparkles
-      const bx = sx(300, 0.68);
+      const bx = sx(120, 0.68);
       const by = sy(470, 0.68);
       ctx.globalAlpha = 0.22 + blossom * 0.22 + (spotHot('blossom') ? 0.15 : 0);
       ctx.drawImage(pinkBloom, bx - 420 * sc, by - 260 * sc, 840 * sc, 520 * sc);
@@ -970,14 +966,14 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
         while (n > 0) {
           if (Math.random() < n) {
             const dd = Math.random();
-            if (Math.random() < 0.7) addPetal(rand(60, 570), rand(360, 580), dd < 0.25 ? 0.6 : 0.68);
-            else addPetal(rand(-260, 600), rand(380, 520), 0.68);
+            if (Math.random() < 0.7) addPetal(rand(-120, 390), rand(360, 580), dd < 0.25 ? 0.6 : 0.68);
+            else addPetal(rand(-260, 520), rand(380, 520), 0.68);
           }
           n -= 1;
         }
-        if (Math.random() < dt * (0.5 + blossom * 3) * (1 - closeP)) addPetal(rand(-200, 560), rand(380, 560), 0.95, 0, true);
+        if (Math.random() < dt * (0.5 + blossom * 3) * (1 - closeP)) addPetal(rand(-200, 420), rand(380, 560), 0.95, 0, true);
       }
-      const wind = 8 + Math.sin(T / 2.3) * 8 + Math.max(0, Math.sin(T / 5.1)) * 12;
+      const wind = 4 + Math.sin(T / 2.3) * 6 + Math.max(0, Math.sin(T / 5.1)) * 8;
       for (let i = petals.length - 1; i >= 0; i--) {
         const pe = petals[i];
         if (pe.flat) {
@@ -990,7 +986,7 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
           }
         } else if (!reduce) {
           // petals drift over the green bank; the wind turns back before the water
-          const target = wind + Math.sin(pe.y * 0.02 + T * 1.1) * 18 - Math.max(0, pe.x - 560) * 0.9 + Math.max(0, -200 - pe.x) * 0.5;
+          const target = wind + Math.sin(pe.y * 0.02 + T * 1.1 + pe.rot) * 16;
           pe.vx += (target - pe.vx) * Math.min(1, dt * 0.9);
           pe.vy += (16 + Math.sin(pe.a * 2) * 12 + Math.cos(pe.x * 0.015 + T) * 6 - pe.vy) * Math.min(1, dt * 1.2);
           pe.x += pe.vx * dt;
@@ -1003,7 +999,7 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
             pe.a = 0;
             pe.y = pe.land;
           }
-          if (pe.x > 640) pe.life -= dt * 2;
+          if (pe.x > 560) pe.life -= dt * 0.8;
         }
         const x = sx(pe.x, pe.d);
         const y = sy(pe.y, pe.d);

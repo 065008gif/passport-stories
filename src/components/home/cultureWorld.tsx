@@ -62,10 +62,10 @@ function ridge(x0: number, x1: number, y: number, amp: number, base: number, see
 }
 
 /* ------------------------------ people ------------------------------ */
-type Garb = { robe: string; trim?: string; skin: string; hair: string; rim?: string };
+type Garb = { robe: string; trim?: string; skin: string; hair: string; rim?: string; obi?: string; collar?: string };
 
 /** A standing figure: slender, long garment, small head. (x, y) is the feet; h is height. */
-function Standing({ x, y, h, g, lean = 0, arm = 'down', className = '' }: { x: number; y: number; h: number; g: Garb; lean?: number; arm?: 'down' | 'up' | 'forward'; className?: string }) {
+function Standing({ x, y, h, g, lean = 0, arm = 'down', className = '', parasol }: { x: number; y: number; h: number; g: Garb; lean?: number; arm?: 'down' | 'up' | 'forward'; className?: string; parasol?: string }) {
   const hr = h * 0.075;
   const top = y - h;
   const sh = top + hr * 2.3;
@@ -77,6 +77,15 @@ function Standing({ x, y, h, g, lean = 0, arm = 'down', className = '' }: { x: n
       {/* garment */}
       <path d={`M${x - w * 0.55},${sh} Q${x},${sh - hr * 0.6} ${x + w * 0.55},${sh} L${x + hem / 2},${y} Q${x},${y + h * 0.02} ${x - hem / 2},${y} Z`} fill={g.robe} />
       {g.trim && <path d={`M${x - w * 0.2},${sh + h * 0.02} L${x - hem * 0.18},${y} L${x - hem * 0.02},${y} L${x + w * 0.05},${sh + h * 0.02} Z`} fill={g.trim} opacity=".85" />}
+      {g.obi && <path d={`M${x - w * 0.62},${sh + (y - sh) * 0.2} L${x + w * 0.62},${sh + (y - sh) * 0.2} L${x + w * 0.7},${sh + (y - sh) * 0.32} L${x - w * 0.7},${sh + (y - sh) * 0.32} Z`} fill={g.obi} />}
+      {g.collar && <path d={`M${x - w * 0.3},${sh - 1} L${x + w * 0.12},${sh + (y - sh) * 0.2} M${x + w * 0.3},${sh - 1} L${x - w * 0.05},${sh + (y - sh) * 0.17}`} stroke={g.collar} strokeWidth={h * 0.03} fill="none" />}
+      {parasol && (
+        <g>
+          <line x1={x + w * 0.5} y1={sh + h * 0.12} x2={x + w * 0.2} y2={top - h * 0.32} stroke="#5a3a2a" strokeWidth={h * 0.018} />
+          <path d={`M${x - h * 0.42},${top - h * 0.18} Q${x + w * 0.2},${top - h * 0.62} ${x + h * 0.82},${top - h * 0.18} Q${x + w * 0.2},${top - h * 0.27} ${x - h * 0.42},${top - h * 0.18} Z`} fill={parasol} />
+          <path d={`M${x + w * 0.2},${top - h * 0.4} L${x - h * 0.3},${top - h * 0.2} M${x + w * 0.2},${top - h * 0.4} L${x + h * 0.66},${top - h * 0.2} M${x + w * 0.2},${top - h * 0.4} L${x + w * 0.2},${top - h * 0.23}`} stroke="#fff3e0" strokeWidth={h * 0.008} opacity=".7" />
+        </g>
+      )}
       {g.rim && <path d={`M${x + w * 0.52},${sh + 2} L${x + hem / 2},${y - 1}`} stroke={g.rim} strokeWidth={h * 0.022} strokeLinecap="round" opacity=".7" />}
       {/* arms */}
       {arm === 'up' && <path className="cw-arm-up" d={`M${x + w * 0.4},${sh + 3} Q${x + w * 0.9},${sh - h * 0.12} ${x + w * 0.3},${top - h * 0.12}`} stroke={g.robe} strokeWidth={h * 0.05} fill="none" strokeLinecap="round" />}
@@ -105,6 +114,8 @@ function Seated({ x, y, h, g, facing = 1, pour = false, cup = false }: { x: numb
       {/* torso */}
       <path d={`M${x - h * 0.22},${y - h * 0.08} L${x - h * 0.16},${sh} Q${x},${sh - hr * 0.5} ${x + h * 0.16},${sh} L${x + h * 0.24},${y - h * 0.08} Z`} fill={g.robe} />
       {g.trim && <path d={`M${x - h * 0.05},${sh + 2} L${x + h * 0.1 * f},${y - h * 0.1}`} stroke={g.trim} strokeWidth={h * 0.06} />}
+      {g.obi && <rect x={x - h * 0.22} y={y - h * 0.3} width={h * 0.44} height={h * 0.1} fill={g.obi} />}
+      {g.collar && <path d={`M${x - h * 0.1},${sh} L${x + h * 0.04},${sh + h * 0.2} M${x + h * 0.1},${sh} L${x - h * 0.01},${sh + h * 0.17}`} stroke={g.collar} strokeWidth={h * 0.035} fill="none" />}
       {/* arm */}
       {pour ? (
         <path className="cw-pour" d={`M${x + h * 0.12 * f},${sh + h * 0.06} Q${x + h * 0.4 * f},${sh + h * 0.2} ${x + h * 0.55 * f},${sh + h * 0.14}`} stroke={g.robe} strokeWidth={h * 0.08} fill="none" strokeLinecap="round" />
@@ -151,6 +162,14 @@ const G = {
   cream: { robe: '#efd9bd', trim: '#c4506f', skin: '#a8705a', hair: '#2a1c25', rim: '#fff1dc' },
   kimono: { robe: '#a84a6e', trim: '#f7d9a6', skin: '#d6a383', hair: '#1c1520', rim: '#ffc7c9' },
   navy: { robe: '#2c3a63', trim: '#e9b04f', skin: '#7d4f3c', hair: '#1a141c', rim: '#ffbf8c' },
+  // kimono and yukata for the hanami party
+  k1: { robe: '#d81b60', obi: '#ffd54f', collar: '#fff8e7', skin: '#e4b896', hair: '#141018', trim: '#ffd54f' },
+  k2: { robe: '#1e6fd0', obi: '#f8bbd0', collar: '#ffffff', skin: '#e0b090', hair: '#161018' },
+  k3: { robe: '#8e24aa', obi: '#ffcc80', collar: '#fff3e0', skin: '#e8bf9c', hair: '#120c14', trim: '#ffcc80' },
+  k4: { robe: '#ef6c00', obi: '#fff3e0', collar: '#ffffff', skin: '#dcae8a', hair: '#1a1214', trim: '#fff3e0' },
+  k5: { robe: '#00897b', obi: '#f48fb1', collar: '#fffde7', skin: '#e2b592', hair: '#151016' },
+  k6: { robe: '#fdf3e7', obi: '#d32f2f', collar: '#d32f2f', skin: '#e6ba98', hair: '#140e16', trim: '#d32f2f' },
+  yukata: { robe: '#283593', obi: '#b0bec5', collar: '#e8eaf6', skin: '#d8a984', hair: '#181216' },
 } satisfies Record<string, Garb>;
 
 const PETAL = ['#ff9cc8', '#ffc4de', '#ff6fb0', '#ffe4f0', '#f0559a'];
@@ -435,7 +454,7 @@ export default function CultureWorld() {
         {/* ---- left bank: blossom tree and tea (Japan) ---- */}
         <path d="M-300,656 L-60,650 Q200,632 420,660 Q560,676 640,720 L640,960 L-300,960 Z" fill="url(#cw-ground-l)" />
         <path d="M-300,658 L-60,652 Q200,634 420,662 Q560,678 640,722" fill="none" stroke="#b8f0c8" strokeWidth="2.5" opacity=".55" />
-        <g data-spot="blossom" className="cw-spot">
+        <g data-spot="blossom" className="cw-spot" transform="translate(-180 0)">
           {/* trunk and branches */}
           <path d="M262,830 C270,760 250,700 286,640 C300,612 296,580 300,548 L316,548 C318,590 322,620 312,650 C290,712 302,770 300,830 Z" fill="url(#cw-trunk)" />
           <g fill="none" stroke="url(#cw-trunk)" strokeLinecap="round">
@@ -481,8 +500,6 @@ export default function CultureWorld() {
               return Array.from({ length: 10 }, (_, j) => <circle key={`d${i}-${j}`} cx={c.x + (r() - 0.5) * c.rx * 1.6} cy={c.y + (r() - 0.3) * c.ry * 1.4} r={1.2 + r() * 1.6} fill="#5a0f3a" opacity=".45" />);
             })}
           </g>
-          <HangingLantern x={432} y={640} r={10} i={1} string={62} color="#ff4a2a" />
-          <HangingLantern x={178} y={648} r={9} i={3} string={56} color="#ff7a1f" />
           {/* petals already on the grass */}
           {Array.from({ length: 40 }, (_, i) => {
             const r = rng(900 + i);
@@ -502,12 +519,14 @@ export default function CultureWorld() {
           <rect x="282" y="752" width="4" height="6" fill="#2f4c5e" />
           <circle cx="252" cy="767" r="4" fill="#f6ead8" />
           <circle cx="316" cy="765" r="4" fill="#f6ead8" />
-          <Seated x={205} y={790} h={58} g={G.kimono} facing={1} pour />
-          <Seated x={372} y={786} h={56} g={G.teal} facing={-1} cup />
-          <Seated x={300} y={810} h={50} g={G.cream} facing={1} cup />
-          <Seated x={70} y={776} h={46} g={G.plum} facing={1} cup />
-          <Standing x={540} y={818} h={70} g={G.saffron} arm="forward" />
-          <HangingLantern x={556} y={782} r={6} i={4} string={10} color="#ffb03a" />
+          <Seated x={205} y={790} h={58} g={G.k1} facing={1} pour />
+          <Seated x={372} y={786} h={56} g={G.yukata} facing={-1} cup />
+          <Seated x={300} y={810} h={50} g={G.k6} facing={1} cup />
+          <Seated x={40} y={760} h={48} g={G.k5} facing={1} cup />
+          <Seated x={-30} y={772} h={46} g={G.k2} facing={-1} />
+          <Standing x={-170} y={736} h={72} g={G.k3} parasol="#e53935" />
+          <Standing x={520} y={806} h={72} g={G.k4} arm="forward" />
+          <Standing x={556} y={812} h={46} g={G.k2} />
         </g>
 
         </g>
