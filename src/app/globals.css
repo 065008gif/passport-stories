@@ -2613,8 +2613,8 @@ footer.bg-ink {
 
 /* the words */
 .culture-copy {
-  position: absolute; z-index: 6; left: 50%; top: 6%;
-  width: min(54rem, 92vw);
+  position: absolute; z-index: 6; left: 50%; top: 7%;
+  width: min(46rem, 90vw);
   translate: -50% 0;
   text-align: center;
   color: #fff;
@@ -2636,9 +2636,9 @@ footer.bg-ink {
   margin-top: 0;
   font-family: 'Ranade', var(--ps-font-display);
   font-weight: 700;
-  font-size: clamp(2.1rem, 4.6vw, 4.2rem);
-  line-height: 1;
-  letter-spacing: -0.035em;
+  font-size: clamp(1.7rem, 3.4vw, 3.1rem);
+  line-height: 1.08;
+  letter-spacing: -0.01em;
   text-wrap: balance;
   text-shadow: 0 2px 0 rgba(90, 40, 80, 0.18), 0 14px 44px rgba(50, 20, 70, 0.45);
 }
