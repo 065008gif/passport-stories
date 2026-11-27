@@ -93,7 +93,7 @@ const PINK_RGB = SKY_PINK.map(hex);
 const BRIDGE_LAMPS = [680, 740, 800, 860, 920].map((x) => [x, 524 + (1 - Math.pow((x - 800) / 170, 2)) * 26 + 14] as const);
 const LIGHTS: { x: number; y: number; d: number; r: number; c: 0 | 1; ry: number; rl: number }[] = [
   ...BRIDGE_LAMPS.map(([x, y]) => ({ x, y, d: 0.42, r: 0.78, c: 0 as const, ry: 652, rl: 80 })),
-  { x: 792, y: 508, d: 0.42, r: 0.75, c: 1, ry: 660, rl: 70 },
+  { x: 801, y: 492, d: 0.42, r: 0.75, c: 1, ry: 660, rl: 70 },
   ...[1534, 1586].map((x) => ({ x, y: 770, d: 0.68, r: 0.3, c: 1 as const, ry: 0, rl: 0 })),
   { x: 586, y: 503, d: 0.25, r: 0.35, c: 1, ry: 616, rl: 26 },
   { x: 595, y: 527, d: 0.25, r: 0.35, c: 1, ry: 616, rl: 26 },

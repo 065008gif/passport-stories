@@ -470,12 +470,12 @@ export default function CultureWorld() {
             return <HangingLantern key={x} x={x} y={y} r={8.5} i={i} string={8} color={i % 2 ? '#ff3b2f' : '#ff6a1f'} />;
           })}
           {/* the pair lifting a sky lantern */}
-          <Standing x={772} y={590} h={66} g={G.hanfuRed} arm="up" />
-          <Standing x={812} y={590} h={70} g={G.hanfuJade} arm="up" lean={-2} />
+          <Standing x={781} y={587} h={76} g={G.hanfuRed} arm="up" />
+          <Standing x={821} y={587} h={80} g={G.hanfuJade} arm="up" lean={-2} />
           <g className="cw-sky-lantern">
-            <circle className="cw-glow" cx="792" cy="508" r="26" fill="url(#cw-lampglow)" opacity=".7" />
-            <path d="M782,500 L802,500 L806,524 L778,524 Z" fill="#ffcf7a" />
-            <path d="M784,503 L800,503 L802,520 L782,520 Z" fill="#fff2c4" opacity=".8" />
+            <circle className="cw-glow" cx="801" cy="490" r="26" fill="url(#cw-lampglow)" opacity=".7" />
+            <path d="M790,480 L812,480 L816,506 L786,506 Z" fill="#ffcf7a" />
+            <path d="M792,483 L810,483 L812,502 L790,502 Z" fill="#fff2c4" opacity=".8" />
           </g>
         </g>
       </g>
