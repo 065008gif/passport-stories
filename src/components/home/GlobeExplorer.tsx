@@ -249,10 +249,18 @@ export default function GlobeExplorer({
       if (!world) return null;
       const d = { x: 0, y: 0, r: 0 };
       world.disc(d);
-      return { diameter: Math.round(d.r * 2), stage: el.clientHeight, ratio: +((d.r * 2) / el.clientHeight).toFixed(3) };
+      const cr = canvas.current?.getBoundingClientRect();
+      return { diameter: Math.round(d.r * 2), stage: el.clientHeight, ratio: +((d.r * 2) / el.clientHeight).toFixed(3), cx: Math.round((cr?.left ?? 0) + d.x), cy: Math.round((cr?.top ?? 0) + d.y) };
     };
     // test hook: is the globe's own jet showing?
     (window as unknown as { __globeJet?: () => unknown }).__globeJet = () => world?.guideVisible ?? null;
+    (window as unknown as { __globeJetPose?: () => unknown }).__globeJetPose = () => {
+      const t = world?.guidePose();
+      const cv = canvas.current;
+      if (!t || !cv) return null;
+      const r = cv.getBoundingClientRect();
+      return { x: Math.round(r.left + t.x), y: Math.round(r.top + t.y) };
+    };
 
     /** Beacons grow with zoom and fade near the back limb; crowded ones shrink to a dot. */
     const placePins = (z: number) => {
@@ -348,7 +356,8 @@ export default function GlobeExplorer({
           setReady(true);
           kick();
           jetSeam.globe = () => {
-            const t = world?.guideTouchdown();
+            // lift off from (and land back on) the jet's own spot; the touchdown point the first time
+            const t = world?.guidePose() ?? world?.guideTouchdown();
             const cv = canvas.current;
             if (!t || !cv) return null;
             const r = cv.getBoundingClientRect();

@@ -13,6 +13,11 @@
  * Ownership (see jetSeam.ts): hero at 0, bridge in between, globe at 1. The
  * loop sleeps and the canvas hides whenever the bridge does not own the jet.
  * Reduced motion skips the bridge: hero before the seam, globe after it.
+ *
+ * Landing: the globe takes the jet at seamP 1, or as soon as scrolling stops
+ * with the globe in view (the bridge finishes its own touchdown path over
+ * ~0.6s). Once landed the globe keeps the jet until the visitor scrolls clearly
+ * back up; the bridge then lifts off from wherever the globe jet is.
  */
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -38,6 +43,9 @@ export default function JetBridge() {
     let t = -1;
     let shown = false;
     const geo = { start: 0, end: 1, p: 0 };
+    let landed = false;
+    let landedAt = 1;
+    let lastScroll = 0;
 
     /** The seam window, from the live page. */
     const seam = () => {
@@ -74,13 +82,28 @@ export default function JetBridge() {
         show(false);
         return;
       }
-      // light damping: silky, never far behind the scroll
-      if (t < 0) t = p;
-      else {
-        t += (p - t) * (1 - Math.pow(1 - 0.14, dt * 60));
-        if (Math.abs(p - t) < 0.0015) t = p;
+      // landed: the globe keeps the jet until the visitor scrolls clearly back up
+      if (landed && p < Math.min(landedAt, 1) - 0.08) {
+        landed = false;
+        t = 0.985; // lift off from the globe jet's own spot, then follow the scroll back
       }
-      let owner: JetOwner = t <= 0.0005 ? 'hero' : t >= 0.99 ? 'globe' : 'bridge';
+      if (landed) {
+        t = 1;
+      } else if (t < 0) t = p;
+      else {
+        // settle to land: scrolling has stopped with the globe in view, so finish the touchdown
+        const g = document.querySelector('.observatory')?.getBoundingClientRect();
+        const settle = shown && now - lastScroll > 240 && p >= 0.5 && !!g && g.top < window.innerHeight * 0.6 && g.bottom > window.innerHeight * 0.5;
+        const goal = settle ? 1 : p;
+        const k = settle ? 1 - Math.exp(-dt * 5) : 1 - Math.pow(1 - 0.14, dt * 60);
+        t += (goal - t) * k;
+        if (Math.abs(goal - t) < 0.0015) t = goal;
+      }
+      if (!landed && t >= 0.99) {
+        landed = true;
+        landedAt = p;
+      }
+      let owner: JetOwner = landed ? 'globe' : t <= 0.0005 ? 'hero' : 'bridge';
       const s = jetSeam.hero?.() ?? null;
       const e = jetSeam.globe?.() ?? null;
       // never zero jets: if the bridge cannot draw yet, the nearer side keeps the jet
@@ -91,7 +114,11 @@ export default function JetBridge() {
         scene.render(t, s, target, headerH(), shown ? dt : 0);
         show(true);
       } else show(false);
-      if (owner === 'bridge' || t !== p) raf = requestAnimationFrame(tick);
+      if (owner === 'bridge' || (!landed && t !== p)) raf = requestAnimationFrame(tick);
+    };
+    const onScroll = () => {
+      lastScroll = performance.now();
+      wake();
     };
     const wake = () => {
       if (raf || disposed) return;
@@ -119,15 +146,15 @@ export default function JetBridge() {
       .catch(() => wake());
 
     // test hook: the seam window and who owns the jet
-    (window as unknown as { __seam?: () => unknown }).__seam = () => ({ start: Math.round(geo.start), end: Math.round(geo.end), p: +geo.p.toFixed(3), t: +t.toFixed(3), owner: jetSeam.owner, bridge: shown });
+    (window as unknown as { __seam?: () => unknown }).__seam = () => ({ start: Math.round(geo.start), end: Math.round(geo.end), p: +geo.p.toFixed(3), t: +t.toFixed(3), owner: jetSeam.owner, bridge: shown, landed });
 
-    window.addEventListener('scroll', wake, { passive: true });
+    window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', resize);
     wake();
     return () => {
       disposed = true;
       cancelAnimationFrame(raf);
-      window.removeEventListener('scroll', wake);
+      window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', resize);
       scene?.dispose();
       scene = null;

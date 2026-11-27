@@ -93,6 +93,12 @@ export class FlightWorld {
   private guideCurve: THREE.QuadraticBezierCurve3 | null = null;
   /** home page: the globe jet may only show once the seam bridge has landed it */
   private guideAllowed = false;
+  /** a pick made before the jet landed, flown the moment it does */
+  private pendingFly = -1;
+  /** the jet has been on the globe before (so it returns to its own spot) */
+  private guidePlaced = false;
+  /** poised hover: the jet's direction in world space, held still while the Earth turns under it */
+  private gHold: THREE.Vector3 | null = null;
   private tdNdc = new THREE.Vector2(0.16, 0.22);
   private guideStart = -1;
   private guideDir = new THREE.Vector3(0, 0, -1);
@@ -103,6 +109,8 @@ export class FlightWorld {
   private gQ = new THREE.Quaternion();
   // cursor steering (home page): where the jet is heading on the orbital shell
   private aim: THREE.Vector3 | null = null;
+  /** a cursor aim, fixed to the screen point (world space) while the Earth turns */
+  private aimWorld: THREE.Vector3 | null = null;
   private gDir = new THREE.Vector3(0, 0, 1);
   private gHead = new THREE.Vector3(1, 0, 0);
   private gBank = 0;
@@ -337,6 +345,13 @@ export class FlightWorld {
       // great circle steering on the orbital shell, nose along the motion, banking with the turn
       const g = this.guide;
       this.gDir.copy(g.position).normalize();
+      this.globe.updateMatrixWorld();
+      if (this.aimWorld) this.aim = this.aimWorld.clone().transformDirection(this.gInv.copy(this.globe.matrixWorld).invert());
+      if (!this.aim) {
+        // no cursor on the globe: hover calmly where it is, on the face toward the viewer
+        if (!this.gHold) this.gHold = this.gDir.clone().transformDirection(this.globe.matrixWorld);
+        else this.gDir.copy(this.gHold).transformDirection(this.gInv.copy(this.globe.matrixWorld).invert());
+      } else this.gHold = null;
       if (this.aim) {
         const angle = Math.acos(THREE.MathUtils.clamp(this.gDir.dot(this.aim), -1, 1));
         if (angle > 1e-4) {
@@ -385,8 +400,8 @@ export class FlightWorld {
     }
     if (this.guide && this.guide.visible && this.guideCurve) {
       if (this.guideStart < 0) this.guideStart = f.time;
-      const k = Math.min(1, (f.time - this.guideStart) / 0.75);
-      const e = 1 - Math.pow(1 - k, 3);
+      const k = Math.min(1, (f.time - this.guideStart) / 0.85);
+      const e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
       this.guideCurve.getPoint(e, this.gPos);
       if (k < 1) {
         this.guideCurve.getTangent(Math.min(0.999, Math.max(0.001, e)), this.gTan);
@@ -399,10 +414,16 @@ export class FlightWorld {
       this.guide.position.copy(this.gPos);
       this.gM.lookAt(this.c.set(0, 0, 0), this.guideDir, this.gUp);
       this.gQ.setFromRotationMatrix(this.gM);
+      // a gentle bank into the arc, level again on arrival
+      this.gQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), 0.2 * Math.sin(Math.PI * k)));
       this.guide.quaternion.slerp(this.gQ, k < 1 ? 0.35 : 0.15);
       if (k >= 1) {
         this.gHead.copy(this.guideDir);
         this.guideCurve = null;
+        // arrived: stay beside this country (it turns with the Earth) until the cursor steers again
+        this.aim = this.gPos.clone().normalize();
+        this.aimWorld = null;
+        this.gHold = null;
       }
     }
     // The home page flight arc, if one is showing.
@@ -512,7 +533,11 @@ export class FlightWorld {
   /** Home page helper: fly the guide to a country along a glowing arc (or swoop in from space). */
   guideFly(index: number, enter = false) {
     const g = this.guide;
-    if (!g || index < 0 || !this.guideAllowed) return;
+    if (!g || index < 0) return;
+    if (!this.guideAllowed) {
+      this.pendingFly = index;
+      return;
+    }
     // hover a little north east of the country, so the beacon never hides it
     const n = this.places[index].clone().normalize();
     const east = new THREE.Vector3(0, 1, 0).cross(n);
@@ -533,6 +558,7 @@ export class FlightWorld {
     this.guideCurve = new THREE.QuadraticBezierCurve3(from, mid, to);
     this.guideStart = -1;
     this.aim = null;
+    this.aimWorld = null;
     g.visible = true;
     if (!fresh) this.arcVec(from, to);
   }
@@ -546,6 +572,7 @@ export class FlightWorld {
   guideAim(ndc: { x: number; y: number } | null) {
     if (!this.guide || !this.guide.visible || !ndc) {
       this.aim = null;
+      this.aimWorld = null;
       return false;
     }
     this.globe.updateMatrixWorld();
@@ -554,9 +581,37 @@ export class FlightWorld {
     const hit = this.gRay.ray.intersectSphere(this.gSphere, new THREE.Vector3());
     if (!hit) {
       this.aim = null;
+      this.aimWorld = null;
       return false;
     }
-    this.aim = hit.applyMatrix4(this.gInv.copy(this.globe.matrixWorld).invert()).normalize();
+    // strictly on the Earth's visible face: near the rim, pull the aim back toward the viewer
+    const n = hit.sub(this.globe.position).normalize();
+    const toCam = this.camera.position.clone().sub(this.globe.position).normalize();
+    const d = n.dot(toCam);
+    // exact: the jet's point on the shell must project within 90% of the Earth's silhouette
+    const R = this.globe.scale.x;
+    const D = this.camera.position.distanceTo(this.globe.position);
+    const limit = 0.9 * Math.asin(Math.min(1, R / D));
+    const toCentre = this.globe.position.clone().sub(this.camera.position).normalize();
+    const angleOf = (dir: THREE.Vector3) => {
+      const pt = this.globe.position.clone().addScaledVector(dir, 1.08 * R).sub(this.camera.position).normalize();
+      return Math.acos(THREE.MathUtils.clamp(pt.dot(toCentre), -1, 1));
+    };
+    if (angleOf(n) > limit) {
+      const tang = n.clone().addScaledVector(toCam, -d).normalize();
+      // slide from the rim toward the viewer until it fits (binary search on the polar angle)
+      let lo = 0;
+      let hi = Math.acos(THREE.MathUtils.clamp(d, -1, 1));
+      for (let i = 0; i < 14; i++) {
+        const mid = (lo + hi) / 2;
+        const dir = toCam.clone().multiplyScalar(Math.cos(mid)).addScaledVector(tang, Math.sin(mid));
+        if (angleOf(dir) > limit) hi = mid;
+        else lo = mid;
+      }
+      n.copy(toCam).multiplyScalar(Math.cos(lo)).addScaledVector(tang, Math.sin(lo));
+    }
+    this.aimWorld = n.clone();
+    this.aim = n.transformDirection(this.gInv.copy(this.globe.matrixWorld).invert());
     return true;
   }
 
@@ -602,6 +657,14 @@ export class FlightWorld {
     if (!g) return;
     this.guideAllowed = true;
     if (g.visible) return;
+    const queued = this.pendingFly;
+    this.pendingFly = -1;
+    if (this.guidePlaced && this.facing(g.position)) {
+      // back to where it was when it lifted off
+      g.visible = true;
+      if (queued >= 0) this.guideFly(queued);
+      return;
+    }
     const td = this.touchdown();
     if (!td) return;
     const inv = this.gInv.copy(this.globe.matrixWorld).invert();
@@ -613,9 +676,46 @@ export class FlightWorld {
     g.quaternion.setFromRotationMatrix(this.gM);
     this.guideCurve = null;
     this.aim = null;
+    this.aimWorld = null;
+    this.gHold = null;
     this.gBank = 0;
     if (this.vapor) this.vapor.pts.length = 0;
     g.visible = true;
+    this.guidePlaced = true;
+    if (queued >= 0) this.guideFly(queued);
+  }
+  /** Is a point on the globe (globe local) on the side facing the camera? */
+  private facing(local: THREE.Vector3, min = 0.35) {
+    this.globe.updateMatrixWorld();
+    const wpos = local.clone().applyMatrix4(this.globe.matrixWorld);
+    const n = wpos.clone().sub(this.globe.position).normalize();
+    const toCam = this.camera.position.clone().sub(wpos).normalize();
+    return n.dot(toCam) > min;
+  }
+  /**
+   * Home page helper: the globe jet's own screen pose (canvas pixels), when it
+   * has been on the globe and sits on the visible face. The bridge lifts off from here.
+   */
+  guidePose() {
+    const g = this.guide;
+    if (!g || !this.guidePlaced || !this.facing(g.position, 0.15)) return null;
+    this.globe.updateMatrixWorld();
+    this.camera.updateMatrixWorld();
+    const w = this.renderer.domElement.clientWidth;
+    const h = this.renderer.domElement.clientHeight;
+    const px = (v: THREE.Vector3) => {
+      const p = v.clone().applyMatrix4(this.globe.matrixWorld).project(this.camera);
+      return { x: (p.x * 0.5 + 0.5) * w, y: (-p.y * 0.5 + 0.5) * h };
+    };
+    const n = g.position.clone().normalize();
+    const head = this.gHead.clone().addScaledVector(n, -this.gHead.dot(n)).normalize();
+    const side = new THREE.Vector3().crossVectors(head, n).normalize();
+    const half = (2.9 * 0.05) / 2;
+    const c = px(g.position);
+    const a = px(g.position.clone().addScaledVector(side, -half));
+    const b = px(g.position.clone().addScaledVector(side, half));
+    const nose = px(g.position.clone().addScaledVector(head, 0.08));
+    return { x: c.x, y: c.y, span: Math.hypot(b.x - a.x, b.y - a.y), angle: Math.atan2(nose.y - c.y, nose.x - c.x) };
   }
   /** Home page helper: is the globe's jet on screen? */
   get guideVisible() {
@@ -624,6 +724,8 @@ export class FlightWorld {
   /** Home page helper: the bridge (or the hero) owns the jet; the globe jet steps aside. */
   guideHide() {
     this.guideAllowed = false;
+    this.gHold = null;
+    this.aimWorld = null;
     this.aim = null;
     this.guideCurve = null;
     if (this.guide) this.guide.visible = false;
@@ -638,6 +740,7 @@ export class FlightWorld {
     if (east.lengthSq() < 1e-6) east.set(1, 0, 0);
     east.normalize();
     const north = n.clone().cross(east).normalize();
+    this.aimWorld = null;
     this.aim = n.addScaledVector(east, 0.1).addScaledVector(north, -0.06).normalize();
   }
 
