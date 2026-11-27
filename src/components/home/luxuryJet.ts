@@ -9,7 +9,7 @@
 import * as THREE from 'three';
 
 /** The sleek jet: needle nose, thin swept wings with turned winglets, glowing twin engines. Nose toward -Z. */
-export function luxuryJet(col: (hex: number) => THREE.Color) {
+export function createJetMesh(col: (hex: number) => THREE.Color) {
   const g = new THREE.Group();
   const pearl = new THREE.MeshPhysicalMaterial({ color: col(0xf8f4ee), metalness: 0.4, roughness: 0.16, clearcoat: 1, clearcoatRoughness: 0.05, envMapIntensity: 1.4 });
   const coral = new THREE.MeshPhysicalMaterial({ color: col(0xff6b5b), metalness: 0.35, roughness: 0.2, clearcoat: 1, clearcoatRoughness: 0.06, envMapIntensity: 1.2 });

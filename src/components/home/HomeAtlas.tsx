@@ -8,6 +8,7 @@
 import { useCallback, useState } from 'react';
 import HeroCollage from '@/components/home/HeroCollage';
 import GlobeExplorer, { type ExploreCountry } from '@/components/home/GlobeExplorer';
+import JetBridge from '@/components/home/JetBridge';
 import { track } from '@/lib/analytics';
 
 export default function HomeAtlas({ countries, startIndex }: { countries: ExploreCountry[]; startIndex: number }) {
@@ -37,6 +38,9 @@ export default function HomeAtlas({ countries, startIndex }: { countries: Explor
           <GlobeExplorer countries={countries} startIndex={startIndex} request={request} />
         </div>
       </section>
+
+      {/* the one jet across the seam: pops out of the hero, glides with the scroll, lands on the globe */}
+      <JetBridge />
     </>
   );
 }

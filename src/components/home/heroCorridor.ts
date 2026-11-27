@@ -18,7 +18,7 @@
  */
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
-import { luxuryJet } from '@/components/home/luxuryJet';
+import { createJetMesh } from '@/components/home/luxuryJet';
 
 export interface PortalSpec {
   slug: string;
@@ -50,7 +50,7 @@ function lin(hex: number): [number, number, number] {
   return [c[0], c[1], c[2]];
 }
 const v3 = (hex: number) => new THREE.Vector3(...lin(hex));
-const col = (hex: number) => new THREE.Color().setRGB(...lin(hex), THREE.LinearSRGBColorSpace);
+export const col = (hex: number) => new THREE.Color().setRGB(...lin(hex), THREE.LinearSRGBColorSpace);
 const smooth = (a: number, b: number, x: number) => {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
   return t * t * (3 - 2 * t);
@@ -177,7 +177,7 @@ function roundedRect(w: number, h: number, r: number) {
 
 /* ------------------------------ Contrail ribbon ------------------------------ */
 const TRAIL = 44;
-class Contrail {
+export class Contrail {
   readonly mesh: THREE.Mesh;
   readonly mat: THREE.ShaderMaterial;
   private geo = new THREE.BufferGeometry();
@@ -206,6 +206,10 @@ class Contrail {
     });
     this.mesh = new THREE.Mesh(this.geo, this.mat);
     this.mesh.frustumCulled = false;
+  }
+  /** Forget the trail (the bridge reuses it after being hidden). */
+  reset() {
+    this.pts.length = 0;
   }
   push(p: THREE.Vector3, now: number) {
     const last = this.pts[0];
@@ -264,6 +268,8 @@ export class HeroCorridor {
   onFocus: (i: number | null) => void = () => {};
   onProgress: (p: number, reached: number) => void = () => {};
   holdFocus = false;
+  /** True while the seam bridge (or the globe) owns the jet. */
+  jetHidden = false;
 
   private renderer: THREE.WebGLRenderer;
   private pmrem: THREE.PMREMGenerator;
@@ -354,7 +360,7 @@ export class HeroCorridor {
     this.buildPortals(specs);
     this.rails = this.buildRails();
     this.motes = this.buildMotes();
-    this.jet = luxuryJet(col);
+    this.jet = createJetMesh(col);
     this.jet.scale.setScalar(this.phone ? 0.24 : 0.4);
     this.scene.add(this.jet);
     this.trails.forEach((t) => this.scene.add(t.mesh));
@@ -675,8 +681,8 @@ export class HeroCorridor {
     const amp = this.phone ? 0.55 : 1.8;
     const x = Math.sin(fly * Math.PI * 4.5) * amp;
     const y = -0.85 + 0.25 * (0.5 + 0.5 * Math.cos(fly * Math.PI * 9));
-    const d = smooth(0.85, 1, p);
-    return out.set(x * (1 - d), (this.phone ? -1.25 : y) - d * 3.4, camZ - JET_AHEAD - d * 5);
+    // no dive: at the end of the corridor the jet holds its line and the seam bridge takes it on
+    return out.set(x, this.phone ? -1.25 : y, camZ - JET_AHEAD);
   }
   private updateJet(dt: number, p: number, camZ: number) {
     const pos = this.jetAt(p, this.tmp);
@@ -693,13 +699,14 @@ export class HeroCorridor {
     step(this.roll, bank, 70, 16, dt);
     if (dt === 0) this.roll.x = bank;
     this.q.multiply(new THREE.Quaternion().setFromAxisAngle(this.zAxis, this.roll.x));
-    const d = smooth(0.85, 1, p);
-    this.q.multiply(new THREE.Quaternion().setFromAxisAngle(this.xAxis, -26 * DEG * d));
     if (dt === 0) this.jetQ.copy(this.q);
     else this.jetQ.slerp(this.q, 1 - Math.exp(-dt * 8));
     this.jet.quaternion.copy(this.jetQ);
     const base = this.phone ? 0.24 : 0.4;
-    this.jet.scale.setScalar(base * (1 - 0.55 * d));
+    this.jet.scale.setScalar(base);
+    // across the seam the bridge canvas owns the jet: this one (and its trails) steps aside
+    this.jet.visible = !this.jetHidden;
+    this.trails.forEach((t) => (t.mesh.visible = !this.jetHidden));
     // twin wingtip contrails
     const s = this.jet.scale.x;
     [-1, 1].forEach((sd, k) => {
@@ -729,6 +736,20 @@ export class HeroCorridor {
       el.style.pointerEvents = fade > 0.6 ? 'auto' : 'none';
       el.dataset.focus = this.focused === i ? 'true' : 'false';
     });
+  }
+  /** The jet's screen pose in stage pixels: centre, wingspan in pixels, and its orientation. */
+  jetPose() {
+    const j = this.jet;
+    j.updateMatrixWorld();
+    const c = this.tmp.copy(j.position).project(this.camera);
+    const x = (c.x * 0.5 + 0.5) * this.w;
+    const y = (-c.y * 0.5 + 0.5) * this.h;
+    const a = new THREE.Vector3(-1.45, 0, 0).applyMatrix4(j.matrixWorld).project(this.camera);
+    const b = new THREE.Vector3(1.45, 0, 0).applyMatrix4(j.matrixWorld).project(this.camera);
+    const span = Math.hypot((b.x - a.x) * 0.5 * this.w, (b.y - a.y) * 0.5 * this.h);
+    // orientation relative to the camera, so another camera looking down -Z can match it
+    const q = this.camera.quaternion.clone().invert().multiply(j.quaternion);
+    return { x, y, span, q };
   }
   /** Where the jet is on screen, for the tests and the shell. */
   jetScreen() {

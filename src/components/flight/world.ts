@@ -15,7 +15,7 @@
  */
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
-import { luxuryJet } from '@/components/home/luxuryJet';
+import { createJetMesh } from '@/components/home/luxuryJet';
 
 // Colours and textures are authored in plain sRGB and drawn as-is, like CSS.
 THREE.ColorManagement.enabled = false;
@@ -91,6 +91,9 @@ export class FlightWorld {
   private arcStart = -1;
   private guide: THREE.Group | null = null;
   private guideCurve: THREE.QuadraticBezierCurve3 | null = null;
+  /** home page: the globe jet may only show once the seam bridge has landed it */
+  private guideAllowed = false;
+  private tdNdc = new THREE.Vector2(0.16, 0.22);
   private guideStart = -1;
   private guideDir = new THREE.Vector3(0, 0, -1);
   private gPos = new THREE.Vector3();
@@ -482,7 +485,7 @@ export class FlightWorld {
     const env = pm.fromScene(new RoomEnvironment(), 0.04).texture;
     pm.dispose();
     const g = new THREE.Group();
-    const jet = luxuryJet((h) => new THREE.Color(h));
+    const jet = createJetMesh((h) => new THREE.Color(h));
     jet.traverse((o) => {
       const m = (o as THREE.Mesh).material as THREE.MeshStandardMaterial | undefined;
       if (m && 'envMap' in m) m.envMap = env;
@@ -509,7 +512,7 @@ export class FlightWorld {
   /** Home page helper: fly the guide to a country along a glowing arc (or swoop in from space). */
   guideFly(index: number, enter = false) {
     const g = this.guide;
-    if (!g || index < 0) return;
+    if (!g || index < 0 || !this.guideAllowed) return;
     // hover a little north east of the country, so the beacon never hides it
     const n = this.places[index].clone().normalize();
     const east = new THREE.Vector3(0, 1, 0).cross(n);
@@ -555,6 +558,76 @@ export class FlightWorld {
     }
     this.aim = hit.applyMatrix4(this.gInv.copy(this.globe.matrixWorld).invert()).normalize();
     return true;
+  }
+
+  /**
+   * Home page helper: the touchdown pose for the seam bridge. A front facing
+   * point on the orbital shell, up and right of centre, with the nose toward
+   * the top of the screen. Canvas pixels: centre, wingspan, nose angle.
+   */
+  guideTouchdown() {
+    if (!this.guide) return null;
+    const td = this.touchdown();
+    if (!td) return null;
+    const r = this.globe.scale.x;
+    const span = 2.9 * 0.05 * r;
+    const w = this.renderer.domElement.clientWidth;
+    const h = this.renderer.domElement.clientHeight;
+    const px = (v: THREE.Vector3) => {
+      const p = v.clone().project(this.camera);
+      return { x: (p.x * 0.5 + 0.5) * w, y: (-p.y * 0.5 + 0.5) * h };
+    };
+    const side = new THREE.Vector3().crossVectors(td.head, td.n).normalize();
+    const c = px(td.world);
+    const a = px(td.world.clone().addScaledVector(side, -span / 2));
+    const b = px(td.world.clone().addScaledVector(side, span / 2));
+    const nose = px(td.world.clone().addScaledVector(td.head, 0.08 * r));
+    return { x: c.x, y: c.y, span: Math.hypot(b.x - a.x, b.y - a.y), angle: Math.atan2(nose.y - c.y, nose.x - c.x) };
+  }
+  private touchdown() {
+    this.globe.updateMatrixWorld();
+    this.camera.updateMatrixWorld();
+    this.gRay.setFromCamera(this.tdNdc, this.camera);
+    this.gSphere.set(this.globe.position, 1.08 * this.globe.scale.x);
+    const hit = this.gRay.ray.intersectSphere(this.gSphere, new THREE.Vector3());
+    if (!hit) return null;
+    const n = hit.clone().sub(this.globe.position).normalize();
+    const up = this.camera.up.clone().applyQuaternion(this.camera.quaternion);
+    const head = up.addScaledVector(n, -up.dot(n)).normalize();
+    return { world: hit, n, head };
+  }
+  /** Home page helper: the bridge has landed; show the globe jet at the touchdown pose. */
+  guidePlace() {
+    const g = this.guide;
+    if (!g) return;
+    this.guideAllowed = true;
+    if (g.visible) return;
+    const td = this.touchdown();
+    if (!td) return;
+    const inv = this.gInv.copy(this.globe.matrixWorld).invert();
+    this.gDir.copy(td.world).applyMatrix4(inv).normalize();
+    this.gHead.copy(td.head).transformDirection(inv);
+    this.gHead.addScaledVector(this.gDir, -this.gHead.dot(this.gDir)).normalize();
+    g.position.copy(this.gDir).multiplyScalar(1.08);
+    this.gM.lookAt(this.c.set(0, 0, 0), this.gHead, this.gDir);
+    g.quaternion.setFromRotationMatrix(this.gM);
+    this.guideCurve = null;
+    this.aim = null;
+    this.gBank = 0;
+    if (this.vapor) this.vapor.pts.length = 0;
+    g.visible = true;
+  }
+  /** Home page helper: is the globe's jet on screen? */
+  get guideVisible() {
+    return !!this.guide?.visible;
+  }
+  /** Home page helper: the bridge (or the hero) owns the jet; the globe jet steps aside. */
+  guideHide() {
+    this.guideAllowed = false;
+    this.aim = null;
+    this.guideCurve = null;
+    if (this.guide) this.guide.visible = false;
+    if (this.vapor) this.vapor.pts.length = 0;
   }
 
   /** Home page helper: glide up beside a country's beacon and hold there. */

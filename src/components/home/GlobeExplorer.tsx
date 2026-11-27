@@ -32,6 +32,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { flagSrc } from '@/components/Flag';
 import { track } from '@/lib/analytics';
+import { jetSeam } from '@/components/home/jetSeam';
 import { pexels } from '@/data/places';
 import type { FlightWorld as FW, Frame } from '@/components/flight/world';
 
@@ -219,14 +220,10 @@ export default function GlobeExplorer({
     let raf = 0;
     let visible = false;
     let disposed = false;
-    let entered = false;
     let last = performance.now();
     let base = 1;
-    const enter = () => {
-      if (entered || !world || !visible) return;
-      entered = true;
-      world.guideFly(refs.current.pick ?? startIndex, true);
-    };
+    // the one jet: hidden until the seam bridge lands it here, hidden again when it lifts off
+    let unseam: (() => void) | null = null;
     const frame: Frame = { progress: 0, free: 1, x: 0, y: 0, scale: 1, dragX: 0, dragY: 0, time: 0 };
     const disc = { x: 0, y: 0, r: 1 };
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -254,6 +251,8 @@ export default function GlobeExplorer({
       world.disc(d);
       return { diameter: Math.round(d.r * 2), stage: el.clientHeight, ratio: +((d.r * 2) / el.clientHeight).toFixed(3) };
     };
+    // test hook: is the globe's own jet showing?
+    (window as unknown as { __globeJet?: () => unknown }).__globeJet = () => world?.guideVisible ?? null;
 
     /** Beacons grow with zoom and fade near the back limb; crowded ones shrink to a dot. */
     const placePins = (z: number) => {
@@ -348,7 +347,19 @@ export default function GlobeExplorer({
           frame.scale = base;
           setReady(true);
           kick();
-          enter();
+          jetSeam.globe = () => {
+            const t = world?.guideTouchdown();
+            const cv = canvas.current;
+            if (!t || !cv) return null;
+            const r = cv.getBoundingClientRect();
+            return { x: r.left + t.x, y: r.top + t.y, span: t.span, angle: t.angle };
+          };
+          unseam = jetSeam.subscribe((o) => {
+            if (!world) return;
+            if (o === 'globe') world.guidePlace();
+            else world.guideHide();
+            kick();
+          });
         })
         .catch(() => setFailed(true));
     };
@@ -362,7 +373,6 @@ export default function GlobeExplorer({
         if (visible) {
           start();
           kick();
-          enter();
         }
       },
       { rootMargin: '0px 0px -25% 0px' },
@@ -377,6 +387,8 @@ export default function GlobeExplorer({
     el.addEventListener('globe:kick', onKick);
     return () => {
       disposed = true;
+      unseam?.();
+      jetSeam.globe = null;
       if (w.cancelIdleCallback) w.cancelIdleCallback(idle);
       else window.clearTimeout(idle);
       io.disconnect();

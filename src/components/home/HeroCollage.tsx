@@ -24,6 +24,7 @@ import { track } from '@/lib/analytics';
 import { PLACES, pexels } from '@/data/places';
 import { COUNTRY_CLIPS } from '@/data/media';
 import type { Flight, HeroCorridor, PortalSpec } from '@/components/home/heroCorridor';
+import { jetSeam } from '@/components/home/jetSeam';
 
 /** The corridor, nearest first, grouped into the telemetry chapters. */
 const ROUTE: { slug: string; chapter: number }[] = [
@@ -153,6 +154,7 @@ export default function HeroCollage({
     let io: IntersectionObserver | null = null;
     let ro: ResizeObserver | null = null;
     let videoTimer = 0;
+    let unseam: (() => void) | null = null;
     import('@/components/home/heroCorridor')
       .then((mod) => {
         if (disposed) return;
@@ -166,9 +168,19 @@ export default function HeroCollage({
         (window as unknown as { __heroJet?: () => unknown }).__heroJet = () => {
           const j = scene?.jetScreen();
           const r = el.getBoundingClientRect();
-          return j && { x: Math.round(j.x + r.left), y: Math.round(j.y + r.top), inView: j.x > 0 && j.x < r.width && j.y > 0 && j.y < r.height };
+          return j && { x: Math.round(j.x + r.left), y: Math.round(j.y + r.top), inView: j.x > 0 && j.x < r.width && j.y > 0 && j.y < r.height, visible: !scene?.jetHidden };
         };
         scene.onFocus = (i) => setFocus(i);
+        // the one jet: this scene draws it only while the hero owns it
+        jetSeam.hero = () => {
+          const ps = scene?.jetPose();
+          if (!ps) return null;
+          const r = el.getBoundingClientRect();
+          return { x: r.left + ps.x, y: r.top + ps.y, span: ps.span, q: { x: ps.q.x, y: ps.q.y, z: ps.q.z, w: ps.q.w } };
+        };
+        unseam = jetSeam.subscribe((o) => {
+          if (scene) scene.jetHidden = o !== 'hero';
+        });
         scene.setBadges(badges.current);
         chapterP.current = [0, scene.progressFor(ROUTE.findIndex((r) => r.chapter === 1)), scene.progressFor(ROUTE.findIndex((r) => r.chapter === 2)), 1];
         scene.onProgress = (p, reached) => {
@@ -203,6 +215,8 @@ export default function HeroCollage({
       window.clearTimeout(videoTimer);
       io?.disconnect();
       ro?.disconnect();
+      unseam?.();
+      jetSeam.hero = null;
       scene?.dispose();
       sceneRef.current = null;
     };
