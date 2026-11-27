@@ -1,29 +1,25 @@
 'use client';
 
 /**
- * HERO: The Culture Map. An illustrated world at dusk, driven by the scroll.
+ * HERO: The Culture Map. An illustrated world at night, driven by the scroll.
  *
  * Nothing plays on its own: the hero is a tall runway with a sticky stage,
  * and the scroll position is the camera. Scrolling down (and back up) moves
  * through one painted world:
  *
- *   0.00  lantern moment on the bridge (China)
- *   0.22  tea under the cherry blossoms (Japan)
- *   0.44  alpenglow on the Matterhorn, mist over the lake (Switzerland)
+ *   0.00  lanterns on the bridge under a black, starry sky (China)
+ *   0.22  tea under the cherry blossoms, the sky turns purplish pink (Japan)
+ *   0.44  the Matterhorn under the stars, mist and fireflies (Switzerland)
  *   0.66  the whole world, then the words and the button
- *   0.80  closing: the camera walks down the path, the banks part like
- *         curtains, lanterns stream up and a warm mist becomes the globe
+ *   0.80  closing: the camera walks down the path, the banks part, lanterns
+ *         rush up and a curtain of clouds rises into the next section
  *
- * Between the moments a gust of petals carries the camera, its strength set
- * by how fast you scroll. The world keeps living at every step: sky lanterns
- * with flickering flames and depth blur, petals that tumble in 3D, glints
- * moving on the water, mist, swaying pines and flowers. Hover or touch
- * answers (lantern glow, falling petals, steam, rings on the water, place
- * labels; a click finds a place on the globe).
- *
- * The art lives in cultureWorld.tsx as layered SVG; this file is the camera,
- * the particles (one canvas) and the interactions. Reduced motion: the
- * camera still follows the scroll, nothing else moves on its own.
+ * Performance: the SVG art (cultureWorld.tsx) never animates by itself, so
+ * it only repaints when the camera moves. Everything alive is painted on two
+ * canvases: the sky behind the art (gradient, stars, moon, shooting stars)
+ * and the light in front of it (water waves and reflections, lantern glow,
+ * sky lanterns, petals in depth of field, fireflies, mist, steam, the cloud
+ * curtain). Reduced motion: the camera follows the scroll, nothing else moves.
  */
 import { useEffect, useRef, useState } from 'react';
 import CultureWorld, { SPOTS } from '@/components/home/cultureWorld';
@@ -35,32 +31,28 @@ const H = 900;
 const clamp = (v: number, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 const smooth = (t: number) => t * t * (3 - 2 * t);
 const ease = (t: number) => 1 - Math.pow(1 - t, 3);
+/** 0 before a, rises to 1 by b, holds, falls back to 0 by d. */
+const bump = (v: number, a: number, b: number, c: number, d: number) => (v <= a || v >= d ? 0 : v < b ? smooth((v - a) / (b - a)) : v <= c ? 1 : smooth((d - v) / (d - c)));
 
-type Shot = { p: number; cx: number; cy: number; s: number; dim: number };
+type Shot = { p: number; cx: number; cy: number; s: number };
 type Lantern = { x: number; y: number; vy: number; ph: number; size: number; d: number; glow: number; hot: number; tilt: number };
-type Petal = { x: number; y: number; vx: number; vy: number; a: number; b: number; va: number; vb: number; rot: number; size: number; d: number; c: string; back: string };
-type Glint = { x: number; y: number; w: number; ph: number; sp: number };
-type Mote = { x: number; y: number; vx: number; vy: number; r: number; ph: number };
-type Ring = { x: number; y: number; t: number };
-
-const PETALS: [string, string][] = [
-  ['#f9b6c8', '#e98fac'],
-  ['#fcd0dc', '#f0a6bd'],
-  ['#f3a0bb', '#d9789c'],
-  ['#ffe2ea', '#f4bccb'],
-];
+type Petal = { x: number; y: number; vx: number; vy: number; a: number; va: number; rot: number; vr: number; size: number; d: number; sp: number; blur: boolean; flat: number; life: number };
+type Star = { x: number; y: number; r: number; ph: number; sp: number; big: boolean };
+type Fly = { x: number; y: number; vx: number; vy: number; ph: number; d: number };
+type Puff = { x: number; y: number; t: number; d: number; s: number };
+type Ring = { x: number; y: number; t: number; s: number };
 
 /** The camera path through the world, keyed by scroll progress. */
 const PATH = (phone: boolean): Shot[] => {
   const f = phone ? 0.82 : 1;
   return [
-    { p: 0.0, cx: 792, cy: 560, s: 2.9 * f, dim: 0.5 },
-    { p: 0.1, cx: 795, cy: 556, s: 2.55 * f, dim: 0.34 },
-    { p: 0.22, cx: 300, cy: 700, s: 2.25 * f, dim: 0.14 },
-    { p: 0.32, cx: 330, cy: 690, s: 2.35 * f, dim: 0.12 },
-    { p: 0.44, cx: 1360, cy: 560, s: 2.0 * f, dim: 0.05 },
-    { p: 0.54, cx: 1330, cy: 548, s: 2.1 * f, dim: 0.03 },
-    { p: 0.68, cx: 800, cy: 450, s: 1, dim: 0 },
+    { p: 0.0, cx: 792, cy: 548, s: 2.7 * f },
+    { p: 0.1, cx: 795, cy: 548, s: 2.4 * f },
+    { p: 0.22, cx: 300, cy: 640, s: 2.15 * f },
+    { p: 0.32, cx: 330, cy: 630, s: 2.25 * f },
+    { p: 0.44, cx: 1360, cy: 520, s: 1.95 * f },
+    { p: 0.54, cx: 1330, cy: 520, s: 2.05 * f },
+    { p: 0.68, cx: 800, cy: 450, s: 1 },
   ];
 };
 const CLOSE_AT = 0.8;
@@ -72,17 +64,49 @@ function cameraAt(P: number, path: Shot[]) {
     const b = path[i + 1];
     if (P <= b.p) {
       const t = smooth((P - a.p) / (b.p - a.p));
-      return { p: P, cx: a.cx + (b.cx - a.cx) * t, cy: a.cy + (b.cy - a.cy) * t, s: a.s + (b.s - a.s) * t, dim: a.dim + (b.dim - a.dim) * t };
+      return { p: P, cx: a.cx + (b.cx - a.cx) * t, cy: a.cy + (b.cy - a.cy) * t, s: a.s + (b.s - a.s) * t };
     }
   }
   return path[path.length - 1];
 }
+
+/* sky palettes: night (lanterns, mountains) and blossom (purplish pink) */
+const SKY_NIGHT = ['#010006', '#07031a', '#170833', '#36104c', '#6a1d66'];
+const SKY_PINK = ['#260a3c', '#5c1a6c', '#a2338c', '#dc5aa6', '#ff9ccb'];
+const SKY_STOPS = [0, 0.38, 0.66, 0.86, 1];
+const hex = (h: string) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+const NIGHT_RGB = SKY_NIGHT.map(hex);
+const PINK_RGB = SKY_PINK.map(hex);
+
+/* fixed lights in the painting: [x, y, depth, size, warm?, reflect-from-y] */
+const BRIDGE_LAMPS = [680, 740, 800, 860, 920].map((x) => [x, 524 + (1 - Math.pow((x - 800) / 170, 2)) * 26 + 14] as const);
+const LIGHTS: { x: number; y: number; d: number; r: number; c: 0 | 1; ry: number; rl: number }[] = [
+  ...BRIDGE_LAMPS.map(([x, y]) => ({ x, y, d: 0.42, r: 1, c: 0 as const, ry: 652, rl: 90 })),
+  { x: 792, y: 512, d: 0.42, r: 1.3, c: 1, ry: 660, rl: 110 },
+  { x: 586, y: 503, d: 0.25, r: 0.35, c: 1, ry: 616, rl: 26 },
+  { x: 595, y: 527, d: 0.25, r: 0.35, c: 1, ry: 616, rl: 26 },
+  ...[930, 965, 1035, 1070].map((x) => ({ x, y: 584, d: 0.25, r: 0.4, c: 1 as const, ry: 614, rl: 30 })),
+  ...([
+    [690, 748, 1],
+    [905, 752, 0.9],
+    [640, 728, 0.7],
+    [960, 732, 0.75],
+  ] as const).map(([x, y, s]) => ({ x, y, d: 1, r: s * 1.1, c: 1 as const, ry: y + 12 * s, rl: 36 * s })),
+];
+
+/* where the water shows, in world units (between the banks, around the path) */
+const WATER: [number, number][] = [
+  [-60, 610], [1040, 610], [1040, 668], [1300, 652], [1700, 628], [1700, 750], [1520, 760], [1380, 768], [1240, 792],
+  [1140, 810], [1060, 860], [1010, 905], [980, 880], [900, 820], [852, 772], [748, 772], [700, 820], [648, 858],
+  [640, 720], [560, 676], [420, 660], [200, 642], [-60, 650],
+];
 
 export default function CultureHero({ onPick }: { onPick?: (slug: string) => void }) {
   const root = useRef<HTMLElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const svg = useRef<SVGSVGElement>(null);
   const cam = useRef<SVGGElement>(null);
+  const skyCv = useRef<HTMLCanvasElement>(null);
   const cv = useRef<HTMLCanvasElement>(null);
   const tip = useRef<HTMLDivElement>(null);
   const [revealed, setRevealed] = useState(false);
@@ -95,19 +119,57 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
     jetSeam.set('globe');
   }, []);
 
+  /* The next section rises in as the clouds clear (a scroll-linked entrance). */
+  useEffect(() => {
+    const ex = document.getElementById('explore');
+    const inner = ex?.firstElementChild as HTMLElement | null;
+    if (!ex || !inner || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    let last = -1;
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const t = clamp((window.innerHeight - ex.getBoundingClientRect().top) / (window.innerHeight * 0.75));
+      const e = ease(t);
+      if (Math.abs(e - last) < 0.002) return;
+      last = e;
+      if (e >= 0.999) {
+        inner.style.transform = '';
+        inner.style.opacity = '';
+      } else {
+        inner.style.transform = `translate3d(0, ${((1 - e) * 90).toFixed(1)}px, 0) scale(${(0.94 + e * 0.06).toFixed(4)})`;
+        inner.style.opacity = (0.1 + e * 0.9).toFixed(3);
+      }
+    };
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+      inner.style.transform = '';
+      inner.style.opacity = '';
+    };
+  }, []);
+
   useEffect(() => {
     const el = root.current;
     const st = stage.current;
     const sv = svg.current;
     const camG = cam.current;
     const canvas = cv.current;
-    if (!el || !st || !sv || !camG || !canvas) return;
+    const skyCanvas = skyCv.current;
+    if (!el || !st || !sv || !camG || !canvas || !skyCanvas) return;
     const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    const sky = skyCanvas.getContext('2d', { alpha: false });
+    if (!ctx || !sky) return;
 
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const phone = () => st.clientWidth < 768;
-    const layers = Array.from(sv.querySelectorAll<SVGGElement>('[data-depth]')).map((g) => ({ g, d: parseFloat(g.dataset.depth || '0') }));
+    const layers = Array.from(sv.querySelectorAll<SVGGElement>('[data-depth]')).map((g) => ({ g, d: parseFloat(g.dataset.depth || '0'), last: '' }));
     const bankL = sv.querySelector<SVGGElement>('#cw-bank-l');
     const bankR = sv.querySelector<SVGGElement>('#cw-bank-r');
     const fore = sv.querySelector<SVGGElement>('#cw-fore');
@@ -116,8 +178,7 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
     let path = PATH(phone());
     const c = { ...path[0] };
     const ptr = { x: 0, y: 0, tx: 0, ty: 0, sx: -1, sy: -1, over: false };
-    let P = 0; // scroll progress through the runway
-    let Ps = 0; // eased
+    let Ps = -1;
     let lastP = 0;
     let vw = 1;
     let vh = 1;
@@ -128,140 +189,277 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
     let raf = 0;
     let visible = true;
     let last = performance.now();
+    let T = 0; // animation clock (seconds)
     let drift = 0;
     let wasRevealed = false;
+    let camKey = '';
+    const vars: Record<string, string> = {};
+    let curtain: { x: number; r: number; dy: number }[][] = [];
 
+    const setVar = (n: string, v: string) => {
+      if (vars[n] !== v) {
+        vars[n] = v;
+        st.style.setProperty(n, v);
+      }
+    };
+
+    const rand = (a: number, b: number) => a + Math.random() * (b - a);
     const size = () => {
       vw = st.clientWidth;
       vh = st.clientHeight;
-      dpr = Math.min(2, window.devicePixelRatio || 1);
-      canvas.width = Math.round(vw * dpr);
-      canvas.height = Math.round(vh * dpr);
+      dpr = Math.min(phone() ? 2 : 1.75, window.devicePixelRatio || 1);
+      for (const cvs of [canvas, skyCanvas]) {
+        cvs.width = Math.round(vw * dpr);
+        cvs.height = Math.round(vh * dpr);
+      }
       k = Math.max(vw / W, vh / H);
       ox = (vw - W * k) / 2;
       oy = (vh - H * k) / 2;
       path = PATH(phone());
+      // the cloud curtain: three bands of soft bumps, sized to the screen
+      curtain = [0, 1, 2].map((layer) => {
+        const out: { x: number; r: number; dy: number }[] = [];
+        let x = -60;
+        while (x < vw + 60) {
+          const r = rand(50, 120) * (phone() ? 0.6 : 1) * (1 + layer * 0.15);
+          out.push({ x, r, dy: rand(-20, 30) });
+          x += r * rand(0.9, 1.3);
+        }
+        return out;
+      });
+      camKey = '';
     };
     size();
 
     const layerShift = (d: number) => ({ x: -ptr.x * d * 22, y: -ptr.y * d * 12 });
-    const toScreen = (wx: number, wy: number, d: number) => {
+    const sx = (wx: number, d: number) => ox + k * ((wx - ptr.x * d * 22 - c.cx) * c.s + W / 2);
+    const sy = (wy: number, d: number) => oy + k * ((wy - ptr.y * d * 12 - c.cy) * c.s + H / 2);
+    const toWorld = (x: number, y: number, d: number) => {
       const sh = layerShift(d);
-      return { x: ox + k * ((wx + sh.x - c.cx) * c.s + W / 2), y: oy + k * ((wy + sh.y - c.cy) * c.s + H / 2) };
-    };
-    const toWorld = (sx: number, sy: number, d: number) => {
-      const sh = layerShift(d);
-      return { x: ((sx - ox) / k - W / 2) / c.s + c.cx - sh.x, y: ((sy - oy) / k - H / 2) / c.s + c.cy - sh.y };
+      return { x: ((x - ox) / k - W / 2) / c.s + c.cx - sh.x, y: ((y - oy) / k - H / 2) / c.s + c.cy - sh.y };
     };
 
+    /* ------------------------------ sprites ------------------------------ */
+    const mk = (w: number, h: number, draw: (g: CanvasRenderingContext2D) => void) => {
+      const cvs = document.createElement('canvas');
+      cvs.width = w;
+      cvs.height = h;
+      draw(cvs.getContext('2d')!);
+      return cvs;
+    };
+    const radial = (r: number, stops: [number, string][]) =>
+      mk(r * 2, r * 2, (g) => {
+        const grd = g.createRadialGradient(r, r, 0, r, r, r);
+        stops.forEach(([o, col]) => grd.addColorStop(o, col));
+        g.fillStyle = grd;
+        g.fillRect(0, 0, r * 2, r * 2);
+      });
+    const halo = radial(64, [[0, 'rgba(255,236,170,1)'], [0.18, 'rgba(255,196,96,0.7)'], [0.5, 'rgba(255,120,50,0.22)'], [1, 'rgba(255,80,40,0)']]);
+    const haloCool = radial(64, [[0, 'rgba(255,244,214,1)'], [0.2, 'rgba(255,206,120,0.55)'], [1, 'rgba(255,150,60,0)']]);
+    const flame = radial(32, [[0, 'rgba(255,255,245,1)'], [0.35, 'rgba(255,224,140,0.9)'], [1, 'rgba(255,150,60,0)']]);
+    const bokeh = radial(64, [[0, 'rgba(255,210,140,0.5)'], [0.7, 'rgba(255,170,100,0.4)'], [0.86, 'rgba(255,150,100,0.16)'], [1, 'rgba(255,140,90,0)']]);
+    const starDot = radial(16, [[0, 'rgba(255,255,255,1)'], [0.25, 'rgba(230,225,255,0.85)'], [1, 'rgba(200,190,255,0)']]);
+    const starBig = mk(64, 64, (g) => {
+      const grd = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+      grd.addColorStop(0, 'rgba(255,255,255,1)');
+      grd.addColorStop(0.12, 'rgba(235,230,255,0.9)');
+      grd.addColorStop(0.4, 'rgba(190,170,255,0.18)');
+      grd.addColorStop(1, 'rgba(160,140,255,0)');
+      g.fillStyle = grd;
+      g.fillRect(0, 0, 64, 64);
+      g.fillStyle = 'rgba(255,255,255,0.85)';
+      g.beginPath();
+      g.moveTo(32, 2);
+      g.lineTo(33.2, 30.8);
+      g.lineTo(62, 32);
+      g.lineTo(33.2, 33.2);
+      g.lineTo(32, 62);
+      g.lineTo(30.8, 33.2);
+      g.lineTo(2, 32);
+      g.lineTo(30.8, 30.8);
+      g.closePath();
+      g.fill();
+    });
+    const moonGlow = radial(128, [[0, 'rgba(255,250,235,0.55)'], [0.2, 'rgba(220,205,255,0.22)'], [0.55, 'rgba(170,140,255,0.08)'], [1, 'rgba(140,110,255,0)']]);
+    const fireGlow = radial(24, [[0, 'rgba(250,255,200,1)'], [0.2, 'rgba(220,255,140,0.8)'], [1, 'rgba(170,255,90,0)']]);
+    const mistSp = radial(64, [[0, 'rgba(214,200,255,0.55)'], [0.6, 'rgba(190,170,255,0.2)'], [1, 'rgba(170,150,255,0)']]);
+    const steamSp = radial(32, [[0, 'rgba(255,250,245,0.7)'], [0.6, 'rgba(255,240,235,0.25)'], [1, 'rgba(255,240,235,0)']]);
+    const pinkBloom = radial(128, [[0, 'rgba(255,120,190,0.55)'], [0.45, 'rgba(255,90,170,0.2)'], [1, 'rgba(255,60,150,0)']]);
+    const sparkle = mk(32, 32, (g) => {
+      const grd = g.createRadialGradient(16, 16, 0, 16, 16, 16);
+      grd.addColorStop(0, 'rgba(255,255,255,1)');
+      grd.addColorStop(0.3, 'rgba(255,200,230,0.5)');
+      grd.addColorStop(1, 'rgba(255,150,200,0)');
+      g.fillStyle = grd;
+      g.fillRect(0, 0, 32, 32);
+      g.fillStyle = '#fff';
+      g.fillRect(15.4, 2, 1.2, 28);
+      g.fillRect(2, 15.4, 28, 1.2);
+    });
+
+    // cherry petals: a rounded petal with a notch, shaded from a deep base to a pale tip,
+    // drawn sharp (mid ground) and soft (out of focus, close to the camera)
+    const PETAL_COLS: [string, string, string][] = [
+      ['#ff4f9c', '#ff9ccb', '#fff0f7'],
+      ['#ff6fae', '#ffb8da', '#ffffff'],
+      ['#e8388a', '#ff86bf', '#ffe2f0'],
+      ['#ff86b8', '#ffd0e6', '#ffffff'],
+    ];
+    const petalShape = (g: CanvasRenderingContext2D, s: number, cols: [string, string, string], back: boolean) => {
+      const grd = g.createLinearGradient(0, s, 0, -s);
+      grd.addColorStop(0, back ? cols[0] : cols[0]);
+      grd.addColorStop(0.45, back ? cols[0] : cols[1]);
+      grd.addColorStop(1, back ? cols[1] : cols[2]);
+      g.fillStyle = grd;
+      g.beginPath();
+      g.moveTo(0, s);
+      g.bezierCurveTo(-s * 1.05, s * 0.45, -s * 0.95, -s * 0.85, -s * 0.2, -s);
+      g.lineTo(0, -s * 0.7);
+      g.lineTo(s * 0.2, -s);
+      g.bezierCurveTo(s * 0.95, -s * 0.85, s * 1.05, s * 0.45, 0, s);
+      g.fill();
+      g.strokeStyle = back ? 'rgba(120,10,60,0.25)' : 'rgba(170,20,80,0.28)';
+      g.lineWidth = s * 0.05;
+      g.beginPath();
+      g.moveTo(0, s * 0.9);
+      g.quadraticCurveTo(s * 0.06, 0, 0, -s * 0.6);
+      g.stroke();
+    };
+    const PS = 48;
+    const petalSprites = PETAL_COLS.map((cols) =>
+      [false, true].map((back) => {
+        const sharp = mk(PS, PS, (g) => {
+          g.translate(PS / 2, PS / 2);
+          petalShape(g, PS * 0.42, cols, back);
+        });
+        // a soft copy: shrink, then let bilinear filtering blur it back up
+        const tiny = mk(10, 10, (g) => g.drawImage(sharp, 0, 0, 10, 10));
+        const soft = mk(PS, PS, (g) => {
+          g.imageSmoothingQuality = 'high';
+          g.drawImage(tiny, 0, 0, PS, PS);
+        });
+        return { sharp, soft };
+      }),
+    );
+
     /* ----------------------------- particles ----------------------------- */
-    const rand = (a: number, b: number) => a + Math.random() * (b - a);
     const lanterns: Lantern[] = [];
     const newLantern = (low: boolean): Lantern => ({
       x: low ? rand(560, 1060) : rand(-100, 1700),
-      y: low ? rand(540, 640) : rand(60, 600),
+      y: low ? rand(540, 640) : rand(40, 600),
       vy: rand(7, 14),
       ph: rand(0, Math.PI * 2),
-      size: rand(0.75, 1.2),
-      d: Math.random() < 0.18 ? rand(0.75, 1) : rand(0.15, 0.55),
-      glow: rand(0.75, 1),
+      size: rand(0.75, 1.25),
+      d: Math.random() < 0.16 ? rand(0.75, 1) : rand(0.15, 0.55),
+      glow: rand(0.8, 1),
       hot: 0,
       tilt: rand(-0.12, 0.12),
     });
-    const nLanterns = reduce ? 10 : phone() ? 12 : 22;
+    const nLanterns = reduce ? 10 : phone() ? 14 : 28;
     for (let i = 0; i < nLanterns; i++) lanterns.push(newLantern(i < 8));
     lanterns.sort((a, b) => a.d - b.d);
 
+    const stars: Star[] = Array.from({ length: phone() ? 160 : 280 }, () => {
+      const big = Math.random() < 0.07;
+      return { x: rand(-500, 2100), y: rand(-420, 560) * (Math.random() < 0.6 ? 0.7 : 1), r: big ? rand(10, 18) : rand(0.7, 1.9), ph: rand(0, 6.28), sp: rand(0.6, 2.6), big };
+    });
+    let shoot: { x: number; y: number; vx: number; vy: number; t: number } | null = null;
+    let nextShoot = 2;
+
     const petals: Petal[] = [];
-    const addPetal = (x: number, y: number, d: number, kick = 0) => {
-      if (petals.length > 260) return;
-      const [col, back] = PETALS[(Math.random() * PETALS.length) | 0];
+    const addPetal = (x: number, y: number, d: number, kick = 0, blur = false) => {
+      if (petals.length > 420) return;
       petals.push({
         x,
         y,
         vx: rand(6, 26) + kick * rand(-1, 0.4),
         vy: rand(4, 14) - kick * rand(0, 0.5),
         a: rand(0, 6.28),
-        b: rand(0, 6.28),
-        va: rand(1.5, 4.5) * (Math.random() < 0.5 ? -1 : 1),
-        vb: rand(1, 3.5),
+        va: rand(1.8, 4.8) * (Math.random() < 0.5 ? -1 : 1),
         rot: rand(0, 6.28),
-        size: rand(3.4, 5.6) * (d > 0.9 ? 1.9 : 1),
+        vr: rand(-1.4, 1.4),
+        size: rand(5, 8) * (blur ? rand(1.5, 2.3) : 1),
         d,
-        c: col,
-        back,
+        sp: (Math.random() * PETAL_COLS.length) | 0,
+        blur,
+        flat: 0,
+        life: 1,
       });
     };
     const gust = (n: number) => {
-      // near petals across the frame: the moment to moment wipe
       for (let i = 0; i < n; i++) {
-        const w = toWorld(rand(vw * 0.5, vw * 1.25), rand(-vh * 0.2, vh * 0.95), 1);
-        addPetal(w.x, w.y, 1, 0);
+        const w = toWorld(rand(vw * 0.6, vw * 1.2), rand(-vh * 0.1, vh * 0.9), 1.2);
+        addPetal(w.x, w.y, 1.2, 0, true);
         const pe = petals[petals.length - 1];
         if (pe) {
-          pe.vx = rand(-560, -280);
-          pe.vy = rand(20, 110);
+          pe.vx = rand(-620, -320);
+          pe.vy = rand(30, 130);
         }
       }
     };
 
-    // glints of light on the water, around the sun path and the floating lanterns
-    const glints: Glint[] = Array.from({ length: reduce ? 0 : 46 }, () => {
-      const nearSun = Math.random() < 0.6;
-      return { x: nearSun ? 905 + rand(-140, 140) : rand(560, 1300), y: rand(620, 780), w: rand(6, 26), ph: rand(0, 6.28), sp: rand(0.6, 1.8) };
+    // twinkles in the blossom canopy
+    const canopy = [
+      [150, 470, 92, 70],
+      [260, 405, 120, 86],
+      [395, 420, 118, 82],
+      [505, 480, 78, 58],
+      [95, 545, 70, 52],
+      [330, 500, 120, 70],
+      [215, 525, 95, 58],
+    ];
+    const twinkles = Array.from({ length: phone() ? 30 : 60 }, () => {
+      const [x, y, rx, ry] = canopy[(Math.random() * canopy.length) | 0];
+      const a = rand(0, 6.28);
+      const r = Math.sqrt(Math.random()) * 0.85;
+      return { x: x + Math.cos(a) * rx * r, y: y + Math.sin(a) * ry * r, ph: rand(0, 6.28), sp: rand(0.8, 2.2), s: rand(0.6, 1.2) };
     });
-    const motes: Mote[] = Array.from({ length: reduce ? 0 : phone() ? 16 : 34 }, () => ({ x: Math.random(), y: Math.random(), vx: rand(-0.004, 0.004), vy: rand(-0.012, -0.004), r: rand(0.8, 2.2), ph: rand(0, 6) }));
-    const rings: Ring[] = [];
 
-    // sprites, drawn once
-    const sprite = (r: number, stops: [number, string][]) => {
-      const cvs = document.createElement('canvas');
-      cvs.width = cvs.height = r * 2;
-      const g = cvs.getContext('2d')!;
-      const grd = g.createRadialGradient(r, r, 0, r, r, r);
-      stops.forEach(([o, col]) => grd.addColorStop(o, col));
-      g.fillStyle = grd;
-      g.fillRect(0, 0, r * 2, r * 2);
-      return cvs;
-    };
-    const halo = sprite(64, [
-      [0, 'rgba(255,226,160,0.9)'],
-      [0.25, 'rgba(255,184,102,0.42)'],
-      [1, 'rgba(255,128,70,0)'],
-    ]);
-    const flame = sprite(32, [
-      [0, 'rgba(255,255,240,1)'],
-      [0.35, 'rgba(255,220,130,0.85)'],
-      [1, 'rgba(255,150,60,0)'],
-    ]);
-    const bokeh = sprite(64, [
-      [0, 'rgba(255,214,140,0.55)'],
-      [0.6, 'rgba(255,190,110,0.35)'],
-      [0.85, 'rgba(255,170,100,0.12)'],
-      [1, 'rgba(255,150,90,0)'],
-    ]);
+    const flies: Fly[] = Array.from({ length: reduce ? 0 : phone() ? 18 : 34 }, (_, i) => ({
+      x: i < 24 ? rand(1060, 1660) : rand(80, 600),
+      y: i < 24 ? rand(640, 900) : rand(600, 820),
+      vx: rand(-8, 8),
+      vy: rand(-6, 6),
+      ph: rand(0, 6.28),
+      d: 0.68,
+    }));
+    const mists = Array.from({ length: 8 }, (_, i) => ({ x: rand(980, 1720), y: 628 + (i % 4) * 16 + rand(-6, 6), w: rand(260, 440), h: rand(30, 52), v: rand(5, 13), d: 0.6 }));
+    const puffs: Puff[] = [];
+    let puffT = 0;
+    const rings: Ring[] = [];
 
     /* ------------------------------ camera ------------------------------ */
     const applyCamera = (closeP: number) => {
-      camG.setAttribute('transform', `translate(${W / 2} ${H / 2}) scale(${c.s.toFixed(4)}) translate(${(-c.cx).toFixed(2)} ${(-c.cy).toFixed(2)})`);
-      const part = ease(clamp((closeP - 0.05) / 0.75));
-      for (const { g, d } of layers) {
-        const sh = layerShift(d);
-        g.setAttribute('transform', `translate(${sh.x.toFixed(2)} ${sh.y.toFixed(2)})`);
+      const key = `${c.cx.toFixed(2)}|${c.cy.toFixed(2)}|${c.s.toFixed(4)}`;
+      if (key !== camKey) {
+        camKey = key;
+        camG.setAttribute('transform', `translate(${W / 2} ${H / 2}) scale(${c.s.toFixed(4)}) translate(${(-c.cx).toFixed(2)} ${(-c.cy).toFixed(2)})`);
       }
-      bankL?.setAttribute('transform', `translate(${(-part * 760).toFixed(1)} ${(part * 60).toFixed(1)})`);
-      bankR?.setAttribute('transform', `translate(${(part * 760).toFixed(1)} ${(part * 60).toFixed(1)})`);
+      const part = ease(clamp((closeP - 0.05) / 0.75));
+      for (const L of layers) {
+        const sh = layerShift(L.d);
+        const t = `translate(${sh.x.toFixed(1)} ${sh.y.toFixed(1)})`;
+        if (t !== L.last) {
+          L.last = t;
+          L.g.setAttribute('transform', t);
+        }
+      }
+      const pt = part.toFixed(3);
+      if (vars._part !== pt) {
+        vars._part = pt;
+        bankL?.setAttribute('transform', `translate(${(-part * 760).toFixed(1)} ${(part * 60).toFixed(1)})`);
+        bankR?.setAttribute('transform', `translate(${(part * 760).toFixed(1)} ${(part * 60).toFixed(1)})`);
+        if (fore) fore.style.opacity = String(1 - part * 0.9);
+      }
       if (fore) {
         const sh = layerShift(1);
-        fore.setAttribute('transform', `translate(${sh.x.toFixed(2)} ${(sh.y + part * 260).toFixed(2)})`);
-        fore.style.opacity = String(1 - part * 0.9);
+        const t = `translate(${sh.x.toFixed(1)} ${(sh.y + part * 260).toFixed(1)})`;
+        if (fore.getAttribute('transform') !== t) fore.setAttribute('transform', t);
       }
       const words = smooth(clamp((Ps - 0.6) / 0.09));
-      st.style.setProperty('--dim', c.dim.toFixed(3));
-      st.style.setProperty('--words', words.toFixed(3));
-      st.style.setProperty('--start', (1 - smooth(clamp(Ps / 0.05))).toFixed(3));
-      st.style.setProperty('--close', closeP.toFixed(4));
-      st.style.setProperty('--mist', ease(clamp((closeP - 0.5) / 0.45)).toFixed(4));
+      setVar('--words', words.toFixed(3));
+      setVar('--start', (1 - smooth(clamp(Ps / 0.05))).toFixed(3));
+      setVar('--close', closeP.toFixed(3));
       const rv = words > 0.5 && closeP < 0.2;
       if (rv !== wasRevealed) {
         wasRevealed = rv;
@@ -270,32 +468,201 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
     };
 
     /* ------------------------------ drawing ------------------------------ */
-    const drawLantern = (L: Lantern, x: number, y: number, s: number, g: number, now: number) => {
-      // near lanterns are out of focus: a soft bokeh disc instead of a sharp lantern
+    const drawSky = (pink: number, starVis: number, dt: number) => {
+      sky.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const top = sy(-260, 0.02);
+      const hor = sy(612, 0.02);
+      const g = sky.createLinearGradient(0, top, 0, hor);
+      for (let i = 0; i < SKY_STOPS.length; i++) {
+        const a = NIGHT_RGB[i];
+        const b = PINK_RGB[i];
+        g.addColorStop(SKY_STOPS[i], `rgb(${Math.round(a[0] + (b[0] - a[0]) * pink)},${Math.round(a[1] + (b[1] - a[1]) * pink)},${Math.round(a[2] + (b[2] - a[2]) * pink)})`);
+      }
+      sky.fillStyle = g;
+      sky.fillRect(0, 0, vw, vh);
+
+      // the moon, high above the lake
+      const mx = sx(1215, 0.04);
+      const my = sy(150, 0.04);
+      const mr = 26 * k * Math.sqrt(c.s);
+      sky.globalCompositeOperation = 'lighter';
+      sky.globalAlpha = 0.9 - pink * 0.35;
+      sky.drawImage(moonGlow, mx - mr * 7, my - mr * 7, mr * 14, mr * 14);
+      sky.globalAlpha = 1;
+      sky.globalCompositeOperation = 'source-over';
+      const md = sky.createRadialGradient(mx - mr * 0.3, my - mr * 0.3, mr * 0.1, mx, my, mr);
+      md.addColorStop(0, '#ffffff');
+      md.addColorStop(0.7, '#fbf4ff');
+      md.addColorStop(1, '#e2d6ff');
+      sky.fillStyle = md;
+      sky.beginPath();
+      sky.arc(mx, my, mr, 0, Math.PI * 2);
+      sky.fill();
+      sky.fillStyle = 'rgba(150,130,200,0.16)';
+      for (const [dx, dy, r] of [
+        [0.3, -0.2, 0.22],
+        [-0.25, 0.3, 0.16],
+        [0.1, 0.42, 0.1],
+      ]) {
+        sky.beginPath();
+        sky.arc(mx + dx * mr, my + dy * mr, r * mr, 0, Math.PI * 2);
+        sky.fill();
+      }
+
+      // stars: brightest in the black sky, fading as it turns pink
+      if (starVis > 0.02) {
+        sky.globalCompositeOperation = 'lighter';
+        const grow = Math.sqrt(c.s);
+        for (const s of stars) {
+          const x = sx(s.x, 0.03);
+          const y = sy(s.y, 0.03);
+          if (x < -20 || x > vw + 20 || y < -20 || y > hor) continue;
+          const tw = reduce ? 0.8 : 0.55 + 0.45 * Math.sin(T * s.sp + s.ph);
+          const fade = clamp((hor - y) / (vh * 0.25));
+          sky.globalAlpha = starVis * tw * fade;
+          if (s.big) {
+            const r = s.r * (0.8 + tw * 0.4) * grow;
+            sky.drawImage(starBig, x - r, y - r, r * 2, r * 2);
+          } else {
+            const r = s.r * 2.6 * grow;
+            sky.drawImage(starDot, x - r, y - r, r * 2, r * 2);
+          }
+        }
+        // a shooting star now and then
+        if (!reduce) {
+          nextShoot -= dt;
+          if (!shoot && nextShoot < 0 && starVis > 0.5) {
+            shoot = { x: rand(vw * 0.1, vw * 0.9), y: rand(0, vh * 0.25), vx: rand(-900, -500), vy: rand(260, 420), t: 0 };
+            nextShoot = rand(4, 9);
+          }
+          if (shoot) {
+            shoot.t += dt;
+            shoot.x += shoot.vx * dt;
+            shoot.y += shoot.vy * dt;
+            const a = Math.sin(clamp(shoot.t / 0.9) * Math.PI) * starVis;
+            const tl = sky.createLinearGradient(shoot.x, shoot.y, shoot.x - shoot.vx * 0.22, shoot.y - shoot.vy * 0.22);
+            tl.addColorStop(0, `rgba(255,255,255,${a.toFixed(3)})`);
+            tl.addColorStop(1, 'rgba(200,180,255,0)');
+            sky.globalAlpha = 1;
+            sky.strokeStyle = tl;
+            sky.lineWidth = 2;
+            sky.beginPath();
+            sky.moveTo(shoot.x, shoot.y);
+            sky.lineTo(shoot.x - shoot.vx * 0.22, shoot.y - shoot.vy * 0.22);
+            sky.stroke();
+            if (shoot.t > 0.9) shoot = null;
+          }
+        }
+        sky.globalAlpha = 1;
+        sky.globalCompositeOperation = 'source-over';
+      }
+    };
+
+    const waterPath = () => {
+      ctx.beginPath();
+      WATER.forEach(([x, y], i) => (i ? ctx.lineTo(sx(x, 0.42), sy(y, 0.42)) : ctx.moveTo(sx(x, 0.42), sy(y, 0.42))));
+      ctx.closePath();
+    };
+
+    const drawWater = (pink: number) => {
+      ctx.save();
+      waterPath();
+      ctx.clip();
+      const sc = k * c.s;
+      // moving wave lines, denser and brighter near the horizon
+      const rows = 34;
+      for (let r = 0; r < rows; r++) {
+        const f = r / rows;
+        const wy = 614 + Math.pow(f, 1.5) * 330;
+        const y = sy(wy, 0.42);
+        if (y < -10 || y > vh + 10) continue;
+        const speed = 10 + r * 1.6;
+        const segLen = (24 + f * 70) * sc;
+        const gap = 150 + (r % 3) * 37;
+        const a = (0.1 + (1 - f) * 0.22) * (reduce ? 0.7 : 1);
+        ctx.strokeStyle = `rgba(${Math.round(190 + pink * 60)},${Math.round(170 - pink * 40)},255,${a.toFixed(3)})`;
+        ctx.lineWidth = Math.max(0.7, (0.8 + f * 1.4) * sc * 0.55);
+        ctx.beginPath();
+        const off = ((r * 97 + T * speed * (r % 2 ? 1 : -0.6)) % gap + gap) % gap;
+        for (let wx = -60 - gap + off; wx < 1700; wx += gap) {
+          const yy = y + Math.sin(T * 1.6 + wx * 0.02 + r) * 1.4 * sc;
+          const x0 = sx(wx, 0.42);
+          if (x0 > vw || x0 + segLen < 0) continue;
+          ctx.moveTo(x0, yy);
+          ctx.quadraticCurveTo(x0 + segLen / 2, yy - 1.6 * sc, x0 + segLen, yy);
+        }
+        ctx.stroke();
+      }
+      // reflections: broken, shimmering columns of light under every lamp and the moon
+      ctx.globalCompositeOperation = 'lighter';
+      const col = (x: number, y0: number, len: number, d: number, w0: number, rgb: string, amp: number, seed: number) => {
+        const n = Math.max(6, Math.round(len / 7));
+        ctx.lineWidth = Math.max(1, 2.2 * sc * 0.6);
+        for (let j = 0; j < n; j++) {
+          const f = j / n;
+          const wy = y0 + f * len;
+          const wob = Math.sin(T * 2.4 + j * 0.9 + seed) * (2 + f * 6);
+          const w = (w0 + f * w0 * 1.6) * (0.55 + 0.45 * Math.sin(T * 3.1 + j * 1.7 + seed * 3));
+          const a = (1 - f) * amp * (0.6 + 0.4 * Math.sin(T * 4 + j + seed));
+          if (a < 0.02) continue;
+          ctx.strokeStyle = `rgba(${rgb},${a.toFixed(3)})`;
+          ctx.beginPath();
+          const xx = sx(x + wob, d);
+          const yy = sy(wy, d);
+          ctx.moveTo(xx - (w * sc) / 2, yy);
+          ctx.lineTo(xx + (w * sc) / 2, yy);
+          ctx.stroke();
+        }
+      };
+      col(1215, 618, 230, 0.42, 22, '225,215,255', 0.5 * (1 - pink * 0.5), 1.3);
+      LIGHTS.forEach((L, i) => col(L.x, L.ry, L.rl, L.d === 1 ? 1 : 0.42, 7 * L.r + 3, L.c ? '255,200,110' : '255,120,60', L.c ? 0.55 : 0.75, i * 2.1));
+      // ripples
+      for (let i = rings.length - 1; i >= 0; i--) {
+        const g = rings[i];
+        g.t += 0.016;
+        if (g.t > 1.8) {
+          rings.splice(i, 1);
+          continue;
+        }
+        for (let j = 0; j < 2; j++) {
+          const tt = g.t - j * 0.25;
+          if (tt <= 0) continue;
+          const rad = (8 + tt * 55) * sc * g.s;
+          ctx.strokeStyle = `rgba(230,210,255,${((1 - tt / 1.8) * 0.6).toFixed(3)})`;
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.ellipse(sx(g.x, 0.42), sy(g.y, 0.42), rad, rad * 0.18, 0, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      }
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.restore();
+    };
+
+    const drawLantern = (L: Lantern, x: number, y: number, s: number, g: number, al = 1) => {
       if (L.d > 0.7) {
-        const r = 34 * s;
-        ctx.globalAlpha = 0.6 + Math.min(1, g) * 0.3;
+        const r = 36 * s;
+        ctx.globalAlpha = (0.55 + Math.min(1, g) * 0.35) * al;
         ctx.drawImage(bokeh, x - r, y - r, r * 2, r * 2);
         ctx.globalAlpha = 1;
         return;
       }
-      const hw = 90 * s * (0.75 + g * 0.55);
+      const hw = 90 * s * (0.75 + g * 0.5);
       ctx.globalCompositeOperation = 'lighter';
-      ctx.globalAlpha = Math.min(1, 0.35 + g * 0.35);
+      ctx.globalAlpha = Math.min(1, 0.38 + g * 0.32) * al;
       ctx.drawImage(halo, x - hw / 2, y - hw / 2, hw, hw);
       ctx.globalCompositeOperation = 'source-over';
-      ctx.globalAlpha = 1;
+      ctx.globalAlpha = al;
       const w = 8 * s;
       const h = 11 * s;
       ctx.save();
       ctx.translate(x, y);
       ctx.rotate(L.tilt + Math.sin(L.ph * 0.7) * 0.05);
-      // paper body, lit from the flame inside
       const grd = ctx.createLinearGradient(0, -h / 2, 0, h / 2);
-      grd.addColorStop(0, '#d9733c');
-      grd.addColorStop(0.45, '#ffb862');
-      grd.addColorStop(0.85, '#ffe6a6');
-      grd.addColorStop(1, '#fff6d8');
+      grd.addColorStop(0, '#e2401c');
+      grd.addColorStop(0.4, '#ff9a2e');
+      grd.addColorStop(0.82, '#ffe08a');
+      grd.addColorStop(1, '#fffbe6');
       ctx.fillStyle = grd;
       ctx.beginPath();
       ctx.moveTo(-w * 0.5, -h / 2);
@@ -305,8 +672,7 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
       ctx.quadraticCurveTo(-w * 0.82, 0, -w * 0.5, -h / 2);
       ctx.closePath();
       ctx.fill();
-      // paper ribs
-      ctx.strokeStyle = 'rgba(150,64,34,0.28)';
+      ctx.strokeStyle = 'rgba(140,40,20,0.3)';
       ctx.lineWidth = Math.max(0.5, s * 0.45);
       ctx.beginPath();
       ctx.moveTo(-w * 0.18, -h * 0.52);
@@ -314,62 +680,88 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
       ctx.moveTo(w * 0.18, -h * 0.52);
       ctx.lineTo(w * 0.22, h * 0.5);
       ctx.stroke();
-      // the flame, flickering
-      const fl = 0.75 + Math.sin(now / 90 + L.ph * 5) * 0.12 + Math.sin(now / 37 + L.ph) * 0.08;
-      const fr = 7 * s * fl;
+      const fl = 0.78 + Math.sin(T * 11 + L.ph * 5) * 0.12 + Math.sin(T * 27 + L.ph) * 0.08;
+      const fr = 7.5 * s * fl;
       ctx.globalCompositeOperation = 'lighter';
       ctx.drawImage(flame, -fr, h * 0.32 - fr, fr * 2, fr * 2);
       ctx.restore();
       ctx.globalCompositeOperation = 'source-over';
+      ctx.globalAlpha = 1;
     };
 
     const drawPetal = (pe: Petal, x: number, y: number, s: number) => {
-      // a cherry petal: rounded with a notch, tumbling on two axes
-      const ca = Math.cos(pe.a);
-      const cb = Math.cos(pe.b);
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.rotate(pe.rot);
-      ctx.scale(Math.max(0.12, Math.abs(ca)), Math.max(0.2, Math.abs(cb)));
-      ctx.fillStyle = ca * cb > 0 ? pe.c : pe.back;
-      ctx.globalAlpha = pe.d > 0.9 ? 0.85 : 0.95;
-      ctx.beginPath();
-      ctx.moveTo(0, s);
-      ctx.bezierCurveTo(-s * 1.1, s * 0.4, -s * 0.9, -s * 0.9, -s * 0.18, -s);
-      ctx.lineTo(0, -s * 0.72);
-      ctx.lineTo(s * 0.18, -s);
-      ctx.bezierCurveTo(s * 0.9, -s * 0.9, s * 1.1, s * 0.4, 0, s);
-      ctx.fill();
-      ctx.restore();
-      ctx.globalAlpha = 1;
+      const flip = Math.cos(pe.a);
+      const set = petalSprites[pe.sp][flip < 0 ? 1 : 0];
+      const img = pe.blur ? set.soft : set.sharp;
+      const sxl = Math.max(0.14, Math.abs(flip));
+      const syl = pe.flat ? 0.38 : 0.75 + 0.25 * Math.abs(Math.sin(pe.a * 0.7));
+      const cs = Math.cos(pe.rot);
+      const sn = Math.sin(pe.rot);
+      const z = (s * 2.2) / PS;
+      ctx.setTransform(dpr * cs * sxl * z, dpr * sn * sxl * z, -dpr * sn * syl * z, dpr * cs * syl * z, dpr * x, dpr * y);
+      ctx.globalAlpha = pe.life * (pe.blur ? 0.62 : 1);
+      ctx.drawImage(img, -PS / 2, -PS / 2);
+    };
+
+    const drawCurtain = (closeP: number) => {
+      if (closeP <= 0.2) return;
+      const cols = ['#3a0f52', '#d2509c', '#fff8ef'];
+      const alphas = [0.78, 0.92, 1];
+      const starts = [0.2, 0.32, 0.44];
+      for (let l = 0; l < 3; l++) {
+        const e = ease(clamp((closeP - starts[l]) / 0.32));
+        if (e <= 0) continue;
+        const top = vh + 140 - e * (vh + 260);
+        ctx.globalAlpha = alphas[l];
+        ctx.fillStyle = cols[l];
+        ctx.beginPath();
+        ctx.rect(0, top + 40, vw, vh - top + 80);
+        for (const b of curtain[l]) {
+          const yy = top + b.dy + Math.sin(T * 0.6 + b.x * 0.01 + l) * 6;
+          ctx.moveTo(b.x + b.r, yy);
+          ctx.arc(b.x, yy, b.r, 0, Math.PI * 2);
+        }
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        if (l === 1) {
+          // the rose clouds catch the lantern light on their tops
+          ctx.globalCompositeOperation = 'lighter';
+          ctx.globalAlpha = 0.25;
+          ctx.drawImage(pinkBloom, -vw * 0.2, top - 160, vw * 1.4, 320);
+          ctx.globalAlpha = 1;
+          ctx.globalCompositeOperation = 'source-over';
+        }
+      }
     };
 
     const frame = (now: number) => {
       raf = 0;
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
+      if (!reduce) T += dt;
       const ph = phone();
 
-      // scroll progress
+      // scroll progress, eased with a frame-rate independent spring
       const r = el.getBoundingClientRect();
       const run = Math.max(1, el.offsetHeight - st.offsetHeight);
-      P = clamp(-r.top / run);
-      Ps += (P - Ps) * (reduce ? 1 : Math.min(1, dt * 7));
+      const P = clamp(-r.top / run);
+      if (Ps < 0 || reduce) Ps = P;
+      else Ps += (P - Ps) * (1 - Math.exp(-dt * 7));
       const speed = Math.abs(P - lastP) / Math.max(dt, 0.001);
       lastP = P;
       const closeP = clamp((Ps - CLOSE_AT) / (1 - CLOSE_AT));
+      const blossom = bump(Ps, 0.12, 0.2, 0.33, 0.42);
+      const pink = Math.max(blossom, 0.38 * bump(Ps, 0.56, 0.66, 0.82, 0.95));
+      const starVis = 1 - pink * 0.75;
 
       // petal gusts carry the camera between moments; stronger when you scroll faster
       const inTransit = (Ps > 0.11 && Ps < 0.23) || (Ps > 0.33 && Ps < 0.45);
-      if (inTransit && !reduce && speed > 0.01) {
-        const n = Math.min(10, speed * 60 * dt * 60);
-        if (Math.random() < n / 10) gust(Math.ceil(n / 3));
-      }
+      if (inTransit && !reduce && speed > 0.01 && Math.random() < Math.min(1, speed * 3)) gust(ph ? 2 : 4);
 
-      ptr.x += (ptr.tx - ptr.x) * Math.min(1, dt * 4);
-      ptr.y += (ptr.ty - ptr.y) * Math.min(1, dt * 4);
+      ptr.x += (ptr.tx - ptr.x) * (1 - Math.exp(-dt * 4));
+      ptr.y += (ptr.ty - ptr.y) * (1 - Math.exp(-dt * 4));
 
-      // camera: the scroll path, then (settled) a slow drift on phones, then the closing walk
+      // camera straight from the eased scroll: no second lag, no jitter
       const shot = cameraAt(Ps, path);
       let tcx = shot.cx;
       let tcy = shot.cy;
@@ -377,56 +769,106 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
       if (Ps >= 0.68 && ph) {
         if (!reduce) drift += dt * 0.12;
         const span = Math.max(0, (W - vw / k) / 2 - 30);
-        tcx = 800 + Math.sin(drift) * span * 0.7 * (1 - closeP);
-        tcy = 470;
+        tcx = 800 + Math.sin(drift) * span * 0.7 * (1 - closeP) * smooth(clamp((Ps - 0.68) / 0.06));
+        tcy = 450 + 20 * smooth(clamp((Ps - 0.68) / 0.06));
       }
       const q = ease(clamp(closeP / 0.9));
-      tcx += (800 - tcx) * q;
-      tcy += (700 - tcy) * q;
-      ts *= 1 + q * (ph ? 0.9 : 1.5);
-      const kk = reduce ? 1 : Math.min(1, dt * 6);
-      c.cx += (tcx - c.cx) * kk;
-      c.cy += (tcy - c.cy) * kk;
-      c.s += (ts - c.s) * kk;
-      c.dim += (shot.dim - c.dim) * kk;
+      c.cx = tcx + (800 - tcx) * q;
+      c.cy = tcy + (640 - tcy) * q;
+      c.s = ts * (1 + q * (ph ? 0.9 : 1.5));
       applyCamera(closeP);
 
-      // ---- canvas ----
+      drawSky(pink, starVis, dt);
+
+      // ---- the light canvas ----
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, vw, vh);
+      const sc = k * c.s;
 
-      // glints on the water
+      drawWater(pink);
+
+      // mist drifting over the alpine lake
+      for (const m of mists) {
+        if (!reduce) m.x += m.v * dt;
+        if (m.x > 1800) m.x = 940;
+        const x = sx(m.x, m.d);
+        const y = sy(m.y, m.d);
+        const w = m.w * sc;
+        const h = m.h * sc;
+        if (x + w / 2 < 0 || x - w / 2 > vw) continue;
+        ctx.globalAlpha = 0.32 * clamp(Math.min(m.x - 940, 1800 - m.x) / 160);
+        ctx.drawImage(mistSp, x - w / 2, y - h / 2, w, h);
+      }
+      ctx.globalAlpha = 1;
+
+      // warm halos round every lamp and window, flickering
       ctx.globalCompositeOperation = 'lighter';
-      for (const g of glints) {
-        g.ph += dt * g.sp;
-        g.x += dt * 6;
-        if (g.x > 1320) g.x = 560;
-        const a = Math.max(0, Math.sin(g.ph)) * 0.55;
-        if (a < 0.02) continue;
-        const sp = toScreen(g.x, g.y, 0.42);
-        const w = g.w * k * c.s * (0.6 + Math.sin(g.ph * 0.5) * 0.4);
-        ctx.strokeStyle = `rgba(255,236,196,${a.toFixed(3)})`;
-        ctx.lineWidth = Math.max(0.8, 1.2 * k * c.s * 0.6);
+      LIGHTS.forEach((L, i) => {
+        const fl = reduce ? 0.9 : 0.78 + Math.sin(T * 7 + i * 1.7) * 0.1 + Math.sin(T * 17 + i) * 0.06;
+        const hw = (L.c ? 80 : 96) * L.r * sc * fl * (spotHot('bridge') && L.d === 0.42 ? 1.45 : 1);
+        ctx.globalAlpha = 0.62;
+        ctx.drawImage(L.c ? haloCool : halo, sx(L.x, L.d) - hw / 2, sy(L.y, L.d) - hw / 2, hw, hw);
+      });
+      // the blossom glows from within, and sparkles
+      const bx = sx(300, 0.68);
+      const by = sy(470, 0.68);
+      ctx.globalAlpha = 0.22 + blossom * 0.22 + (spotHot('blossom') ? 0.15 : 0);
+      ctx.drawImage(pinkBloom, bx - 420 * sc, by - 260 * sc, 840 * sc, 520 * sc);
+      for (const t of twinkles) {
+        const a = Math.pow(Math.max(0, Math.sin(T * t.sp + t.ph)), 6);
+        if (a < 0.05) continue;
+        const s = 9 * t.s * Math.sqrt(sc);
+        ctx.globalAlpha = a;
+        ctx.drawImage(sparkle, sx(t.x, 0.68) - s, sy(t.y, 0.68) - s, s * 2, s * 2);
+      }
+      // the waterfall
+      for (let i = 0; i < 6; i++) {
+        const f = (T * 0.9 + i / 6) % 1;
+        ctx.globalAlpha = 0.8 * Math.sin(f * Math.PI);
+        ctx.strokeStyle = '#f4f0ff';
+        ctx.lineWidth = Math.max(1, 2.4 * sc * 0.5);
         ctx.beginPath();
-        ctx.moveTo(sp.x - w / 2, sp.y);
-        ctx.lineTo(sp.x + w / 2, sp.y);
+        ctx.moveTo(sx(1588 + f * 3, 0.25), sy(520 + f * 92, 0.25));
+        ctx.lineTo(sx(1588 + f * 3.5, 0.25), sy(532 + f * 92, 0.25));
         ctx.stroke();
       }
+      // fireflies over the meadow and under the tree
+      for (const f of flies) {
+        f.vx += rand(-20, 20) * dt;
+        f.vy += rand(-20, 20) * dt;
+        f.vx *= 0.98;
+        f.vy *= 0.98;
+        f.x += f.vx * dt;
+        f.y += f.vy * dt;
+        if (f.x < 1040 && f.x > 620) f.vx += 30 * dt * (f.x > 830 ? 1 : -1);
+        f.y = clamp(f.y, 600, 920);
+        const a = Math.pow(Math.max(0, Math.sin(T * 1.3 + f.ph)), 3);
+        if (a < 0.03) continue;
+        const s = 10 * Math.sqrt(sc);
+        ctx.globalAlpha = a * (spotHot('jetty') ? 1 : 0.85);
+        ctx.drawImage(fireGlow, sx(f.x, f.d) - s, sy(f.y, f.d) - s, s * 2, s * 2);
+      }
+      ctx.globalAlpha = 1;
       ctx.globalCompositeOperation = 'source-over';
 
-      // motes
-      for (const m of motes) {
-        m.x += m.vx * dt;
-        m.y += m.vy * dt;
-        if (m.y < -0.05) {
-          m.y = 1.05;
-          m.x = Math.random();
+      // steam from the teapot and the cup on the jetty
+      if (!reduce) {
+        puffT -= dt;
+        if (puffT < 0) {
+          puffT = 0.14;
+          puffs.push({ x: 284 + rand(-3, 3), y: 750, t: 0, d: 0.68, s: 1 }, { x: 1194 + rand(-2, 2), y: 744, t: 0, d: 0.68, s: 0.6 });
         }
-        ctx.globalAlpha = clamp(0.35 + Math.sin(now / 700 + m.ph) * 0.3);
-        ctx.fillStyle = '#fff1c4';
-        ctx.beginPath();
-        ctx.arc(m.x * vw, m.y * vh, m.r, 0, Math.PI * 2);
-        ctx.fill();
+      }
+      for (let i = puffs.length - 1; i >= 0; i--) {
+        const p = puffs[i];
+        p.t += dt;
+        if (p.t > 2.6) {
+          puffs.splice(i, 1);
+          continue;
+        }
+        const rr = (4 + p.t * 9) * p.s * sc;
+        ctx.globalAlpha = 0.5 * Math.sin((p.t / 2.6) * Math.PI) * (spotHot('tea') ? 1.4 : 1);
+        ctx.drawImage(steamSp, sx(p.x + Math.sin(p.t * 2.4 + i) * 4 * p.s, p.d) - rr, sy(p.y - p.t * 22 * p.s, p.d) - rr, rr * 2, rr * 2);
       }
       ctx.globalAlpha = 1;
 
@@ -438,66 +880,94 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
           L.ph += dt * 0.8;
           L.x += Math.sin(L.ph * 0.6) * dt * 4;
         }
-        const sp = toScreen(L.x + Math.sin(L.ph) * 8, L.y, L.d);
+        const x = sx(L.x + Math.sin(L.ph) * 8, L.d);
+        const y = sy(L.y, L.d);
         if (ptr.over && ptr.sx >= 0) {
-          const dd = Math.hypot(sp.x - ptr.sx, sp.y - ptr.sy);
-          const near = dd < 80 ? 1 - dd / 80 : 0;
+          const dd = Math.hypot(x - ptr.sx, y - ptr.sy);
+          const near = dd < 90 ? 1 - dd / 90 : 0;
           L.hot += (near - L.hot) * Math.min(1, dt * 6);
-          if (near > 0) L.x += ((sp.x - ptr.sx) / (dd || 1)) * near * dt * 30;
+          if (near > 0) L.x += ((x - ptr.sx) / (dd || 1)) * near * dt * 30;
         } else L.hot *= 0.95;
-        if (sp.y < -120) {
+        if (y < -120) {
           Object.assign(L, newLantern(true), { d: L.d });
           continue;
         }
-        const scale = L.size * k * c.s * (0.45 + L.d * 0.9);
-        drawLantern(L, sp.x, sp.y, scale, clamp(L.glow + L.hot * 0.8, 0, 1.7), now);
+        drawLantern(L, x, y, L.size * sc * (0.45 + L.d * 0.9), clamp(L.glow + L.hot * 0.8, 0, 1.7));
       }
 
-      // petals: ambient from the canopy, with wind gusts and flutter
-      if (!reduce && Math.random() < dt * (ph ? 4 : 7) * (1 - closeP)) addPetal(rand(70, 560), rand(380, 560), 0.68);
-      const wind = 16 + Math.sin(now / 2300) * 10 + Math.max(0, Math.sin(now / 5100)) * 26;
+      // petals: from the canopy, in depth (back, mid, out-of-focus front), on a swirling wind
+      if (!reduce) {
+        const rate = ((ph ? 5 : 9) + blossom * (ph ? 22 : 40)) * (1 - closeP);
+        let n = rate * dt;
+        while (n > 0) {
+          if (Math.random() < n) {
+            const dd = Math.random();
+            addPetal(rand(60, 570), rand(360, 580), dd < 0.25 ? 0.55 : dd < 0.85 ? 0.68 : 0.82);
+          }
+          n -= 1;
+        }
+        if (Math.random() < dt * (0.6 + blossom * 5) * (1 - closeP)) {
+          const w = toWorld(rand(-vw * 0.1, vw * 0.7), rand(-vh * 0.2, vh * 0.3), 1.25);
+          addPetal(w.x, w.y, 1.25, 0, true);
+        }
+      }
+      const wind = 18 + Math.sin(T / 2.3) * 12 + Math.max(0, Math.sin(T / 5.1)) * 34;
       for (let i = petals.length - 1; i >= 0; i--) {
         const pe = petals[i];
-        const target = pe.d > 0.9 && pe.vx < -100 ? pe.vx : wind;
-        pe.vx += (target - pe.vx) * Math.min(1, dt * 0.9);
-        // flutter: a falling petal sways and catches the air
-        pe.vy += (14 + Math.sin(pe.a * 2) * 10 - pe.vy) * Math.min(1, dt * 1.2);
-        pe.x += pe.vx * dt + Math.cos(pe.b) * dt * 8;
-        pe.y += pe.vy * dt;
-        pe.a += pe.va * dt;
-        pe.b += pe.vb * dt;
-        pe.rot += pe.va * 0.2 * dt;
-        const sp = toScreen(pe.x, pe.y, pe.d);
-        if (sp.y > vh + 40 || sp.x < -80 || sp.x > vw + 80 || pe.y > 940) {
+        if (pe.flat) {
+          // floating on the water, drifting downstream and fading
+          pe.flat += dt;
+          pe.x += 7 * dt;
+          pe.y += Math.sin(T * 1.4 + i) * 0.4 * dt;
+          pe.life = clamp(1 - (pe.flat - 6) / 3);
+          if (pe.life <= 0) {
+            petals.splice(i, 1);
+            continue;
+          }
+        } else if (!reduce) {
+          const target = pe.vx < -150 ? pe.vx : wind + Math.sin(pe.y * 0.02 + T * 1.1) * 26;
+          pe.vx += (target - pe.vx) * Math.min(1, dt * 0.9);
+          pe.vy += (16 + Math.sin(pe.a * 2) * 12 + Math.cos(pe.x * 0.015 + T) * 6 - pe.vy) * Math.min(1, dt * 1.2);
+          pe.x += pe.vx * dt;
+          pe.y += pe.vy * dt;
+          pe.a += pe.va * dt;
+          pe.rot += pe.vr * dt;
+          // land on the water, or settle on the grass
+          if (pe.d < 0.9 && pe.y > 690 && pe.x > 650 && pe.x < 1030 && pe.y < 770) {
+            pe.flat = 0.001;
+            pe.a = 0;
+            if (rings.length < 12 && Math.random() < 0.35) rings.push({ x: pe.x, y: pe.y, t: 0, s: 0.35 });
+          } else if (pe.d < 0.9 && pe.y > 700 && pe.x < 600) pe.life -= dt * 1.5;
+        }
+        const x = sx(pe.x, pe.d);
+        const y = sy(pe.y, pe.d);
+        if (pe.life <= 0 || y > vh + 80 || x < -120 || x > vw + 160 || pe.y > 960) {
           petals.splice(i, 1);
           continue;
         }
-        drawPetal(pe, sp.x, sp.y, pe.size * k * c.s * 0.9);
+        drawPetal(pe, x, y, pe.size * sc);
       }
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.globalAlpha = 1;
 
-      // water rings
-      for (let i = rings.length - 1; i >= 0; i--) {
-        const g = rings[i];
-        g.t += dt;
-        if (g.t > 1.8) {
-          rings.splice(i, 1);
-          continue;
+      drawCurtain(closeP);
+      // a few lanterns keep rising over the clouds and lead the eye into the next section
+      if (closeP > 0.5) {
+        const a = smooth(clamp((closeP - 0.5) / 0.3));
+        for (const L of lanterns) {
+          if (L.d < 0.35 || L.d > 0.7) continue;
+          const x = sx(L.x + Math.sin(L.ph) * 8, L.d);
+          const y = sy(L.y, L.d);
+          if (y < -40 || y > vh + 40) continue;
+          drawLantern(L, x, y, L.size * sc * (0.45 + L.d * 0.9) * 0.8, 1, a);
         }
-        const sp = toScreen(g.x, g.y, 0.42);
-        for (let j = 0; j < 2; j++) {
-          const tt = g.t - j * 0.25;
-          if (tt <= 0) continue;
-          const rad = (8 + tt * 55) * k * c.s;
-          ctx.strokeStyle = `rgba(255,236,210,${((1 - tt / 1.8) * 0.65).toFixed(3)})`;
-          ctx.lineWidth = 1.3;
-          ctx.beginPath();
-          ctx.ellipse(sp.x, sp.y, rad, rad * 0.16, 0, 0, Math.PI * 2);
-          ctx.stroke();
-        }
+        ctx.globalAlpha = 1;
       }
 
       if (visible) raf = requestAnimationFrame(frame);
     };
+    let hoverId = '';
+    const spotHot = (id: string) => hoverId === id;
     const wake = () => {
       if (!raf && visible) {
         last = performance.now();
@@ -523,16 +993,17 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
       }
       const sEl = spotOf(e.target);
       const id = sEl?.dataset.spot ?? null;
+      hoverId = id ?? '';
       setSpot((cur) => (cur === id ? cur : id));
-      st.dataset.hover = id ?? '';
+      if (st.dataset.hover !== hoverId) st.dataset.hover = hoverId;
       if (id) placeTip(ptr.sx, ptr.sy, b);
-      if (id === 'blossom' && performance.now() - lastPetal > 45) {
+      if (id === 'blossom' && performance.now() - lastPetal > 40) {
         lastPetal = performance.now();
         const w = toWorld(ptr.sx, ptr.sy, 0.68);
         addPetal(w.x, w.y, 0.68, 30);
       }
       const w = toWorld(ptr.sx, ptr.sy, 0.42);
-      if ((id === 'water' || id === 'alps' || !sEl) && w.y > 618 && w.y < 790 && (rings.length === 0 || rings[rings.length - 1].t > 0.3)) rings.push({ x: w.x, y: w.y, t: 0 });
+      if (w.y > 618 && w.y < 860 && (rings.length === 0 || rings[rings.length - 1].t > 0.3)) rings.push({ x: w.x, y: w.y, t: 0, s: 1 });
       wake();
     };
     const onLeave = () => {
@@ -540,6 +1011,7 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
       ptr.ty = 0;
       ptr.over = false;
       ptr.sx = -1;
+      hoverId = '';
       st.dataset.hover = '';
       setSpot(null);
     };
@@ -550,16 +1022,15 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
       const b = st.getBoundingClientRect();
       ptr.sx = e.clientX - b.left;
       ptr.sy = e.clientY - b.top;
+      hoverId = id;
       setSpot(id);
       st.dataset.hover = id;
       placeTip(ptr.sx, ptr.sy, b, true);
       track('hero_spot_touched', { spot: id });
       if (id === 'blossom') {
         const w = toWorld(ptr.sx, ptr.sy, 0.68);
-        for (let i = 0; i < 18; i++) addPetal(w.x + rand(-30, 30), w.y + rand(-20, 20), 0.68, 40);
+        for (let i = 0; i < 26; i++) addPetal(w.x + rand(-30, 30), w.y + rand(-20, 20), 0.68, 40);
       }
-      sEl.classList.add('is-touched');
-      setTimeout(() => sEl.classList.remove('is-touched'), 1600);
       wake();
     };
     const onClick = (e: MouseEvent) => {
@@ -586,7 +1057,6 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
     st.addEventListener('pointerdown', onDown);
     st.addEventListener('click', onClick);
     window.addEventListener('scroll', onScroll, { passive: true });
-    applyCamera(0);
     wake();
 
     return () => {
@@ -612,15 +1082,14 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
   return (
     <section ref={root} className="culture-hero relative" aria-labelledby="hero-title">
       <div ref={stage} className={`culture-stage ${revealed ? 'is-revealed' : ''}`}>
-        <svg ref={svg} className="culture-svg" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid slice" role="img" aria-label="An illustrated world at dusk: sky lanterns rising over a bridge, tea under cherry blossoms, the Matterhorn glowing pink above a misty alpine lake, a pagoda and a palace on the skyline.">
+        <canvas ref={skyCv} aria-hidden className="culture-sky" />
+        <svg ref={svg} className="culture-svg" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid slice" role="img" aria-label="An illustrated world at night: sky lanterns rising over a bridge, tea under glowing cherry blossoms, the Matterhorn under the stars above a misty alpine lake, a pagoda and a palace on the skyline.">
           <g ref={cam}>
             <CultureWorld />
           </g>
         </svg>
         <canvas ref={cv} aria-hidden className="culture-canvas" />
-        <div aria-hidden className="culture-dusk" />
-        <div aria-hidden className="culture-paper" />
-        <div aria-hidden className="culture-mist" />
+        <div aria-hidden className="culture-vignette" />
 
         {/* before the journey: a quiet invitation to scroll */}
         <div className="culture-start" aria-hidden={revealed}>
