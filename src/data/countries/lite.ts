@@ -17,7 +17,7 @@ export interface CountryLite {
   accent: string;
 }
 
-const ACCENTS = ['#FFC233', '#FF8A4C', '#FF6B5B'];
+const ACCENTS = ['#FFB72B', '#FF7A45', '#FF5A6E'];
 
 export const toLite = (c: Country, i: number): CountryLite => ({
   slug: c.slug,

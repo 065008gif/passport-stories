@@ -57,7 +57,7 @@ export default function PassportClient({ countries }: { countries: PassportCount
           aria-valuemax={countries.length}
           aria-valuenow={mounted ? earned : 0}
         >
-          <div className="h-full rounded-full bg-gradient-to-r from-tang via-sun to-[#ffe08a] shadow-[0_0_14px_rgba(255,194,51,.8)] transition-all duration-700" style={{ width: `${mounted ? (earned / countries.length) * 100 : 0}%` }} />
+          <div className="h-full rounded-full bg-gradient-to-r from-tang via-sun to-[#ffe08a] shadow-[0_0_14px_rgba(255, 183, 43,.8)] transition-all duration-700" style={{ width: `${mounted ? (earned / countries.length) * 100 : 0}%` }} />
         </div>
 
         <ul className="mt-6 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
@@ -69,7 +69,7 @@ export default function PassportClient({ countries }: { countries: PassportCount
                   href={`/countries/${c.slug}`}
                   className={`group relative flex aspect-square flex-col items-center justify-center rounded-2xl p-1 text-center transition-all duration-200 hover:-translate-y-1.5 hover:rotate-2 ${
                     date
-                      ? 'bg-[#FFF4E0] shadow-[0_0_0_3px_#FFC233,0_14px_26px_-10px_rgba(255,194,51,.55)]'
+                      ? 'bg-[#FFF4E0] shadow-[0_0_0_3px_#FFB72B,0_14px_26px_-10px_rgba(255, 183, 43,.55)]'
                       : 'border-2 border-dashed border-cream/45 bg-white/[0.07] hover:border-sun hover:bg-white/[0.14]'
                   }`}
                   aria-label={date ? `${c.name}: stamped` : `${c.name}: not visited yet`}

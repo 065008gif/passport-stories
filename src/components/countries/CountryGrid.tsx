@@ -30,8 +30,8 @@ export interface SortOption {
   emoji: string;
 }
 
-const ACCENTS = ['#FFC233', '#1AA3CF', '#12B5A6', '#FF8A4C'];
-const CHIP_COLORS = ['#FFC233', '#1AA3CF', '#12B5A6', '#FF8A4C', '#FFC233', '#1AA3CF', '#12B5A6'];
+const ACCENTS = ['#FFB72B', '#8A5CF6', '#E84A7F', '#FF7A45'];
+const CHIP_COLORS = ['#FFB72B', '#8A5CF6', '#E84A7F', '#FF7A45', '#FFB72B', '#8A5CF6', '#E84A7F'];
 
 export default function CountryGrid({ countries, regions, sorts }: { countries: GridCountry[]; regions: string[]; sorts: SortOption[] }) {
   const board = useBoard();
@@ -150,7 +150,7 @@ export default function CountryGrid({ countries, regions, sorts }: { countries: 
                       <img src={flagSrc(c.slug)} alt="" loading="lazy" className="ccard-wash" />
                       <img src={flagSrc(c.slug)} alt="" loading="lazy" className="ccard-sticker" />
                       {stat && (
-                        <span className="absolute right-3 top-3 z-[2] flex h-9 min-w-9 items-center justify-center rounded-full bg-sun px-2 font-display text-lg font-extrabold text-ink shadow-[0_3px_0_#1F2A44]">
+                        <span className="absolute right-3 top-3 z-[2] flex h-9 min-w-9 items-center justify-center rounded-full bg-sun px-2 font-display text-lg font-extrabold text-ink shadow-[0_3px_0_#2B1B3D]">
                           #{i + 1}
                         </span>
                       )}

@@ -10,7 +10,7 @@ import { ImageResponse } from 'next/og';
 export const OG_SIZE = { width: 1200, height: 630 };
 export const OG_TYPE = 'image/png';
 
-const C = { ink: '#1F2A44', night: '#0D0F3A', sun: '#FFC233', tang: '#FF8A4C', coral: '#FF6B5B', cream: '#FFF4E0', teal: '#12B5A6', sky: '#1AA3CF' };
+const C = { ink: '#2B1B3D', night: '#0D0F3A', sun: '#FFB72B', tang: '#FF7A45', coral: '#FF5A6E', cream: '#FFF4E0', teal: '#E84A7F', sky: '#8A5CF6' };
 
 export async function ogImage({ kicker, title, from, to }: { kicker: string; title: string; from?: string; to?: string }) {
   // The display font; if it cannot be read the image falls back to the default font.

@@ -147,26 +147,31 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
     jetSeam.set('globe');
   }, []);
 
-  /* The next section rises in as the clouds clear (a scroll-linked entrance). */
+  /* The title and globe drift up into place as the globe section's sky arrives
+     (the sky itself never moves, so the two skies stay joined). */
   useEffect(() => {
     const ex = document.getElementById('explore');
-    const inner = ex?.firstElementChild as HTMLElement | null;
-    if (!ex || !inner || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (!ex || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const parts = Array.from(ex.querySelectorAll<HTMLElement>('.explore-sky > *'));
+    if (!parts.length) return;
     let last = -1;
     let raf = 0;
     const update = () => {
       raf = 0;
-      const t = clamp((window.innerHeight - ex.getBoundingClientRect().top) / (window.innerHeight * 0.75));
+      const t = clamp((window.innerHeight - ex.getBoundingClientRect().top) / (window.innerHeight * 0.9));
       const e = ease(t);
       if (Math.abs(e - last) < 0.002) return;
       last = e;
-      if (e >= 0.999) {
-        inner.style.transform = '';
-        inner.style.opacity = '';
-      } else {
-        inner.style.transform = `translate3d(0, ${((1 - e) * 90).toFixed(1)}px, 0) scale(${(0.94 + e * 0.06).toFixed(4)})`;
-        inner.style.opacity = (0.1 + e * 0.9).toFixed(3);
-      }
+      parts.forEach((el, i) => {
+        const ei = ease(clamp(t * 1.15 - i * 0.12));
+        if (ei >= 0.999) {
+          el.style.transform = '';
+          el.style.opacity = '';
+        } else {
+          el.style.transform = `translate3d(0, ${((1 - ei) * 70).toFixed(1)}px, 0)`;
+          el.style.opacity = ei.toFixed(3);
+        }
+      });
     };
     const onScroll = () => {
       if (!raf) raf = requestAnimationFrame(update);
@@ -178,8 +183,10 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
       cancelAnimationFrame(raf);
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', onScroll);
-      inner.style.transform = '';
-      inner.style.opacity = '';
+      parts.forEach((el) => {
+        el.style.transform = '';
+        el.style.opacity = '';
+      });
     };
   }, []);
 
@@ -774,7 +781,7 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
 
       // petal gusts carry the camera between moments; stronger when you scroll faster
       // a burst from the tree when you scroll into the blossom
-      if (!reduce && blossom > 0.05 && speed > 0.01 && Math.random() < Math.min(1, speed * 3)) for (let i = 0; i < 3; i++) addPetal(rand(-120, 380), rand(360, 560), 0.68, 20);
+      if (!reduce && blossom > 0.05 && speed > 0.01 && Math.random() < Math.min(0.5, speed * 1.5)) addPetal(rand(-120, 380), rand(360, 560), 0.68, 20);
 
       ptr.x += (ptr.tx - ptr.x) * (1 - Math.exp(-dt * 4));
       ptr.y += (ptr.ty - ptr.y) * (1 - Math.exp(-dt * 4));
@@ -791,9 +798,10 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
         tcy = shot.cy + 20 * smooth(clamp((Ps - 0.68) / 0.06));
       }
       const q = ease(clamp(closeP / 0.9));
-      c.cx = tcx + (800 - tcx) * q;
-      c.cy = tcy + (640 - tcy) * q;
-      c.s = ts * (1 + q * (ph ? 0.9 : 1.5));
+      // closing: the camera tilts up into the starry sky, where the globe section's sky takes over
+      c.cx = tcx + (900 - tcx) * q;
+      c.cy = tcy + (120 - tcy) * q;
+      c.s = ts * (1 + q * 0.25);
       // never pan past the edges of the painting (it spans about -300 to 1900)
       const halfW = vw / k / (2 * c.s);
       if (halfW < 1080) c.cx = clamp(c.cx, -280 + halfW, 1880 - halfW);
@@ -922,7 +930,7 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
 
       // petals: from the canopy, in depth (back, mid, out-of-focus front), on a swirling wind
       if (!reduce) {
-        const rate = ((ph ? 7 : 14) + blossom * (ph ? 22 : 40)) * (1 - closeP);
+        const rate = ((ph ? 3 : 6) + blossom * (ph ? 9 : 16)) * (1 - closeP);
         let n = rate * dt;
         while (n > 0) {
           if (Math.random() < n) {
@@ -932,7 +940,7 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
           }
           n -= 1;
         }
-        if (Math.random() < dt * (0.5 + blossom * 3) * (1 - closeP)) addPetal(rand(-200, 420), rand(380, 560), 0.95, 0, true);
+        if (Math.random() < dt * (0.25 + blossom * 1.2) * (1 - closeP)) addPetal(rand(-200, 420), rand(380, 560), 0.95, 0, true);
       }
       const wind = 4 + Math.sin(T / 2.3) * 6 + Math.max(0, Math.sin(T / 5.1)) * 8;
       for (let i = petals.length - 1; i >= 0; i--) {

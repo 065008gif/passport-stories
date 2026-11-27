@@ -34,7 +34,7 @@ export const resetScore = () => {
   emit();
 };
 
-const COLORS = ['#FFC233', '#12B5A6', '#1AA3CF', '#FF8A4C'];
+const COLORS = ['#FFB72B', '#E84A7F', '#8A5CF6', '#FF7A45'];
 
 function Burst() {
   return (
@@ -92,7 +92,7 @@ export function GuessCard({
 
   const solid = Boolean(color);
   const dark = tone === 'dark' && !solid;
-  const barB = color === '#FF6B5B' ? '#FFF4E0' : '#FF6B5B';
+  const barB = color === '#FF5A6E' ? '#FFF4E0' : '#FF5A6E';
   return (
     <div className={`relative overflow-hidden rounded-3xl p-5 ${solid ? 'guess-solid text-ink shadow-[0_8px_0_rgba(0,0,0,.38)]' : dark ? 'blk' : 'border-2 border-ink bg-white/70 text-ink'}`} style={solid ? { background: color } : undefined} data-section={`guess:${metric}`}>
       {rank && <p className={`kicker ${solid ? 'text-ink/75' : 'text-sun'}`}>{rank}</p>}
@@ -133,7 +133,7 @@ export function GuessCard({
                     </span>
                   </p>
                   <div className={`mt-1 h-3 overflow-hidden rounded-full ${dark ? 'bg-cream/15' : 'bg-ink/10'}`}>
-                    <motion.div className="h-full rounded-full" style={{ background: i === 0 ? (dark ? '#1AA3CF' : '#1F2A44') : solid ? barB : '#FFC233' }} initial={{ width: 0 }} animate={{ width: `${Math.max(6, (s.value / max) * 100)}%` }} transition={{ duration: 0.9, delay: 0.1 + i * 0.12, ease: [0.2, 0.8, 0.2, 1] }} />
+                    <motion.div className="h-full rounded-full" style={{ background: i === 0 ? (dark ? '#8A5CF6' : '#2B1B3D') : solid ? barB : '#FFB72B' }} initial={{ width: 0 }} animate={{ width: `${Math.max(6, (s.value / max) * 100)}%` }} transition={{ duration: 0.9, delay: 0.1 + i * 0.12, ease: [0.2, 0.8, 0.2, 1] }} />
                   </div>
                 </div>
               </div>

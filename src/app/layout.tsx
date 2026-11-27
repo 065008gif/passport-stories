@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   icons: { icon: site.logo },
 };
 
-export const viewport: Viewport = { themeColor: '#FFF8EF', width: 'device-width', initialScale: 1 };
+export const viewport: Viewport = { themeColor: '#FFF1E6', width: 'device-width', initialScale: 1 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

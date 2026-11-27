@@ -48,8 +48,8 @@ export function DuelBar({ label, a, b, highlight = false }: { label: string; a: 
         {highlight && <span className="rounded-full bg-tang px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-ink">Big difference</span>}
       </p>
       <div className="space-y-2">
-        <Bar side={a} max={max} color="#1AA3CF" delay={0} />
-        <Bar side={b} max={max} color="#FFC233" delay={0.12} />
+        <Bar side={a} max={max} color="#8A5CF6" delay={0} />
+        <Bar side={b} max={max} color="#FFB72B" delay={0.12} />
       </div>
     </div>
   );

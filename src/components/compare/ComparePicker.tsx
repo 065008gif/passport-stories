@@ -23,7 +23,7 @@ export default function ComparePicker({ options, a, b }: { options: PickOption[]
         aria-label="Swap the two countries"
         data-track="compare-swap"
         style={{ transform: `rotate(${turns * 180}deg)` }}
-        className="mx-auto -my-1 flex h-11 w-11 shrink-0 sm:my-0 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-sun text-2xl font-bold text-ink shadow-[0_4px_0_#FF8A4C] transition-transform duration-500 hover:scale-110"
+        className="mx-auto -my-1 flex h-11 w-11 shrink-0 sm:my-0 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-sun text-2xl font-bold text-ink shadow-[0_4px_0_#FF7A45] transition-transform duration-500 hover:scale-110"
       >
         <span className="sm:hidden">⇅</span>
         <span className="hidden sm:inline">⇄</span>

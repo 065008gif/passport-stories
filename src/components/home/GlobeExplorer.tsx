@@ -627,6 +627,7 @@ export default function GlobeExplorer({
 
   return (
     <div>
+      <div className="explore-sky">
       {/* Header row */}
       <div className="flex flex-col items-start justify-between gap-5 md:flex-row md:items-end">
         <div className="min-w-0">
@@ -744,6 +745,8 @@ export default function GlobeExplorer({
       </div>
 
       {/* Country discovery slider */}
+      </div>
+
       <div className="mt-9 sm:mt-12">
         <div className="flex items-end justify-between gap-4">
           <h3 className="slider-title">Discover a country</h3>
@@ -1051,7 +1054,7 @@ function FlatMap({
             <img src="/textures/earth-day.webp" alt="" className="flat-img block h-full w-full" draggable={false} />
           </div>
           <svg ref={svg} className="pointer-events-none absolute inset-0 z-[6] h-full w-full" viewBox="0 0 300 100" preserveAspectRatio="none" aria-hidden>
-            {route && <motion.path key={route.key} d={route.d} fill="none" stroke="#ffc233" strokeWidth="0.55" strokeLinecap="round" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 0.75, ease: EASE }} />}
+            {route && <motion.path key={route.key} d={route.d} fill="none" stroke="#FFB72B" strokeWidth="0.55" strokeLinecap="round" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 0.75, ease: EASE }} />}
             {Array.from({ length: 12 }, (_, i) => (
               <circle
                 key={i}
@@ -1059,13 +1062,13 @@ function FlatMap({
                   dots.current[i] = c;
                 }}
                 r={0.45 - i * 0.025}
-                fill="#ffc233"
+                fill="#FFB72B"
                 opacity="0"
               />
             ))}
             <g ref={planeG}>
               <g transform="scale(0.32) rotate(90) translate(-12 -12)">
-                <path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z" fill="#fffaf3" stroke="#ff6b5b" strokeWidth="1.2" strokeLinejoin="round" />
+                <path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z" fill="#fffaf3" stroke="#FF5A6E" strokeWidth="1.2" strokeLinejoin="round" />
               </g>
             </g>
           </svg>

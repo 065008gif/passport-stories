@@ -145,7 +145,7 @@ export function ScrollPlane() {
     <div ref={bar} aria-hidden className="scroll-plane">
       <span className="scroll-plane-fill" />
       <svg className="scroll-plane-icon" viewBox="0 0 24 24">
-        <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.670 10 3.500V9l-8 5v2l8-2.500V19l-2 1.500V22l3.500-1 3.500 1v-1.500L13 19v-5.500l8 2.500z" fill="#FFF4E0" stroke="#1F2A44" strokeWidth="0.9" strokeLinejoin="round" />
+        <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.670 10 3.500V9l-8 5v2l8-2.500V19l-2 1.500V22l3.500-1 3.500 1v-1.500L13 19v-5.500l8 2.500z" fill="#FFF4E0" stroke="#2B1B3D" strokeWidth="0.9" strokeLinejoin="round" />
       </svg>
     </div>
   );
