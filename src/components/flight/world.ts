@@ -87,6 +87,15 @@ export class FlightWorld {
   private arcGroup: THREE.Group | null = null;
   private arcCurve: THREE.QuadraticBezierCurve3 | null = null;
   private arcStart = -1;
+  private guide: THREE.Group | null = null;
+  private guideCurve: THREE.QuadraticBezierCurve3 | null = null;
+  private guideStart = -1;
+  private guideDir = new THREE.Vector3(0, 0, -1);
+  private gPos = new THREE.Vector3();
+  private gTan = new THREE.Vector3();
+  private gUp = new THREE.Vector3();
+  private gM = new THREE.Matrix4();
+  private gQ = new THREE.Quaternion();
   // scratch objects, so the render loop allocates nothing
   private a = new THREE.Vector3();
   private b = new THREE.Vector3();
@@ -306,6 +315,25 @@ export class FlightWorld {
     if (picked) this.ring.scale.multiplyScalar(1.6);
     (this.ring.material as THREE.MeshBasicMaterial).color.set(picked ? 0xff6b5b : 0xfff4e0);
 
+    // The home page guide: glides along its curve (0.75 s, eased out), nose on the tangent, level over the surface.
+    if (this.guide && this.guide.visible && this.guideCurve) {
+      if (this.guideStart < 0) this.guideStart = f.time;
+      const k = Math.min(1, (f.time - this.guideStart) / 0.75);
+      const e = 1 - Math.pow(1 - k, 3);
+      this.guideCurve.getPoint(e, this.gPos);
+      if (k < 1) {
+        this.guideCurve.getTangent(Math.min(0.999, Math.max(0.001, e)), this.gTan);
+        this.gUp.copy(this.gPos).normalize();
+        this.gTan.addScaledVector(this.gUp, -this.gTan.dot(this.gUp));
+        if (this.gTan.lengthSq() > 1e-6) this.guideDir.copy(this.gTan.normalize());
+      }
+      this.gUp.copy(this.gPos).normalize();
+      this.guideDir.addScaledVector(this.gUp, -this.guideDir.dot(this.gUp)).normalize();
+      this.guide.position.copy(this.gPos);
+      this.gM.lookAt(this.c.set(0, 0, 0), this.guideDir, this.gUp);
+      this.gQ.setFromRotationMatrix(this.gM);
+      this.guide.quaternion.slerp(this.gQ, k < 1 ? 0.35 : 0.15);
+    }
     // The home page flight arc, if one is showing.
     if (this.arcGroup && this.arcCurve) {
       if (this.arcStart < 0) this.arcStart = f.time;
@@ -344,10 +372,23 @@ export class FlightWorld {
       this.arcGroup = null;
     }
     if (from < 0 || to < 0 || from === to) return;
-    const a = this.places[from];
-    const b = this.places[to];
-    const mid = this.a.copy(a).add(b).normalize().multiplyScalar(1.08 + a.distanceTo(b) * 0.28);
-    this.arcCurve = new THREE.QuadraticBezierCurve3(a.clone().multiplyScalar(1.012), mid.clone(), b.clone().multiplyScalar(1.012));
+    this.arcVec(this.places[from].clone().multiplyScalar(1.012), this.places[to].clone().multiplyScalar(1.012));
+  }
+
+  /** The flight arc between two points on or above the surface (globe space). */
+  private arcVec(a: THREE.Vector3, b: THREE.Vector3) {
+    if (this.arcGroup) {
+      this.globe.remove(this.arcGroup);
+      this.arcGroup.traverse((o) => {
+        const m = o as THREE.Mesh;
+        m.geometry?.dispose();
+        (m.material as THREE.Material | undefined)?.dispose();
+      });
+      this.arcGroup = null;
+    }
+    if (a.distanceTo(b) < 1e-3) return;
+    const mid = this.a.copy(a).add(b).normalize().multiplyScalar(Math.max(a.length(), b.length()) + 0.06 + a.distanceTo(b) * 0.26);
+    this.arcCurve = new THREE.QuadraticBezierCurve3(a.clone(), mid.clone(), b.clone());
     const g = new THREE.Group();
     g.add(new THREE.Mesh(new THREE.TubeGeometry(this.arcCurve, 96, 0.006, 8, false), new THREE.MeshBasicMaterial({ color: 0xffc233, transparent: true, opacity: 0.95, depthWrite: false })));
     g.add(new THREE.Mesh(new THREE.TubeGeometry(this.arcCurve, 96, 0.018, 8, false), new THREE.MeshBasicMaterial({ color: 0xff8a4c, transparent: true, opacity: 0.28, depthWrite: false, blending: THREE.AdditiveBlending })));
@@ -355,6 +396,64 @@ export class FlightWorld {
     this.arcGroup = g;
     this.arcStart = -1;
     this.globe.add(g);
+  }
+
+  /**
+   * Home page helper: a miniature jet in the home page livery that flies
+   * between countries just above the surface. Adds its own two lights; the
+   * v8 materials ignore lights, so the globe looks exactly the same.
+   */
+  enableGuide() {
+    if (this.guide) return;
+    this.scene.add(new THREE.HemisphereLight(0xffffff, 0xffd9c2, 1.6));
+    const key = new THREE.DirectionalLight(0xfff4e0, 2.2);
+    key.position.set(-2, 3, 4);
+    this.scene.add(key);
+    const std = (c: number, rough = 0.32) => new THREE.MeshStandardMaterial({ color: c, roughness: rough, metalness: 0.1 });
+    const g = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.13, 0.78, 8, 20), std(0xfffaf3, 0.25));
+    body.rotation.x = Math.PI / 2;
+    const nose = new THREE.Mesh(new THREE.SphereGeometry(0.132, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), std(0xff6b5b));
+    nose.rotation.x = -Math.PI / 2;
+    nose.position.z = -0.52;
+    const wing = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.035, 0.3), std(0xff6b5b));
+    wing.position.set(0, -0.03, -0.02);
+    const stab = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.03, 0.16), std(0xff6b5b));
+    stab.position.set(0, 0.02, 0.46);
+    const fin = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.3, 0.2), std(0xffc233));
+    fin.position.set(0, 0.17, 0.44);
+    const tips = [-0.75, 0.75].map((x) => {
+      const t = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.14, 0.16), std(0x12b5a6));
+      t.position.set(x, 0.05, 0.02);
+      return t;
+    });
+    g.add(body, nose, wing, stab, fin, ...tips);
+    g.scale.setScalar(0.17);
+    g.visible = false;
+    this.guide = g;
+    this.globe.add(g);
+  }
+
+  /** Home page helper: fly the guide to a country along a glowing arc (or swoop in from space). */
+  guideFly(index: number, enter = false) {
+    const g = this.guide;
+    if (!g || index < 0) return;
+    // hover a little north east of the country, so the beacon never hides it
+    const n = this.places[index].clone().normalize();
+    const east = new THREE.Vector3(0, 1, 0).cross(n);
+    if (east.lengthSq() < 1e-6) east.set(1, 0, 0);
+    east.normalize();
+    const north = n.clone().cross(east).normalize();
+    const to = n.multiplyScalar(1.1).addScaledVector(east, 0.11).addScaledVector(north, -0.07);
+    const fresh = enter || !g.visible;
+    const from = fresh ? this.places[index].clone().multiplyScalar(2.6).add(new THREE.Vector3(0, 0.8, 0)) : g.position.clone();
+    if (from.distanceTo(to) < 1e-3) return;
+    const mid = from.clone().add(to).multiplyScalar(0.5);
+    mid.setLength(Math.max(from.length(), to.length()) + 0.06 + from.distanceTo(to) * 0.2);
+    this.guideCurve = new THREE.QuadraticBezierCurve3(from, mid, to);
+    this.guideStart = -1;
+    g.visible = true;
+    if (!fresh) this.arcVec(from, to);
   }
 
   /**

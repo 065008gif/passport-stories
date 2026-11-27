@@ -7,6 +7,9 @@
  *
  *  - At rest the stage is open: the whole Earth and its glow sit at about
  *    sixty percent of the stage height, with room all round.
+ *  - A miniature jet, the hero plane's little sibling, swoops onto the globe
+ *    when the section arrives and flies a glowing arc to every country you
+ *    hover or pick. On the flat map an SVG plane flies the same routes.
  *  - Hover a beacon (globe or flat map) and a passport ticket springs out
  *    beside it on a glowing tether. A short grace period lets the pointer
  *    travel from the beacon onto the ticket.
@@ -58,7 +61,7 @@ const DEG = Math.PI / 180;
 const N = 75;
 const S = -45;
 const EASE = [0.23, 1, 0.32, 1] as const;
-const GRACE = 200;
+const GRACE = 220;
 
 type Pt = { x: number; y: number; visible: boolean; depth?: number };
 const fx = (c: ExploreCountry) => ((c.lng + 180) / 360) * 100;
@@ -96,7 +99,6 @@ export default function GlobeExplorer({
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const [pick, setPick] = useState<number | null>(null);
-  const [prevPick, setPrevPick] = useState<number | null>(null);
   const [locked, setLocked] = useState<number | null>(null);
   const [hover, setHover] = useState<number | null>(null);
   const [zoom, setZoomState] = useState(1);
@@ -126,6 +128,7 @@ export default function GlobeExplorer({
     window.clearTimeout(closeTimer.current);
     setHover(i);
     setHinted(true);
+    if (refs.current.mode === 'globe') worldRef.current?.guideFly(i);
   }, []);
   const closeSoon = useCallback(() => {
     window.clearTimeout(closeTimer.current);
@@ -161,8 +164,6 @@ export default function GlobeExplorer({
 
   const choose = useCallback(
     (i: number, where: string) => {
-      const prev = refs.current.pick;
-      if (prev !== null && prev !== i) setPrevPick(prev);
       setPick(i);
       setLocked(i);
       setHover(null);
@@ -170,13 +171,13 @@ export default function GlobeExplorer({
       const w = worldRef.current;
       if (w) {
         w.highlight = i;
-        w.arc(prev ?? startIndex, i);
+        w.guideFly(i);
       }
       faceCountry(i);
       track('map_country_opened', { country: countries[i].slug, where });
       centreCard(i);
     },
-    [countries, faceCountry, centreCard, startIndex],
+    [countries, faceCountry, centreCard],
   );
   const dismiss = useCallback(() => {
     setLocked(null);
@@ -205,8 +206,14 @@ export default function GlobeExplorer({
     let raf = 0;
     let visible = false;
     let disposed = false;
+    let entered = false;
     let last = performance.now();
     let base = 1;
+    const enter = () => {
+      if (entered || !world || !visible) return;
+      entered = true;
+      world.guideFly(refs.current.pick ?? startIndex, true);
+    };
     const frame: Frame = { progress: 0, free: 1, x: 0, y: 0, scale: 1, dragX: 0, dragY: 0, time: 0 };
     const disc = { x: 0, y: 0, r: 1 };
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -315,10 +322,12 @@ export default function GlobeExplorer({
           world = new mod.FlightWorld(canvas.current, places, [startIndex, (startIndex + 1) % places.length], TEXTURES);
           worldRef.current = world;
           world.highlight = refs.current.pick ?? -1;
+          world.enableGuide();
           fit();
           frame.scale = base;
           setReady(true);
           kick();
+          enter();
         })
         .catch(() => setFailed(true));
     };
@@ -332,9 +341,10 @@ export default function GlobeExplorer({
         if (visible) {
           start();
           kick();
+          enter();
         }
       },
-      { rootMargin: '120px 0px' },
+      { rootMargin: '0px 0px -25% 0px' },
     );
     io.observe(el);
     const ro = new ResizeObserver(() => {
@@ -632,7 +642,7 @@ export default function GlobeExplorer({
         {/* Flat map */}
         {mode === 'flat' && (
           <motion.div className="absolute inset-0" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.45, ease: EASE }}>
-            <FlatMap countries={countries} pick={pick} prev={prevPick} ticket={ticket} pinsRef={flatPins} openHover={openHover} closeSoon={closeSoon} choose={choose} zoom={zoom} />
+            <FlatMap countries={countries} pick={pick} ticket={ticket} pinsRef={flatPins} openHover={openHover} closeSoon={closeSoon} choose={choose} zoom={zoom} start={startIndex} />
           </motion.div>
         )}
 
@@ -672,8 +682,8 @@ export default function GlobeExplorer({
         />
         <p className={`stage-hint pointer-events-none absolute left-1/2 top-4 z-10 -translate-x-1/2 ${hinted ? 'is-gone' : ''}`}>
           <span className="stage-hint-dot" aria-hidden />
-          <span className="hidden sm:inline">Hover any glowing beacon to open a passport ticket</span>
-          <span className="sm:hidden">Tap any glowing beacon to open a passport ticket</span>
+          <span className="hidden sm:inline">Hover any glowing beacon to fly there</span>
+          <span className="sm:hidden">Tap any glowing beacon to fly there</span>
         </p>
       </div>
 
@@ -868,25 +878,58 @@ function PassportTicket({ c, locked, onClose, sheet }: { c: ExploreCountry; lock
 function FlatMap({
   countries,
   pick,
-  prev,
   ticket,
   pinsRef,
   openHover,
   closeSoon,
   choose,
   zoom,
+  start,
 }: {
   countries: ExploreCountry[];
   pick: number | null;
-  prev: number | null;
   ticket: number | null;
   pinsRef: React.MutableRefObject<(HTMLButtonElement | null)[]>;
   openHover: (i: number) => void;
   closeSoon: () => void;
   choose: (i: number, where: string) => void;
   zoom: number;
+  start: number;
 }) {
   const box = useRef<HTMLDivElement>(null);
+  const planeG = useRef<SVGGElement>(null);
+  const at = useRef<{ x: number; y: number }>({ x: fx(countries[start]) * 3, y: fy(countries[start]) });
+  const [route, setRoute] = useState<{ d: string; key: number } | null>(null);
+  const target = ticket ?? pick ?? start;
+  // Fly the little plane from wherever it is to the target along a lifted curve (0.75 s, eased out).
+  useEffect(() => {
+    const g = planeG.current;
+    const x1 = at.current.x;
+    const y1 = at.current.y;
+    const x2 = fx(countries[target]) * 3;
+    const y2 = fy(countries[target]);
+    const lift = Math.min(28, Math.hypot(x2 - x1, y2 - y1) * 0.35);
+    const cx = (x1 + x2) / 2;
+    const cy = Math.min(y1, y2) - lift;
+    if (Math.hypot(x2 - x1, y2 - y1) > 0.5) setRoute({ d: `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`, key: performance.now() });
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const t0 = performance.now();
+    let raf = 0;
+    const tick = (now: number) => {
+      const k = reduce ? 1 : Math.min(1, (now - t0) / 750);
+      const e = 1 - Math.pow(1 - k, 3);
+      const u = 1 - e;
+      const x = u * u * x1 + 2 * u * e * cx + e * e * x2;
+      const y = u * u * y1 + 2 * u * e * cy + e * e * y2;
+      const dx = 2 * u * (cx - x1) + 2 * e * (x2 - cx);
+      const dy = 2 * u * (cy - y1) + 2 * e * (y2 - cy);
+      at.current = { x, y };
+      if (g) g.setAttribute('transform', `translate(${x.toFixed(2)} ${y.toFixed(2)}) rotate(${((Math.atan2(dy, dx || 0.001) * 180) / Math.PI).toFixed(1)})`);
+      if (k < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, countries]);
   const focus = pick ?? 0;
   const ox = pick !== null ? fx(countries[focus]) : 50;
   const oy = pick !== null ? fy(countries[focus]) : 50;
@@ -897,17 +940,6 @@ function FlatMap({
     const target = pick !== null ? (el.scrollWidth * fx(countries[pick])) / 100 : el.scrollWidth * (215 / 360);
     el.scrollTo({ left: target - el.clientWidth / 2, behavior: 'smooth' });
   }, [pick, countries]);
-  const arc = (() => {
-    if (prev === null || pick === null || prev === pick) return null;
-    const a = countries[prev];
-    const b = countries[pick];
-    const x1 = fx(a) * 3;
-    const y1 = fy(a);
-    const x2 = fx(b) * 3;
-    const y2 = fy(b);
-    const lift = Math.min(30, Math.hypot(x2 - x1, y2 - y1) * 0.35);
-    return `M ${x1} ${y1} Q ${(x1 + x2) / 2} ${Math.min(y1, y2) - lift} ${x2} ${y2}`;
-  })();
 
   return (
     <div ref={box} className="flat-scroll h-full overflow-x-auto overscroll-x-contain [scrollbar-width:none]">
@@ -917,11 +949,14 @@ function FlatMap({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/textures/earth-day.webp" alt="" className="flat-img block h-full w-full" draggable={false} />
           </div>
-          {arc && (
-            <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 300 100" preserveAspectRatio="none" aria-hidden>
-              <motion.path key={arc} d={arc} fill="none" stroke="#ffc233" strokeWidth="0.55" strokeLinecap="round" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 0.9, ease: EASE }} />
-            </svg>
-          )}
+          <svg className="pointer-events-none absolute inset-0 z-[6] h-full w-full" viewBox="0 0 300 100" preserveAspectRatio="none" aria-hidden>
+            {route && <motion.path key={route.key} d={route.d} fill="none" stroke="#ffc233" strokeWidth="0.55" strokeLinecap="round" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 0.75, ease: EASE }} />}
+            <g ref={planeG}>
+              <g transform="scale(0.32) rotate(90) translate(-12 -12)">
+                <path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z" fill="#fffaf3" stroke="#ff6b5b" strokeWidth="1.2" strokeLinejoin="round" />
+              </g>
+            </g>
+          </svg>
           {countries.map((c, i) => (
             <button
               key={c.slug}

@@ -1,48 +1,56 @@
 'use client';
 
 /**
- * HERO: the sunlit 3D sky world and a three act scroll flight.
+ * HERO: a three leg flight across twelve landmarks, then into the globe.
  *
- * The 3D world lives in heroDiorama.ts (plain three.js): twelve landmark
- * islands in three waves, clouds, balloons and a hero scale jet. This shell
- * owns the DOM: the words, a flag pill under every island, the spotlight
- * card for a focused island, the drag hint, the act dots, pointer input and
- * the GSAP ScrollTrigger flight.
+ * The 3D world lives in heroDiorama.ts (plain three.js): twelve landmarks on
+ * porcelain discs, four per leg, one in each corner of the view, and a jet
+ * that glides its route from country to country. This shell owns the DOM:
+ * the words, a flag pill on every disc, the spotlight card, the flight
+ * itinerary pill, pointer input and the GSAP ScrollTrigger flight.
  *
- *  - Drag anywhere to tilt and turn the sky; it coasts and settles. The
- *    pointer leaves a sparkle wake and nudges clouds and balloons.
- *  - Hover (or tap) an island or its pill: the island rises and turns in a
- *    glowing compass ring, and a card offers "Fly to Globe". The button, a
- *    click, or a second tap scrolls to the globe with that country picked.
- *  - Scrolling pins the hero and flies three acts: golden morning, azure
- *    cruise, golden hour, then dives into the atlas. Scrolling back reverses.
+ *  - Scrolling pins the hero and flies three legs: Asia and wonders, Europe
+ *    and icons, the Americas and Oceania, then hands off to the globe.
+ *  - While anything scrolls, hover is locked; it unlocks 260ms after the
+ *    scroll stops and only once the pointer deliberately moves.
+ *  - Hover (or tap) a landmark or its pill: a ring lights its disc, it lifts,
+ *    and a card offers "Fly to Globe".
+ *  - Drag tilts the sky a little; it coasts and settles.
  *
  * Native scrolling is never touched: ScrollTrigger only reads the position.
- * Reduced motion: a still panorama; hover, pills and cards still work.
+ * Reduced motion: a still panorama of the first leg; hover still works.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { flagSrc } from '@/components/Flag';
+import { track } from '@/lib/analytics';
 import type { Flight, HeroDiorama, IslandSpec, Landmark } from '@/components/home/heroDiorama';
 
-const ISLANDS: { slug: string; landmark: Landmark; place: string; hook: string }[] = [
-  { slug: 'india', landmark: 'india', place: 'Taj Mahal, Agra', hook: 'A marble love letter on the Yamuna.' },
-  { slug: 'japan', landmark: 'japan', place: 'Mount Fuji, Fujiyoshida', hook: 'Sakura season paints the whole country pink.' },
-  { slug: 'france', landmark: 'france', place: 'Eiffel Tower, Paris', hook: 'Café terraces fill up long before lunch.' },
-  { slug: 'egypt', landmark: 'egypt', place: 'Pyramids of Giza', hook: 'Standing tall for more than 4,500 years.' },
-  { slug: 'italy', landmark: 'italy', place: 'Colosseum, Rome', hook: 'Once filled with around 50,000 cheering Romans.' },
-  { slug: 'united-kingdom', landmark: 'uk', place: 'Big Ben, London', hook: 'The great clock has kept time since 1859.' },
-  { slug: 'china', landmark: 'china', place: 'Temple of Heaven, Beijing', hook: 'Built in 1420 to pray for good harvests.' },
-  { slug: 'uae', landmark: 'uae', place: 'Burj Khalifa, Dubai', hook: 'At 828 metres, the tallest building on Earth.' },
-  { slug: 'usa', landmark: 'usa', place: 'Golden Gate Bridge, San Francisco', hook: 'Its famous colour is called International Orange.' },
-  { slug: 'brazil', landmark: 'brazil', place: 'Christ the Redeemer, Rio', hook: 'Arms open wide over Rio since 1931.' },
-  { slug: 'australia', landmark: 'australia', place: 'Sydney Opera House', hook: 'Its sails wear more than a million tiles.' },
-  { slug: 'singapore', landmark: 'singapore', place: 'Marina Bay Sands', hook: 'A rooftop park balanced on three towers.' },
+const ISLANDS: { slug: string; landmark: Landmark; place: string }[] = [
+  { slug: 'india', landmark: 'india', place: 'Taj Mahal, Agra' },
+  { slug: 'japan', landmark: 'japan', place: 'Mount Fuji, Fujiyoshida' },
+  { slug: 'egypt', landmark: 'egypt', place: 'Pyramids of Giza' },
+  { slug: 'uae', landmark: 'uae', place: 'Burj Khalifa, Dubai' },
+  { slug: 'france', landmark: 'france', place: 'Eiffel Tower, Paris' },
+  { slug: 'italy', landmark: 'italy', place: 'Colosseum, Rome' },
+  { slug: 'united-kingdom', landmark: 'uk', place: 'Big Ben, London' },
+  { slug: 'china', landmark: 'china', place: 'Temple of Heaven, Beijing' },
+  { slug: 'usa', landmark: 'usa', place: 'Golden Gate Bridge, San Francisco' },
+  { slug: 'brazil', landmark: 'brazil', place: 'Christ the Redeemer, Rio' },
+  { slug: 'australia', landmark: 'australia', place: 'Sydney Opera House' },
+  { slug: 'singapore', landmark: 'singapore', place: 'Marina Bay Sands' },
 ];
 const INFO = Object.fromEntries(ISLANDS.map((s) => [s.landmark, s]));
-const ACTS = ['Golden morning', 'Cloud cruise', 'Golden hour'];
+
+/** The flight plan, in scroll progress through the pinned hero. */
+const LEGS = [
+  { id: 'asia', n: '1', label: 'Asia & Wonders', from: 0, to: 0.32, icon: 'M4 20h16M6 20l6-12 6 12M9 14h6' },
+  { id: 'europe', n: '2', label: 'Europe & Icons', from: 0.32, to: 0.66, icon: 'M12 3v4M9 20l3-13 3 13M7 20h10M10 13h4' },
+  { id: 'americas', n: '3', label: 'Americas & Oceania', from: 0.66, to: 0.94, icon: 'M12 21V10M12 10c-3 0-6-2-7-5 3 0 6 1 7 5zM12 10c3 0 6-2 7-5-3 0-6 1-7 5zM8 21h8' },
+  { id: 'globe', n: '', label: 'Globe · 20 Countries', from: 0.94, to: 1, icon: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18' },
+];
 
 export default function HeroCollage({
   headline,
@@ -61,11 +69,11 @@ export default function HeroCollage({
   const card = useRef<HTMLDivElement>(null);
   const wash = useRef<HTMLDivElement>(null);
   const hint = useRef<HTMLDivElement>(null);
-  const cue = useRef<HTMLDivElement>(null);
-  const dots = useRef<HTMLDivElement>(null);
+  const itin = useRef<HTMLDivElement>(null);
   const pills = useRef<(HTMLButtonElement | null)[]>([]);
   const sceneRef = useRef<HeroDiorama | null>(null);
   const placedRef = useRef<IslandSpec[]>([]);
+  const stRef = useRef<ScrollTrigger | null>(null);
   const flight = useRef<Flight>({ p: 0 });
 
   const [placed, setPlaced] = useState<IslandSpec[]>([]);
@@ -133,10 +141,20 @@ export default function HeroCollage({
     };
   }, [names]);
 
-  // Hand the pill elements to the scene once they exist.
   useEffect(() => {
     sceneRef.current?.setPills(pills.current);
   }, [placed]);
+
+  /* ---------------------- Scroll locks hover, briefly ---------------------- */
+  useEffect(() => {
+    const lock = () => sceneRef.current?.lockHover();
+    window.addEventListener('scroll', lock, { passive: true });
+    window.addEventListener('wheel', lock, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', lock);
+      window.removeEventListener('wheel', lock);
+    };
+  }, []);
 
   /* ------------------------------ Pointer ------------------------------ */
   useEffect(() => {
@@ -146,7 +164,7 @@ export default function HeroCollage({
       const r = el.getBoundingClientRect();
       return [e.clientX - r.left, e.clientY - r.top] as const;
     };
-    const onUi = (e: Event) => !!(e.target as Element | null)?.closest?.('.sky-pill, .spot-anchor');
+    const onUi = (e: Event) => !!(e.target as Element | null)?.closest?.('.sky-pill, .spot-anchor, .itinerary');
     const move = (e: PointerEvent) => {
       const s = sceneRef.current;
       if (!s) return;
@@ -189,7 +207,7 @@ export default function HeroCollage({
     };
   }, [pick]);
 
-  /* ------------------------ Scroll: the three acts ------------------------ */
+  /* ------------------------ Scroll: the three legs ------------------------ */
   useEffect(() => {
     const el = root.current;
     if (!el) return;
@@ -199,6 +217,15 @@ export default function HeroCollage({
       const cs = getComputedStyle(document.documentElement);
       return parseFloat(cs.getPropertyValue('--header')) * parseFloat(cs.fontSize) || 0;
     };
+    const fill = (p: number) => {
+      const bar = itin.current;
+      if (!bar) return;
+      LEGS.forEach((l) => bar.style.setProperty(`--${l.id}`, Math.min(1, Math.max(0, (p - l.from) / (l.to - l.from))).toFixed(3)));
+      const found = LEGS.findIndex((l) => p < l.to);
+      const now = found < 0 ? 3 : found;
+      if (bar.dataset.leg !== String(now)) bar.dataset.leg = String(now);
+    };
+    fill(0);
     const ctx = gsap.context(() => {
       const mm = gsap.matchMedia();
       const build = (desktop: boolean) => {
@@ -208,23 +235,22 @@ export default function HeroCollage({
           scrollTrigger: {
             trigger: el,
             start: () => `top top+=${header()}`,
-            end: desktop ? '+=260%' : '+=155%',
-            scrub: 0.75,
+            end: desktop ? '+=240%' : '+=150%',
+            scrub: 0.55,
             pin: true,
             anticipatePin: 1,
             invalidateOnRefresh: true,
-            onUpdate: (st) => {
-              const act = st.progress < 0.28 ? 0 : st.progress < 0.68 ? 1 : 2;
-              if (dots.current && dots.current.dataset.act !== String(act)) dots.current.dataset.act = String(act);
-            },
+            onUpdate: (st) => fill(st.progress),
           },
         });
+        stRef.current = tl.scrollTrigger ?? null;
         tl.to(f, { p: 1, duration: 1 }, 0)
-          .to(copy.current, { yPercent: -18, scale: 1.08, opacity: 0, duration: 0.2, ease: 'power2.in' }, 0)
-          .to([hint.current, cue.current], { opacity: 0, duration: 0.06 }, 0)
-          .to(wash.current, { opacity: 1, duration: 0.04, ease: 'power1.in' }, 0.96);
+          .to(copy.current, { yPercent: -16, scale: 1.06, opacity: 0, duration: 0.18, ease: 'power2.in' }, 0)
+          .to(hint.current, { opacity: 0, duration: 0.05 }, 0)
+          .to(wash.current, { opacity: 1, duration: 0.03, ease: 'power1.in' }, 0.97);
         return () => {
           f.p = 0;
+          stRef.current = null;
         };
       };
       mm.add('(min-width: 768px) and (prefers-reduced-motion: no-preference)', () => build(true));
@@ -233,6 +259,20 @@ export default function HeroCollage({
     return () => ctx.revert();
   }, []);
 
+  const jump = (i: number) => {
+    const leg = LEGS[i];
+    track('hero_leg_jump', { leg: leg.id });
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const st = stRef.current;
+    if (leg.id === 'globe' || !st) {
+      document.getElementById('explore')?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+      return;
+    }
+    // land a little into the leg, when its four landmarks are in place
+    const at = leg.from === 0 ? 0 : leg.from + 0.03;
+    window.scrollTo({ top: st.start + (st.end - st.start) * at, behavior: reduce ? 'auto' : 'smooth' });
+  };
+
   const focused = focus !== null ? placed[focus] : null;
   const info = focused ? INFO[focused.landmark] : null;
 
@@ -240,7 +280,7 @@ export default function HeroCollage({
     <section ref={root} className="hero-diorama relative isolate overflow-hidden" aria-labelledby="hero-title">
       <canvas ref={canvas} aria-hidden className="diorama-canvas absolute inset-0 h-full w-full" />
 
-      {/* The words, in the open sunlit corridor */}
+      {/* The words, in the open corridor between the four landmarks */}
       <div ref={copy} className="diorama-copy pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center px-5 text-center">
         <h1 id="hero-title" className="diorama-title">
           <span className="block">{lead}</span>
@@ -249,7 +289,7 @@ export default function HeroCollage({
         <p className="diorama-tagline mx-auto">{tagline}</p>
       </div>
 
-      {/* A flag pill under every island; the scene places and scales them */}
+      {/* A flag pill on the front rim of every disc; the scene places them */}
       {placed.map((s, i) => (
         <button
           key={s.key}
@@ -261,9 +301,9 @@ export default function HeroCollage({
           aria-hidden
           className="sky-pill absolute left-0 top-0 z-20"
           style={{ opacity: 0, transform: 'translate3d(-999px, -999px, 0)' }}
-          onPointerEnter={() => {
+          onPointerEnter={(e) => {
             const sc = sceneRef.current;
-            if (!sc) return;
+            if (!sc || (e.pointerType === 'mouse' && !sc.canHover)) return;
             sc.holdFocus = true;
             sc.setFocus(i);
           }}
@@ -277,12 +317,12 @@ export default function HeroCollage({
           }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={flagSrc(s.slug)} alt="" width={20} height={20} />
+          <img src={flagSrc(s.slug)} alt="" width={22} height={22} />
           {s.name}
         </button>
       ))}
 
-      {/* Destination spotlight card beside the focused island */}
+      {/* The spotlight card beside the focused landmark */}
       <div
         ref={card}
         className="spot-anchor absolute left-0 top-0 z-30"
@@ -299,10 +339,10 @@ export default function HeroCollage({
             <motion.div
               key={focused.key}
               className={`spot-card ${kbd ? 'is-kbd' : ''}`}
-              initial={{ opacity: 0, scale: 0.86, filter: 'blur(4px)' }}
-              animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
-              exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.12, ease: [0.23, 1, 0.32, 1] } }}
-              transition={{ type: 'spring', stiffness: 420, damping: 30 }}
+              initial={{ opacity: 0, scale: 0.92 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.96, transition: { duration: 0.12, ease: [0.23, 1, 0.32, 1] } }}
+              transition={{ type: 'spring', stiffness: 460, damping: 34 }}
             >
               <div className="spot-head">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -312,7 +352,6 @@ export default function HeroCollage({
                   <p className="spot-place">{info.place}</p>
                 </div>
               </div>
-              <p className="spot-hook">{info.hook}</p>
               <button type="button" className="spot-fly" onClick={() => focus !== null && pick(focus)} tabIndex={-1}>
                 Fly to Globe
                 <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden>
@@ -324,7 +363,7 @@ export default function HeroCollage({
         </AnimatePresence>
       </div>
 
-      {/* Keyboard and screen reader route to every island */}
+      {/* Keyboard and screen reader route to every landmark */}
       <ul className="sr-only">
         {placed.map((s, i) => (
           <li key={s.key}>
@@ -343,13 +382,6 @@ export default function HeroCollage({
         ))}
       </ul>
 
-      {/* Which act of the flight you are in */}
-      <div ref={dots} data-act="0" className="act-dots pointer-events-none absolute right-5 top-1/2 z-20 hidden -translate-y-1/2 md:flex" aria-hidden>
-        {ACTS.map((a, i) => (
-          <span key={a} data-i={i} title={a} />
-        ))}
-      </div>
-
       {/* GSAP fades the wrapper on scroll; the pill itself fades after the first touch. */}
       <div ref={hint} aria-hidden className="diorama-hint-wrap pointer-events-none absolute inset-x-0 z-20 flex justify-center">
         <p className={`diorama-hint ${touched || focused ? 'is-gone' : ''}`}>
@@ -359,9 +391,20 @@ export default function HeroCollage({
           Drag to tilt the sky
         </p>
       </div>
-      <div ref={cue} aria-hidden className="diorama-cue pointer-events-none absolute bottom-5 left-1/2 z-20">
-        <span className="diorama-cue-dot" />
-      </div>
+
+      {/* The flight itinerary: where the scroll takes you, and a way to jump there */}
+      <nav ref={itin} data-leg="0" className="itinerary absolute bottom-4 left-1/2 z-30 -translate-x-1/2" aria-label="Flight legs">
+        {LEGS.map((l, i) => (
+          <button key={l.id} type="button" className="itinerary-leg" data-i={i} onClick={() => jump(i)} style={{ '--fill': `var(--${l.id}, 0)` } as React.CSSProperties}>
+            <span className="itinerary-fill" aria-hidden />
+            <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden>
+              <path d={l.icon} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            {l.n && <span className="itinerary-n">{l.n}</span>}
+            <span className="itinerary-label">{l.label}</span>
+          </button>
+        ))}
+      </nav>
       <div ref={wash} aria-hidden className="diorama-wash pointer-events-none absolute inset-0 z-40" />
     </section>
   );

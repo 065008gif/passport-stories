@@ -13,7 +13,7 @@ import { Analytics as VercelAnalytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import FlightProvider from '@/components/FlightProvider';
 import SearchPalette from '@/components/SearchPalette';
-import { RevealRoot, ScrollPlane } from '@/components/Fx';
+import { RevealRoot } from '@/components/Fx';
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
@@ -32,7 +32,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         {/* Scroll reveals only hide content once we know scripts run. */}
         <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
-        <ScrollPlane />
         <RevealRoot />
         <FlightProvider>
           <Header />

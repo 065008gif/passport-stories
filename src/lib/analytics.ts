@@ -40,7 +40,8 @@ export type EventName =
   | 'hero_explore'
   | 'map_country_opened'
   | 'hero_country_picked'
-  | 'explore_country_clicked';
+  | 'explore_country_clicked'
+  | 'hero_leg_jump';
 
 type Params = Record<string, string | number | boolean | undefined>;
 

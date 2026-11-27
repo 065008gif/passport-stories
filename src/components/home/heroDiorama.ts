@@ -167,7 +167,12 @@ function palm(x: number, z: number, h: number, lean: number) {
 }
 /** A flat shape lying on the island top; points are [x, z]. */
 function flatShape(pts: [number, number][], mat: THREE.Material, y = 0.012) {
-  const g = new THREE.ShapeGeometry(new THREE.Shape(pts.map(([x, z]) => new THREE.Vector2(x, -z))), 24);
+  // keep ground details on the disc: clamp every point inside its rim
+  const inside = pts.map(([x, z]) => {
+    const l = Math.hypot(x, z);
+    return l > 0.9 ? ([(x / l) * 0.9, (z / l) * 0.9] as [number, number]) : ([x, z] as [number, number]);
+  });
+  const g = new THREE.ShapeGeometry(new THREE.Shape(inside.map(([x, z]) => new THREE.Vector2(x, -z))), 24);
   g.rotateX(-Math.PI / 2);
   return mesh(g, mat, 0, y, 0, false);
 }
@@ -336,20 +341,20 @@ function landmark(kind: Landmark, d: THREE.Group, living: Living[]) {
       128,
       (g) => {
         g.strokeStyle = '#7a4a2e';
-        g.lineWidth = 7;
+        g.lineWidth = 13;
         g.beginPath();
         g.moveTo(0, 0);
         g.lineTo(128, 128);
         g.moveTo(128, 0);
         g.lineTo(0, 128);
         g.stroke();
-        g.lineWidth = 10;
+        g.lineWidth = 16;
         g.strokeRect(0, 0, 128, 128);
       },
-      [9, 9],
+      [7, 7],
     );
     const bronze = new THREE.MeshPhysicalMaterial({ color: col(0x9a6440), map: lattice, alphaTest: 0.4, roughness: 0.4, metalness: 0.55, clearcoat: 0.5, side: THREE.DoubleSide, envMapIntensity: 1 });
-    const s = 1.15;
+    const s = 1.4;
     const outline: [number, number][] = [[-0.42, 0]];
     for (let i = 1; i <= 10; i++) {
       const t = i / 10;
@@ -838,33 +843,45 @@ const TOPS: Record<Landmark, [number, number]> = {
   singapore: [0x74c96a, 0xbf6a43],
 };
 
+/**
+ * The base every landmark stands on: a paper thin porcelain disc with a gold
+ * and turquoise rim, its ground colour inset on top, tucked into a few soft
+ * cloud puffs. No rock, no cone underneath. The landmark is the silhouette.
+ */
 function island(kind: Landmark, r: number) {
   const g = new THREE.Group();
-  const [topHex, rockHex] = TOPS[kind];
-  const topMat = clay(topHex, 0.7, 0.25);
-  topMat.emissive = col(0xffd9a0);
-  topMat.emissiveIntensity = 0;
-  g.add(mesh(new THREE.CylinderGeometry(r, r * 0.95, 0.24, 64), topMat, 0, -0.12, 0, false));
-  const lip = mesh(new THREE.TorusGeometry(r * 0.975, 0.05, 10, 64), clay(topHex, 0.6, 0.3), 0, -0.01, 0, false);
-  lip.rotation.x = Math.PI / 2;
-  g.add(lip);
-  const pts: [number, number][] = [];
-  for (let i = 14; i >= 0; i--) {
-    const t = i / 14;
-    pts.push([r * 0.96 * Math.pow(1 - t, 0.72) * (1 + 0.07 * Math.sin(t * 13)) + 0.02, -0.24 - t * r * 1.3]);
-  }
-  g.add(lathe(pts, clay(rockHex, 0.78, 0.12), 48));
-  [0.42, 0.8].forEach((t, i) => {
-    const band = mesh(new THREE.TorusGeometry(r * 0.96 * Math.pow(1 - t * 0.7, 0.72) * 0.86, 0.035, 8, 48), clay(i ? 0xa9532f : 0xd9855a, 0.8, 0.1), 0, -0.24 - t * r * 0.62, 0, false);
-    band.rotation.x = Math.PI / 2;
-    g.add(band);
+  const [topHex] = TOPS[kind];
+  const porcelain = new THREE.MeshPhysicalMaterial({ color: col(0xfffaf2), roughness: 0.16, clearcoat: 1, clearcoatRoughness: 0.06, envMapIntensity: 1.1 });
+  g.add(mesh(new THREE.CylinderGeometry(r, r * 0.97, 0.1, 72), porcelain, 0, -0.06, 0, false));
+  const ground = clay(topHex, 0.7, 0.2);
+  ground.emissive = col(0xffd9a0);
+  ground.emissiveIntensity = 0;
+  g.add(mesh(new THREE.CylinderGeometry(r * 0.93, r * 0.93, 0.02, 72), ground, 0, -0.005, 0, false));
+  const gold = mesh(new THREE.TorusGeometry(r * 0.985, 0.018, 8, 96), metal(0xf2c14e, 0.25, 0.85), 0, -0.01, 0, false);
+  gold.rotation.x = Math.PI / 2;
+  const teal = mesh(new THREE.TorusGeometry(r * 0.975, 0.014, 8, 96), gloss(0x12b5a6, 0.25, 0.9), 0, -0.1, 0, false);
+  teal.rotation.x = Math.PI / 2;
+  g.add(gold, teal);
+  // soft cloud puffs hugging the underside
+  const puff = new THREE.MeshStandardMaterial({ color: col(0xfffbf6), roughness: 1, emissive: col(0xffecd8), emissiveIntensity: 0.25, envMapIntensity: 0.3 });
+  const geo = new THREE.IcosahedronGeometry(1, 3);
+  [
+    [-0.55, 0.35, 0.34],
+    [0.5, 0.42, 0.3],
+    [0.05, 0.62, 0.38],
+    [-0.15, -0.45, 0.3],
+  ].forEach(([x, z, s]) => {
+    const b = new THREE.Mesh(geo, puff);
+    b.scale.set(s * r * 1.3, s * r * 0.55, s * r);
+    b.position.set(x * r, -0.12 - s * r * 0.2, z * r);
+    g.add(b);
   });
   const d = new THREE.Group();
-  d.scale.setScalar(r / 1.25);
+  d.scale.setScalar(r / 1.0);
   g.add(d);
   const living: Living[] = [];
   landmark(kind, d, living);
-  return { group: g, topMat, living };
+  return { group: g, topMat: ground, living };
 }
 
 function balloon(colors: string[]) {
@@ -1105,17 +1122,17 @@ void main(){ float d = length(gl_PointCoord - 0.5); float a = smoothstep(0.5, 0.
   #include <colorspace_fragment>
 }`;
 
-/* ------------------------------ Ribbon contrail ------------------------------ */
-const TRAIL = 52;
-class Ribbon {
+/* ------------------------------ Flight trail ------------------------------ */
+const TRAIL = 56;
+/** A camera facing ribbon through a list of points, head first: coral at the plane, turquoise at the tail. */
+class Trail {
   readonly mesh: THREE.Mesh;
   readonly mat: THREE.ShaderMaterial;
   private geo = new THREE.BufferGeometry();
-  private pts: THREE.Vector3[] = [];
   private side = new THREE.Vector3();
   private dir = new THREE.Vector3();
   private view = new THREE.Vector3();
-  constructor(private width: number) {
+  constructor() {
     const idx: number[] = [];
     for (let i = 0; i < TRAIL - 1; i++) idx.push(i * 2, i * 2 + 1, i * 2 + 2, i * 2 + 1, i * 2 + 3, i * 2 + 2);
     const t = new Float32Array(TRAIL * 2);
@@ -1131,36 +1148,35 @@ class Ribbon {
       depthWrite: false,
       side: THREE.DoubleSide,
       toneMapped: false,
-      uniforms: { uA: { value: v3(P.coral) }, uB: { value: v3(P.sun) }, uC: { value: v3(P.teal) }, uOpacity: { value: 0.85 } },
+      uniforms: { uA: { value: v3(P.coral) }, uB: { value: v3(P.sun) }, uC: { value: v3(P.teal) }, uOpacity: { value: 0.9 } },
     });
     this.mesh = new THREE.Mesh(this.geo, this.mat);
     this.mesh.frustumCulled = false;
   }
-  push(p: THREE.Vector3) {
-    const last = this.pts[0];
-    if (last && last.distanceToSquared(p) < 0.0004) return;
-    this.pts.unshift(p.clone());
-    if (this.pts.length > TRAIL) this.pts.length = TRAIL;
-  }
-  update(cam: THREE.Vector3, scale: number) {
+  update(pts: THREE.Vector3[], cam: THREE.Vector3, width: number) {
     const pos = this.geo.getAttribute('position') as THREE.BufferAttribute;
     const al = this.geo.getAttribute('aA') as THREE.BufferAttribute;
-    const n = this.pts.length;
+    const n = pts.length;
     for (let i = 0; i < TRAIL; i++) {
-      const a = this.pts[Math.min(i, n - 1)];
-      if (!a) continue;
-      const b = this.pts[Math.min(i + 1, n - 1)];
-      this.dir.copy(a).sub(b);
-      if (this.dir.lengthSq() < 1e-8) this.dir.set(1, 0, 0);
+      const a = pts[Math.min(i, n - 1)];
+      if (!a || n < 2) {
+        al.setX(i * 2, 0);
+        al.setX(i * 2 + 1, 0);
+        continue;
+      }
+      const b = pts[Math.min(i + 1, n - 1)];
+      const c = pts[Math.min(Math.max(i - 1, 0), n - 1)];
+      this.dir.copy(c).sub(b);
+      if (this.dir.lengthSq() < 1e-10) this.dir.set(1, 0, 0);
       this.view.copy(cam).sub(a);
       this.side.crossVectors(this.dir, this.view).normalize();
       const k = i / (TRAIL - 1);
-      const w = this.width * scale * (0.25 + 0.75 * Math.sin(Math.PI * Math.min(1, k * 1.6 + 0.08))) * (1 - k * 0.5);
+      const w = width * (0.35 + 0.65 * Math.sin(Math.PI * Math.min(1, k * 1.4 + 0.12)));
       pos.setXYZ(i * 2, a.x + this.side.x * w, a.y + this.side.y * w, a.z + this.side.z * w);
       pos.setXYZ(i * 2 + 1, a.x - this.side.x * w, a.y - this.side.y * w, a.z - this.side.z * w);
-      // never draw trail points near or behind the lens
-      const near = a.z > cam.z - 2.2 ? 0 : Math.min(1, (cam.z - 2.2 - a.z) / 2.0);
-      const alpha = i < n ? Math.pow(1 - k, 1.4) * 0.85 * near : 0;
+      // never draw near or behind the lens
+      const near = Math.min(1, Math.max(0, (cam.z - a.z - 2.5) / 2));
+      const alpha = i < n ? Math.pow(1 - k, 1.2) * near : 0;
       al.setX(i * 2, alpha);
       al.setX(i * 2 + 1, alpha);
     }
@@ -1169,47 +1185,59 @@ class Ribbon {
   }
 }
 
-/* ------------------------------ Layout ------------------------------ */
-// Three waves along the flight: [x, y, z]. Wave one frames the words at the top.
-const WIDE: Record<Landmark, [number, number, number]> = {
-  india: [-3.9, -2.25, 1.0],
-  japan: [-5.3, 1.35, -1.6],
-  france: [5.1, 1.75, -3.0],
-  egypt: [3.95, -2.15, 0.5],
-  italy: [-4.7, 1.6, -11],
-  uk: [4.7, 2.0, -12.5],
-  china: [-4.3, -2.2, -12.8],
-  uae: [4.4, -2.0, -10.8],
-  usa: [-4.4, 1.3, -22],
-  brazil: [4.6, 1.8, -23.5],
-  australia: [-3.9, -2.3, -21.2],
-  singapore: [4.2, -2.2, -22.8],
-};
-const TALL: Partial<Record<Landmark, [number, number, number]>> = {
-  japan: [-1.15, 2.6, -1.2],
-  france: [1.3, 3.5, -4.5],
-  india: [-1.15, -2.75, -0.4],
-  egypt: [1.25, -2.4, -1.6],
-  italy: [-1.25, 2.7, -12],
-  uk: [1.3, -2.6, -13],
-  usa: [-1.25, -2.6, -22.5],
-  australia: [1.3, 2.7, -23.5],
-};
-// camera z through the flight: scroll progress -> z
-const CAM_KEYS: [number, number][] = [
-  [0, CAM_Z],
-  [0.28, 3.2],
-  [0.68, -7.2],
-  [0.96, -15.6],
-  [1, -16.2],
+/* ------------------------------ The flight plan ------------------------------ */
+/** Three legs, four countries each, visited in this order: top left, top right, bottom right, bottom left. */
+export const LEGS: Landmark[][] = [
+  ['india', 'japan', 'egypt', 'uae'],
+  ['france', 'italy', 'uk', 'china'],
+  ['usa', 'brazil', 'australia', 'singapore'],
 ];
-function camAt(p: number) {
-  for (let i = 1; i < CAM_KEYS.length; i++) {
-    const [p1, z1] = CAM_KEYS[i];
-    const [p0, z0] = CAM_KEYS[i - 1];
+const QUAD: [number, number][] = [
+  [-1, 1],
+  [1, 1],
+  [1, -1],
+  [-1, -1],
+];
+const STATION = [9, -25, -59];
+/** How far ahead of its station each leg's landmarks stand. */
+const AHEAD = 8.5;
+// scroll progress -> camera z: hold on a leg, then glide to the next
+const CAM_KEYS: [number, number][] = [
+  [0, 9],
+  [0.2, 8.6],
+  [0.32, -25],
+  [0.54, -25.4],
+  [0.66, -59],
+  [0.94, -59.4],
+  [1, -59.8],
+];
+// scroll progress -> the plane on screen: [p, ndc x, ndc y, distance ahead of the camera]
+const PLANE_KEYS: [number, number, number, number][] = [
+  [0.0, -0.3, 0.66, 5.5],
+  [0.04, -0.38, 0.62, 5.5],
+  [0.1, 0.38, 0.62, 5.5],
+  [0.15, 0.42, -0.6, 5.5],
+  [0.2, -0.42, -0.62, 5.5],
+  [0.26, 0.0, 0.15, 5.5],
+  [0.34, -0.38, 0.62, 5.5],
+  [0.4, 0.38, 0.62, 5.5],
+  [0.46, 0.42, -0.6, 5.5],
+  [0.52, -0.42, -0.62, 5.5],
+  [0.59, 0.0, 0.15, 5.5],
+  [0.68, -0.38, 0.62, 5.5],
+  [0.75, 0.38, 0.62, 5.5],
+  [0.82, 0.42, -0.6, 5.5],
+  [0.89, -0.42, -0.62, 5.5],
+  [0.94, 0.0, -0.2, 6],
+  [1.0, 0.0, -0.85, 9],
+];
+function keyed(keys: [number, number][], p: number) {
+  for (let i = 1; i < keys.length; i++) {
+    const [p1, z1] = keys[i];
+    const [p0, z0] = keys[i - 1];
     if (p <= p1) return z0 + (z1 - z0) * ((p - p0) / (p1 - p0));
   }
-  return CAM_KEYS[CAM_KEYS.length - 1][1];
+  return keys[keys.length - 1][1];
 }
 
 interface IslandState {
@@ -1218,14 +1246,18 @@ interface IslandState {
   topMat: THREE.MeshPhysicalMaterial;
   proxy: THREE.Mesh;
   living: Living[];
-  home: THREE.Vector3;
+  leg: number;
+  quad: [number, number];
   r: number;
+  /** local bounds of the whole island, unscaled */
+  box: THREE.Box3;
+  base: number;
+  home: THREE.Vector3;
   phase: number;
   lift: Spring;
   glow: Spring;
-  soft: Spring;
-  spin: number;
-  screen: { x: number; y: number; on: boolean; dist: number };
+  arrive: number;
+  screen: { x: number; y: number; top: number; on: boolean };
 }
 
 export class HeroDiorama {
@@ -1247,12 +1279,13 @@ export class HeroDiorama {
   private clouds: { group: THREE.Group; base: THREE.Vector3; speed: number; push: THREE.Vector2 }[] = [];
   private plane: THREE.Group;
   private fans: THREE.Group[];
-  private ribbons: Ribbon[];
+  private planeCurve: THREE.CatmullRomCurve3;
+  private trail = new Trail();
+  private trailPts: THREE.Vector3[] = [];
   private sparkle: THREE.Points;
   private wake: { geo: THREE.BufferGeometry; vel: Float32Array; next: number; n: number };
   private spot: THREE.Group;
   private spotRing: THREE.Mesh;
-  private haloMat: THREE.ShaderMaterial;
   private ray = new THREE.Raycaster();
   private ndc = new THREE.Vector2(-9, -9);
   private w = 1;
@@ -1264,20 +1297,27 @@ export class HeroDiorama {
   private last = 0;
   private running = false;
   private disposed = false;
-  private pointer = { x: 0, y: 0, inside: false, type: 'mouse', moved: 0 };
+  private pointer = { x: 0, y: 0, px: 0, py: 0, inside: false, type: 'mouse', moved: 0 };
   private cam = { x: { x: 0, v: 0 } as Spring, y: { x: 0, v: 0 } as Spring };
   private orbit = { a: 0, v: 0, tilt: { x: 0, v: 0 } as Spring, dragging: false, lastX: 0, lastY: 0, lastT: 0, downX: 0, downY: 0, moved: 0, tiltTarget: 0 };
   private focused: number | null = null;
   private pills: (HTMLElement | null)[] = [];
   private cardEl: HTMLElement | null = null;
-  private planeState = { t: 0, roll: { x: 0, v: 0 } as Spring, prev: new THREE.Vector3(), vel: new THREE.Vector3() };
-  private curve: THREE.CatmullRomCurve3;
+  private hoverLocked = false;
+  private needMove = false;
+  private lockAt = { x: 0, y: 0 };
+  private lockTimer = 0;
+  private planeQ = new THREE.Quaternion();
   private tmp = new THREE.Vector3();
   private tmp2 = new THREE.Vector3();
+  private tmp3 = new THREE.Vector3();
   private tmpM = new THREE.Matrix4();
   private q = new THREE.Quaternion();
   private origin = new THREE.Vector3();
   private up = new THREE.Vector3(0, 1, 0);
+  private zAxis = new THREE.Vector3(0, 0, 1);
+  private pivotR = new THREE.Matrix4();
+  private pivotT = new THREE.Matrix4();
 
   constructor(canvas: HTMLCanvasElement, specs: IslandSpec[], opts: { phone: boolean; reduce: boolean; flight: Flight }) {
     this.phone = opts.phone;
@@ -1290,15 +1330,15 @@ export class HeroDiorama {
     this.renderer.toneMappingExposure = 1.12;
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    // studio reflections for every glossy, metal, glass and water surface
+    // studio reflections for every glossy, metal, glass, porcelain and water surface
     this.pmrem = new THREE.PMREMGenerator(this.renderer);
     this.scene.environment = this.pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-    this.camera.position.set(0, 0.4, CAM_Z);
+    this.camera.position.set(0, 0.4, STATION[0]);
     this.scene.add(this.camera, this.world);
 
-    const [c1a, c1b, c1c] = [0xff8a5c, 0x1588b5, 0xffcf8a].map(v3); // act one: golden morning
-    const [c2a, c2b, c2c] = [0x8fdcf2, 0x1aa3cf, 0x5fd3c6].map(v3); // act two: azure cruise
-    const [c3a, c3b, c3c] = [0xff8a4c, 0xff6b5b, 0x12b5a6].map(v3); // act three: golden hour
+    const [c1a, c1b, c1c] = [0xff8a5c, 0x1588b5, 0xffcf8a].map(v3); // leg one: warm morning
+    const [c2a, c2b, c2c] = [0x8fdcf2, 0x1aa3cf, 0x5fd3c6].map(v3); // leg two: azure cruise
+    const [c3a, c3b, c3c] = [0xff8a4c, 0xff6b5b, 0x12b5a6].map(v3); // leg three: golden hour
     this.skyMat = new THREE.ShaderMaterial({
       vertexShader: SKY_VERT,
       fragmentShader: SKY_FRAG,
@@ -1309,173 +1349,142 @@ export class HeroDiorama {
     this.sky = new THREE.Mesh(new THREE.SphereGeometry(150, 48, 32), this.skyMat);
     this.sky.renderOrder = -10;
     this.scene.add(this.sky);
-    this.fog = new THREE.Fog(col(0x7fc6dc), 22, 70);
+    this.fog = new THREE.Fog(col(0x7fc6dc), 24, 70);
     this.scene.fog = this.fog;
 
     this.scene.add(new THREE.HemisphereLight(col(0xcdeeff), col(0xffd9c2), 1.0));
-    this.sun = new THREE.DirectionalLight(col(0xfff0d4), 2.8);
+    this.sun = new THREE.DirectionalLight(col(0xfff0d4), 2.6);
     this.sun.castShadow = true;
     this.sun.shadow.mapSize.set(this.phone ? 1024 : 2048, this.phone ? 1024 : 2048);
     const sc = this.sun.shadow.camera;
-    sc.left = sc.bottom = -13;
-    sc.right = sc.top = 13;
+    sc.left = sc.bottom = -12;
+    sc.right = sc.top = 12;
     sc.near = 1;
     sc.far = 50;
     this.sun.shadow.bias = -0.0006;
     this.sun.shadow.normalBias = 0.02;
     this.sun.shadow.radius = 4;
     this.scene.add(this.sun, this.sun.target);
-    const rim = new THREE.DirectionalLight(col(0x7fe6dc), 1.2);
+    const rim = new THREE.DirectionalLight(col(0x7fe6dc), 1.1);
     rim.position.set(-6, 3, -8);
     this.scene.add(rim);
 
     this.buildIslands(specs);
-    this.buildBalloons();
-    this.buildClouds();
+    this.buildSky();
     const j = jet();
     this.plane = j.group;
     this.fans = j.fans;
-    this.plane.scale.setScalar(this.phone ? 0.26 : 0.4);
+    this.plane.scale.setScalar(this.phone ? 0.27 : 0.42);
     this.scene.add(this.plane);
-    this.ribbons = [new Ribbon(0.12), new Ribbon(0.12)];
-    this.ribbons.forEach((r) => this.scene.add(r.mesh));
+    this.scene.add(this.trail.mesh);
+    this.planeCurve = new THREE.CatmullRomCurve3(
+      PLANE_KEYS.map(([, x, y, d]) => new THREE.Vector3(x, y, d)),
+      false,
+      'centripetal',
+    );
     this.sparkle = this.points(2, 0xfff3c4, 16);
     this.scene.add(this.sparkle);
     const wakePts = this.points(90, 0xffd27a, 10);
     this.scene.add(wakePts);
     this.wake = { geo: wakePts.geometry, vel: new Float32Array(90 * 3), next: 0, n: 90 };
 
-    // spotlight: a glowing compass ring and a warm light column at the focused island
+    // spotlight: a glowing coral and gold compass ring around the focused disc
     this.spot = new THREE.Group();
-    this.spotRing = mesh(new THREE.TorusGeometry(1, 0.03, 12, 96), glow(0xff8a5c, 2.4), 0, 0, 0, false);
+    this.spotRing = mesh(new THREE.TorusGeometry(1.06, 0.035, 12, 96), glow(0xff8a5c, 2.4), 0, 0, 0, false);
     this.spotRing.rotation.x = Math.PI / 2;
     this.spot.add(this.spotRing);
-    const inner = mesh(new THREE.TorusGeometry(0.86, 0.012, 8, 96), glow(0xffc233, 2.2), 0, 0, 0, false);
+    const inner = mesh(new THREE.TorusGeometry(1.16, 0.014, 8, 96), glow(0xffc233, 2.2), 0, 0, 0, false);
     inner.rotation.x = Math.PI / 2;
     this.spot.add(inner);
     for (let i = 0; i < 4; i++) {
       const tick = mesh(new THREE.ConeGeometry(0.06, 0.2, 4), glow(0xffc233, 2.2), 0, 0, 0, false);
       const a = (i / 4) * Math.PI * 2;
-      tick.position.set(Math.cos(a) * 1.12, 0, Math.sin(a) * 1.12);
+      tick.position.set(Math.cos(a) * 1.3, 0, Math.sin(a) * 1.3);
       tick.rotation.set(0, -a, -Math.PI / 2);
       this.spot.add(tick);
     }
-    this.haloMat = new THREE.ShaderMaterial({
-      vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-      fragmentShader: HALO_FRAG,
-      transparent: true,
-      depthWrite: false,
-      side: THREE.DoubleSide,
-      blending: THREE.AdditiveBlending,
-      toneMapped: false,
-      uniforms: { uCol: { value: v3(0xffc27a) }, uOpacity: { value: 0 } },
-    });
-    const halo = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.05, 2.2, 48, 1, true), this.haloMat);
-    halo.position.y = 1.0;
-    this.spot.add(halo);
     this.spot.visible = false;
     this.world.add(this.spot);
-
-    // the flight path, relative to the camera: [x, y, distance ahead]
-    this.curve = new THREE.CatmullRomCurve3(
-      [
-        new THREE.Vector3(2.3, 1.25, -6.2),
-        new THREE.Vector3(-1.7, 0.6, -3.1),
-        new THREE.Vector3(1.6, 0.25, -4.6),
-        new THREE.Vector3(0.7, -0.2, -2.6),
-        new THREE.Vector3(-1.9, 0.5, -3.8),
-        new THREE.Vector3(1.4, 0.9, -3.3),
-        new THREE.Vector3(-0.3, 0.2, -4.4),
-        new THREE.Vector3(0, -0.6, -5.4),
-      ],
-      false,
-      'centripetal',
-    );
   }
 
   /* ------------------------------ Builders ------------------------------ */
   private buildIslands(specs: IslandSpec[]) {
     const proxyMat = new THREE.MeshBasicMaterial({ visible: false });
-    specs.forEach((spec, i) => {
-      const at = this.phone ? TALL[spec.landmark] : WIDE[spec.landmark];
-      if (!at) return;
-      const r = this.phone ? 0.85 : 1.25;
-      const built = island(spec.landmark, r);
-      const home = new THREE.Vector3(...at);
-      built.group.position.copy(home);
-      const proxy = new THREE.Mesh(new THREE.SphereGeometry(r * 1.35, 12, 8), proxyMat);
-      proxy.position.y = 0.35;
-      proxy.userData.index = this.islands.length;
-      built.group.add(proxy);
-      this.world.add(built.group);
-      this.islands.push({
-        spec,
-        group: built.group,
-        topMat: built.topMat,
-        proxy,
-        living: built.living,
-        home,
-        r,
-        phase: i * 1.37,
-        lift: { x: 0, v: 0 },
-        glow: { x: 0, v: 0 },
-        soft: { x: 0, v: 0 },
-        spin: (i % 2 ? -1 : 1) * 0.35,
-        screen: { x: 0, y: 0, on: false, dist: 99 },
+    LEGS.forEach((leg, li) => {
+      leg.forEach((kind, qi) => {
+        const spec = specs.find((s) => s.landmark === kind);
+        if (!spec) return;
+        const r = 1.25;
+        const built = island(kind, r);
+        const box = new THREE.Box3().setFromObject(built.group);
+        const proxy = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 8), proxyMat);
+        const c = box.getCenter(new THREE.Vector3());
+        const sz = box.getSize(new THREE.Vector3());
+        proxy.position.copy(c);
+        proxy.scale.set(sz.x * 0.55, sz.y * 0.55, sz.z * 0.55);
+        proxy.userData.index = this.islands.length;
+        built.group.add(proxy);
+        this.world.add(built.group);
+        this.islands.push({
+          spec,
+          group: built.group,
+          topMat: built.topMat,
+          proxy,
+          living: built.living,
+          leg: li,
+          quad: QUAD[qi],
+          r,
+          box,
+          base: 1,
+          home: new THREE.Vector3(),
+          phase: (li * 4 + qi) * 1.37,
+          lift: { x: 0, v: 0 },
+          glow: { x: 0, v: 0 },
+          arrive: 0,
+          screen: { x: 0, y: 0, top: 0, on: false },
+        });
       });
     });
   }
 
-  private buildBalloons() {
-    const sets: { c: string[]; p: [number, number, number]; s: number }[] = this.phone
-      ? [
-          { c: ['#ff6b5b', '#fff8ef', '#ffc233', '#fff8ef'], p: [1.7, 0.95, -3], s: 0.55 },
-          { c: ['#12b5a6', '#fff8ef', '#1aa3cf', '#ffe3d3'], p: [1.9, 4.4, -10], s: 0.7 },
-        ]
-      : [
-          { c: ['#ff6b5b', '#fff8ef', '#ffc233', '#fff8ef'], p: [-2.3, 3.2, -4.5], s: 0.85 },
-          { c: ['#12b5a6', '#fff8ef', '#1aa3cf', '#ffe3d3'], p: [7.2, -0.4, -7], s: 1.0 },
-          { c: ['#ff8a4c', '#ffe3d3', '#ff6b5b', '#fff8ef'], p: [-7.6, -0.6, -16], s: 1.1 },
-          { c: ['#1aa3cf', '#fff8ef', '#ffc233', '#ffe3d3'], p: [6.8, 3.0, -18], s: 1.0 },
-        ];
-    sets.forEach((b, i) => {
-      const g = balloon(b.c);
-      g.scale.setScalar(b.s);
-      const base = new THREE.Vector3(...b.p);
-      g.position.copy(base);
-      this.world.add(g);
-      this.balloons.push({ group: g, base, phase: i * 2.1, push: new THREE.Vector2() });
-    });
-  }
-
-  private buildClouds() {
-    const sets: [number, number, number, number][] = this.phone
-      ? [
-          [-2.5, 3.9, -3, 0.42],
-          [2.6, -3.8, 0.5, 0.5],
-          [-2.4, -0.4, -8, 0.7],
-          [2.3, 0.8, -16, 0.8],
-          [-2.2, 0.2, -20, 0.8],
-        ]
-      : [
-          [-7.6, 3.4, -6, 0.75],
-          [7.8, 3.9, -9, 0.95],
-          [-1.6, -4.1, -4, 0.7],
-          [6.8, -3.6, 2.5, 0.55],
-          [-6.6, -1.4, 3.6, 0.5],
-          [-7.5, 0.3, -14, 1.1],
-          [7.4, 0.6, -16, 1.2],
-          [-2.5, 4.4, -17, 1.0],
-          [3.0, -4.4, -19, 1.1],
-          [-7.0, 2.6, -26, 1.3],
-          [7.5, -1.0, -27, 1.3],
-        ];
-    sets.forEach(([x, y, z, s], i) => {
-      const g = cloud(s);
-      const base = new THREE.Vector3(x, y, z);
-      g.position.copy(base);
-      this.world.add(g);
-      this.clouds.push({ group: g, base, speed: 0.06 + (i % 3) * 0.03, push: new THREE.Vector2() });
+  /** Clouds and balloons around each leg, kept to the edges of the view. */
+  private buildSky() {
+    STATION.forEach((st, li) => {
+      const sets: [number, number, number, number][] = this.phone
+        ? [
+            [-2.6, 4.6, st - 12, 0.7],
+            [2.8, -4.4, st - 14, 0.8],
+            [2.4, 3.8, st - 22, 0.9],
+          ]
+        : [
+            [-8.5, 3.6, st - 12, 0.9],
+            [8.6, -3.4, st - 13, 1.0],
+            [-3.0, 5.2, st - 20, 1.1],
+            [3.4, -5.0, st - 22, 1.1],
+            [-9.0, -1.0, st - 26, 1.3],
+            [9.2, 1.6, st - 27, 1.3],
+          ];
+      sets.forEach(([x, y, z, s], i) => {
+        const g = cloud(s);
+        const base = new THREE.Vector3(x, y, z);
+        g.position.copy(base);
+        this.world.add(g);
+        this.clouds.push({ group: g, base, speed: 0.05 + ((i + li) % 3) * 0.025, push: new THREE.Vector2() });
+      });
+      const palette = [
+        ['#ff6b5b', '#fff8ef', '#ffc233', '#fff8ef'],
+        ['#12b5a6', '#fff8ef', '#1aa3cf', '#ffe3d3'],
+        ['#ff8a4c', '#ffe3d3', '#ff6b5b', '#fff8ef'],
+      ][li];
+      const bset: [number, number, number, number][] = this.phone ? [[0.0, 5.4, st - 20, 0.8]] : [[-1.2, 4.6, st - 18, 0.9], [7.6, 0.2, st - 24, 1.1]];
+      bset.forEach(([x, y, z, s], i) => {
+        const g = balloon(palette);
+        g.scale.setScalar(s);
+        const base = new THREE.Vector3(x, y, z);
+        g.position.copy(base);
+        this.world.add(g);
+        this.balloons.push({ group: g, base, phase: li * 2 + i * 1.3, push: new THREE.Vector2() });
+      });
     });
   }
 
@@ -1499,6 +1508,26 @@ export class HeroDiorama {
     return p;
   }
 
+  /* ------------------------------ Framing ------------------------------ */
+  /** Place every island in its corner of the view, from the camera's real fov and aspect. */
+  private layout() {
+    const tan = Math.tan((this.camera.fov / 2) * DEG);
+    const aspect = this.camera.aspect;
+    const tall = aspect < 1;
+    this.islands.forEach((s) => {
+      const hh = AHEAD * tan;
+      const hw = hh * aspect;
+      const nx = s.quad[0] * (tall ? 0.5 : 0.6);
+      const ny = s.quad[1] > 0 ? (tall ? 0.42 : 0.32) : tall ? -0.43 : -0.3;
+      const size = s.box.getSize(this.tmp);
+      // landmark height 36% of the view (28% on phones), width at most 30% (84% of a phone's half)
+      const k = Math.min(((tall ? 0.28 : 0.36) * hh) / size.y, ((tall ? 0.84 : 0.3) * hw) / size.x);
+      s.base = k;
+      const cy = (s.box.min.y + s.box.max.y) / 2;
+      s.home.set(nx * hw, 0.4 + ny * hh - cy * k, STATION[s.leg] - AHEAD);
+    });
+  }
+
   /* ------------------------------ Input ------------------------------ */
   setPills(els: (HTMLElement | null)[]) {
     this.pills = els;
@@ -1506,7 +1535,7 @@ export class HeroDiorama {
   setCard(el: HTMLElement | null) {
     this.cardEl = el;
   }
-  /** Islands actually placed (phones keep eight), in the order the pills use. */
+  /** Islands in pill order. */
   get placed() {
     return this.islands.map((s) => s.spec);
   }
@@ -1515,9 +1544,26 @@ export class HeroDiorama {
     this.h = Math.max(1, h);
     this.renderer.setSize(this.w, this.h, false);
     this.camera.aspect = this.w / this.h;
-    this.camera.fov = this.camera.aspect < 1 ? 50 : this.camera.aspect < 1.4 ? 52 : FOV;
+    this.camera.fov = this.camera.aspect < 1 ? 52 : FOV;
     this.camera.updateProjectionMatrix();
+    this.layout();
     if (!this.running) this.frame(performance.now(), true);
+  }
+  /** Scrolling moves the world under a still pointer: no hover until it settles and the pointer moves. */
+  lockHover() {
+    this.hoverLocked = true;
+    this.holdFocus = false;
+    this.setFocus(null);
+    window.clearTimeout(this.lockTimer);
+    this.lockTimer = window.setTimeout(() => {
+      this.hoverLocked = false;
+      this.needMove = true;
+      this.lockAt.x = this.pointer.px;
+      this.lockAt.y = this.pointer.py;
+    }, 260);
+  }
+  get canHover() {
+    return !this.hoverLocked && !this.needMove;
   }
   pointerMove(x: number, y: number, type: string) {
     const px = (x / this.w) * 2 - 1;
@@ -1525,18 +1571,21 @@ export class HeroDiorama {
     this.pointer.moved += Math.hypot(px - this.pointer.x, py - this.pointer.y);
     this.pointer.x = px;
     this.pointer.y = py;
+    this.pointer.px = x;
+    this.pointer.py = y;
     this.pointer.inside = true;
     this.pointer.type = type;
     this.ndc.set(px, -py);
+    if (this.needMove && Math.hypot(x - this.lockAt.x, y - this.lockAt.y) > 4) this.needMove = false;
     const o = this.orbit;
     if (o.dragging) {
       const now = performance.now();
       const dx = x - o.lastX;
       const dy = y - o.lastY;
       const dt = Math.max(1, now - o.lastT) / 1000;
-      o.a += dx * 0.0035;
-      o.v = o.v * 0.35 + ((dx * 0.0035) / dt) * 0.65;
-      o.tiltTarget = Math.max(-0.22, Math.min(0.22, o.tiltTarget + dy * 0.0016));
+      o.a += dx * 0.003;
+      o.v = o.v * 0.35 + ((dx * 0.003) / dt) * 0.65;
+      o.tiltTarget = Math.max(-0.12, Math.min(0.12, o.tiltTarget + dy * 0.001));
       o.moved = Math.max(o.moved, Math.hypot(x - o.downX, y - o.downY));
       o.lastX = x;
       o.lastY = y;
@@ -1552,6 +1601,7 @@ export class HeroDiorama {
     o.moved = 0;
     o.v = 0;
     this.pointerMove(x, y, this.pointer.type);
+    this.needMove = false;
   }
   pointerUp(cancelled = false): { tap: boolean; hit: number | null } {
     const o = this.orbit;
@@ -1571,7 +1621,7 @@ export class HeroDiorama {
   private hit(): number | null {
     this.ray.setFromCamera(this.ndc, this.camera);
     const hits = this.ray.intersectObjects(
-      this.islands.filter((s) => s.group.visible).map((s) => s.proxy),
+      this.islands.filter((s) => s.group.visible && s.arrive > 0.6).map((s) => s.proxy),
       false,
     );
     return hits.length ? (hits[0].object.userData.index as number) : null;
@@ -1603,6 +1653,19 @@ export class HeroDiorama {
     this.raf = requestAnimationFrame(this.tick);
   };
 
+  /** Where the plane is in the world at progress p: fixed to the camera's view, so it never leaves the frame. */
+  private planeAt(p: number, out: THREE.Vector3) {
+    const q = Math.min(1, Math.max(0, p));
+    let i = 1;
+    while (i < PLANE_KEYS.length - 1 && q > PLANE_KEYS[i][0]) i++;
+    const p0 = PLANE_KEYS[i - 1][0];
+    const p1 = PLANE_KEYS[i][0];
+    const t = (q - p0) / (p1 - p0);
+    const v = this.planeCurve.getPoint((i - 1 + t) / (PLANE_KEYS.length - 1), this.tmp3);
+    const hh = v.z * Math.tan((this.camera.fov / 2) * DEG);
+    return out.set(v.x * hh * this.camera.aspect * (this.phone ? 0.8 : 1), 0.4 + v.y * hh * (this.phone ? 0.85 : 1), keyed(CAM_KEYS, q) - v.z);
+  }
+
   private frame(now: number, still: boolean) {
     const dt = still ? 0 : Math.min(0.05, (now - this.last) / 1000);
     this.last = now;
@@ -1611,166 +1674,163 @@ export class HeroDiorama {
     const t = this.time;
     const p = Math.min(1, Math.max(0, this.flight.p));
 
-    /* orbit with momentum: 0.93 friction per 60 Hz frame, drifting home */
+    /* a gentle drag tilt with momentum (0.93 per 60 Hz frame), always drifting home */
     const o = this.orbit;
     if (!o.dragging) {
       o.a += o.v * dt;
       o.v *= Math.pow(0.93, dt * 60);
-      o.a += (0 - o.a) * (1 - Math.exp(-dt * 0.35));
+      o.a += (0 - o.a) * (1 - Math.exp(-dt * 0.8));
     }
-    step(o.tilt, o.tiltTarget, 90, 16, dt);
-    this.world.rotation.set(o.tilt.x, o.a * (this.phone ? 0.25 : 0.18), 0);
+    step(o.tilt, o.tiltTarget, 90, 18, dt);
+    const camZ = keyed(CAM_KEYS, p);
+    // tilt the world around the current leg, not the origin
+    this.world.rotation.set(o.tilt.x, o.a * 0.12, 0);
+    this.world.matrixAutoUpdate = false;
+    this.world.matrix
+      .makeTranslation(0, 0, camZ - AHEAD)
+      .multiply(this.pivotR.makeRotationFromEuler(this.world.rotation))
+      .multiply(this.pivotT.makeTranslation(0, 0, -(camZ - AHEAD)));
+    this.world.matrixWorldNeedsUpdate = true;
 
-    /* hover focus for mouse pointers */
+    /* hover only when the pointer has deliberately moved and nothing is scrolling */
     if (this.pointer.type === 'mouse' && this.pointer.inside && !o.dragging && !this.holdFocus) {
-      const h = this.hit();
+      const h = this.canHover ? this.hit() : null;
       if (h !== null) this.setFocus(h);
-      else if (!this.holdFocus) this.setFocus(null);
+      else this.setFocus(null);
     }
 
-    /* camera: flies the scroll, with deep pointer parallax and a gentle weave */
+    /* camera: flies the scroll, with soft pointer parallax */
     const px = this.pointer.inside && !rm ? this.pointer.x : 0;
     const py = this.pointer.inside && !rm ? this.pointer.y : 0;
-    step(this.cam.x, px * (this.phone ? 0.5 : 1.2), 30, 11, dt);
-    step(this.cam.y, -py * (this.phone ? 0.35 : 0.75), 30, 11, dt);
+    step(this.cam.x, px * (this.phone ? 0.25 : 0.6), 30, 11, dt);
+    step(this.cam.y, -py * (this.phone ? 0.18 : 0.35), 30, 11, dt);
     if (still) {
-      this.cam.x.x = px * 1.2;
-      this.cam.y.x = -py * 0.75;
+      this.cam.x.x = px * 0.6;
+      this.cam.y.x = -py * 0.35;
     }
-    const camZ = camAt(p);
-    const weave = rm ? 0 : Math.sin(p * Math.PI * 3) * 0.6 * smooth(0.05, 0.2, p) * (1 - smooth(0.85, 0.96, p));
-    this.camera.position.set(this.cam.x.x + weave, 0.4 + this.cam.y.x, camZ);
-    this.camera.lookAt(this.cam.x.x * 0.25 + weave * 0.4, 0.25 + this.cam.y.x * 0.2, camZ - 9);
-    this.camera.rotateZ(-weave * 0.05);
+    this.camera.position.set(this.cam.x.x, 0.4 + this.cam.y.x, camZ);
+    this.camera.lookAt(this.cam.x.x * 0.3, 0.4 + this.cam.y.x * 0.3, camZ - 10);
     this.camera.updateMatrixWorld();
     this.sky.position.copy(this.camera.position);
     this.sun.position.set(this.camera.position.x + 6, 9, camZ + 4);
-    this.sun.target.position.set(this.camera.position.x, 0, camZ - 8);
+    this.sun.target.position.set(0, 0, camZ - 9);
 
-    /* the sky's three acts, and a matching haze */
-    const act = smooth(0.2, 0.42, p) + smooth(0.6, 0.78, p);
+    /* the sky's three moods, and a matching haze */
+    const act = smooth(0.22, 0.38, p) + smooth(0.56, 0.72, p);
     this.skyMat.uniforms.uAct.value = act;
     this.skyMat.uniforms.uTime.value = t;
     this.fog.color.copy(col(act < 1 ? lerpHex(0x7fc6dc, 0x6fd0e0, act) : lerpHex(0x6fd0e0, 0xffa985, act - 1)));
 
-    /* islands: bob, part as the camera passes, spring on focus */
+    /* islands: rise into their corners as a leg arrives, part as the camera passes, lift on focus */
     const f = this.focused;
     this.islands.forEach((s, i) => {
       const on = f === i;
-      step(s.lift, on ? 0.9 : 0, 170, 13, dt);
-      step(s.glow, on ? 1 : 0, 120, 16, dt);
-      step(s.soft, f !== null && !on ? 1 : 0, 90, 18, dt);
+      step(s.lift, on ? 1 : 0, 260, 26, dt);
+      step(s.glow, on ? 1 : 0, 220, 26, dt);
       if (still || rm) {
-        s.lift.x = on ? 0.9 : 0;
+        s.lift.x = on ? 1 : 0;
         s.glow.x = on ? 1 : 0;
-        s.soft.x = f !== null && !on ? 1 : 0;
       }
       const dist = camZ - s.home.z;
-      const near = Math.max(0, Math.min(1, (7 - dist) / 7));
-      const part = near * near * 1.1;
-      const bob = rm ? 0 : Math.sin(t * 0.8 + s.phase) * 0.12;
-      s.group.position.set(s.home.x * (1 + part), s.home.y * (1 + part * 0.4) + bob + s.lift.x - s.soft.x * 0.15, s.home.z);
-      if (s.glow.x > 0.05 && !rm) s.spin += dt * 0.45 * s.glow.x;
-      else s.spin += ((i % 2 ? -1 : 1) * 0.35 - s.spin) * (1 - Math.exp(-dt * 1.5));
-      s.group.rotation.y = s.spin + (rm ? 0 : Math.sin(t * 0.25 + s.phase) * 0.06);
-      const arrive = smooth(19, 12.5, dist);
-      s.group.scale.setScalar(Math.max(0.001, arrive * (1 + s.glow.x * 0.35 - s.soft.x * 0.08)));
+      s.arrive = smooth(27, 15, dist);
+      const pass = Math.max(0, (AHEAD - 0.4 - dist) / AHEAD);
+      const k = s.base * (1 + s.glow.x * 0.18);
+      const bob = rm ? 0 : Math.sin(t * 0.7 + s.phase) * 0.04 * s.base;
+      s.group.position.set(s.home.x * (1 + pass * 1.6), s.home.y - (1 - s.arrive) * 3 + bob + s.lift.x * 0.4 * s.base * 2.4, s.home.z);
+      s.group.rotation.y = (s.quad[0] > 0 ? -1 : 1) * 0.3 + (rm ? 0 : Math.sin(t * 0.2 + s.phase) * 0.04) + s.glow.x * 0.3;
+      s.group.scale.setScalar(Math.max(0.0001, k * s.arrive));
       s.topMat.emissiveIntensity = s.glow.x * 0.35;
-      s.group.visible = dist > 0.9 && arrive > 0.01;
-      if (!rm && s.group.visible && dist < 40) s.living.forEach((l) => l.update(t));
+      s.group.visible = s.arrive > 0.01 && dist > 1.2;
+      if (!rm && s.group.visible) s.living.forEach((l) => l.update(t));
     });
     if (rm && still) this.islands.forEach((s) => s.living.forEach((l) => l.update(2)));
 
-    /* spotlight ring and light column */
+    /* the ring around the focused disc */
     if (f !== null) {
       const s = this.islands[f];
       this.spot.visible = true;
-      this.spot.position.set(s.group.position.x, s.group.position.y - 0.16, s.group.position.z);
-      this.spot.scale.setScalar(Math.max(0.001, s.glow.x * s.r * (1 + 0.35 * s.glow.x)));
+      this.spot.position.set(s.group.position.x, s.group.position.y - 0.02 * s.group.scale.x, s.group.position.z);
+      this.spot.scale.setScalar(Math.max(0.0001, s.glow.x * s.r * s.group.scale.x));
       this.spotRing.rotation.z = t * 0.6;
-      this.haloMat.uniforms.uOpacity.value = s.glow.x;
     } else this.spot.visible = false;
 
-    /* balloons and clouds sway away from the pointer */
+    /* clouds and balloons drift and sway away from the pointer */
     const nudge = (obj: THREE.Object3D, push: THREE.Vector2) => {
-      this.tmp.copy(obj.position).applyMatrix4(this.world.matrixWorld).project(this.camera);
+      this.tmp.copy(obj.position).project(this.camera);
       const dx = this.tmp.x - px;
       const dy = this.tmp.y + py;
       const d2 = dx * dx + dy * dy;
-      const k = this.pointer.inside && !rm && d2 < 0.09 ? (0.09 - d2) * 6 : 0;
+      const k = this.pointer.inside && !rm && d2 < 0.09 ? (0.09 - d2) * 5 : 0;
       push.x += ((dx > 0 ? 1 : -1) * k - push.x) * (1 - Math.exp(-dt * 3));
       push.y += ((dy > 0 ? 1 : -1) * k * 0.5 - push.y) * (1 - Math.exp(-dt * 3));
     };
-    this.balloons.forEach((b, i) => {
+    this.balloons.forEach((b) => {
       nudge(b.group, b.push);
-      b.group.position.set(b.base.x + (rm ? 0 : Math.sin(t * 0.15 + b.phase) * 0.4) + b.push.x, b.base.y + (rm ? 0 : Math.sin(t * 0.5 + b.phase) * 0.25) + b.push.y, b.base.z);
-      b.group.rotation.set(b.push.x * 0.15, rm ? i : t * 0.25 + b.phase, 0);
+      const arrive = smooth(30, 20, camZ - b.base.z);
+      b.group.visible = arrive > 0.01 && camZ - b.base.z > 0.5;
+      b.group.position.set(b.base.x + b.push.x, b.base.y + (rm ? 0 : Math.sin(t * 0.4 + b.phase) * 0.2) + b.push.y, b.base.z);
+      b.group.rotation.y = rm ? b.phase : t * 0.2 + b.phase;
     });
     this.clouds.forEach((c) => {
       nudge(c.group, c.push);
-      const span = 26;
-      const x = rm ? c.base.x : ((((c.base.x + t * c.speed + span / 2) % span) + span) % span) - span / 2;
-      const near = Math.max(0, Math.min(1, (7 - (camZ - c.base.z)) / 7));
-      c.group.position.set(x * (1 + near * 0.9) + c.push.x, c.base.y + c.push.y, c.base.z);
+      const pass = Math.max(0, Math.min(1, (8 - (camZ - c.base.z)) / 8));
+      const arrive = smooth(30, 20, camZ - c.base.z);
+      c.group.visible = arrive > 0.01 && camZ - c.base.z > 0.5;
+      c.group.scale.setScalar(Math.max(0.001, arrive));
+      c.group.position.set((c.base.x + (rm ? 0 : Math.sin(t * c.speed + c.base.z) * 0.6)) * (1 + pass * 1.4) + c.push.x, c.base.y + c.push.y, c.base.z);
     });
 
-    this.updatePlane(dt, rm, camZ, p);
+    this.updatePlane(dt, p);
     this.updateWake(dt);
     this.updateLabels();
     this.renderer.render(this.scene, this.camera);
   }
 
-  private updatePlane(dt: number, rm: boolean, camZ: number, p: number) {
-    const ps = this.planeState;
-    if (!rm) ps.t += dt;
-    const ph = this.phone;
-    const px = this.pointer.inside && !rm ? this.pointer.x : 0;
-    const py = this.pointer.inside && !rm ? this.pointer.y : 0;
-    // idle: a lazy loop above the words that dips toward the pointer
-    const idle = this.tmp.set(Math.sin(ps.t * 0.32) * (ph ? 0.8 : 2.4) + px * 0.7, (ph ? 1.15 : 1.3) + Math.sin(ps.t * 0.64) * (ph ? 0.12 : 0.3) - py * 0.45, camZ - 5.8 + Math.cos(ps.t * 0.32) * (ph ? 0.4 : 1.1));
-    if (rm) idle.set(ph ? 0.2 : 1.5, ph ? 1.6 : 2.2, camZ - 6.2);
-    // scroll: the three act curve, then a dive toward the globe
-    const fly = smooth(0.0, 0.06, p);
-    const u = Math.min(0.999, Math.max(0, (p - 0.02) / 0.9));
-    const rel = this.curve.getPointAt(u);
-    if (ph) rel.x *= 0.45;
-    const target = idle.lerp(this.tmp2.set(rel.x, rel.y, camZ + rel.z), fly);
-    const dive = smooth(0.9, 1.0, p);
-    target.lerp(this.tmp2.set(0, -3.4, camZ - 4.4), dive);
-    const prev = ps.prev.copy(this.plane.position);
-    if (dt === 0) this.plane.position.copy(target);
-    else this.plane.position.lerp(target, 1 - Math.exp(-dt * (fly > 0.5 ? 9 : 4)));
-    if (dt > 0) ps.vel.lerp(this.tmp.copy(this.plane.position).sub(prev).divideScalar(dt), 1 - Math.exp(-dt * 7));
-    const head = this.tmp.copy(ps.vel);
-    if (head.lengthSq() < 0.02) head.set(Math.cos(ps.t * 0.32), 0, -0.4);
-    head.z -= 0.35 + dive * 1.5;
-    head.y -= dive * 2;
+  /** The plane: exact position on its curve, nose along the tangent, banking only with the turn (at most 18 degrees). */
+  private updatePlane(dt: number, p: number) {
+    const e = 0.004;
+    const here = this.planeAt(p, this.tmp);
+    this.plane.position.copy(here);
+    const a = this.planeAt(p - e, new THREE.Vector3());
+    const b = this.planeAt(p + e, new THREE.Vector3());
+    const head = b.clone().sub(a);
+    if (head.lengthSq() < 1e-8) head.set(1, 0, -1);
     head.normalize();
+    head.z -= 0.55; // a three quarter view: always a little forward
+    head.normalize();
+    // turn rate in the ground plane decides the bank
+    const a2 = this.planeAt(p - 2 * e, new THREE.Vector3());
+    const h1 = a.clone().sub(a2).setY(0).normalize();
+    const h2 = b.clone().sub(a).setY(0).normalize();
+    const turn = Math.atan2(h1.x * h2.z - h1.z * h2.x, h1.dot(h2) || 1);
+    const bank = Math.max(-18 * DEG, Math.min(18 * DEG, turn * 6));
     this.tmpM.lookAt(this.origin, head, this.up);
     this.q.setFromRotationMatrix(this.tmpM);
-    this.plane.quaternion.slerp(this.q, dt === 0 ? 1 : 1 - Math.exp(-dt * 8));
-    // bank into turns, up to 34 degrees, and tip a wing toward a focused island
-    let lean = 0;
-    if (this.focused !== null) {
-      const s = this.islands[this.focused].screen;
-      this.tmp2.copy(this.plane.position).project(this.camera);
-      lean = Math.max(-0.35, Math.min(0.35, ((s.x / this.w) * 2 - 1 - this.tmp2.x) * 0.5));
-    }
-    step(ps.roll, Math.max(-34 * DEG, Math.min(34 * DEG, -ps.vel.x * 0.16 - lean)), 60, 12, dt);
-    this.plane.rotateZ(ps.roll.x);
+    this.q.multiply(new THREE.Quaternion().setFromAxisAngle(this.zAxis, -bank));
+    if (dt === 0) this.planeQ.copy(this.q);
+    else this.planeQ.slerp(this.q, 1 - Math.exp(-dt * 7));
+    this.plane.quaternion.copy(this.planeQ);
+    const shrink = 1 - 0.35 * smooth(0.94, 1, p);
+    this.plane.scale.setScalar((this.phone ? 0.27 : 0.42) * shrink);
     this.fans.forEach((fan) => (fan.rotation.z += dt * 40));
-    this.plane.visible = this.plane.position.z < this.camera.position.z - 0.4;
+
+    // the route behind the plane, sampled from the same curve, so it rewinds with the scroll
+    this.trailPts.length = 0;
+    const span = 0.09;
+    for (let i = 0; i < TRAIL; i++) {
+      const q = p - (i / (TRAIL - 1)) * span;
+      if (q < 0) break;
+      this.trailPts.push(this.planeAt(q, new THREE.Vector3()));
+    }
+    this.trail.update(this.trailPts, this.camera.position, 0.06 * (this.phone ? 0.8 : 1));
 
     const s = this.plane.scale.x;
     const spos = this.sparkle.geometry.getAttribute('position') as THREE.BufferAttribute;
     const slife = this.sparkle.geometry.getAttribute('aLife') as THREE.BufferAttribute;
     [-1, 1].forEach((side, k) => {
-      const tip = this.tmp.set(side * 1.6, -0.02, 0.3).applyQuaternion(this.plane.quaternion).multiplyScalar(s).add(this.plane.position);
-      if (dt > 0) this.ribbons[k].push(tip);
-      this.ribbons[k].update(this.camera.position, (s / 0.4) * (0.55 + fly * 0.45));
-      this.ribbons[k].mat.uniforms.uOpacity.value = this.plane.visible ? 0.4 + fly * 0.5 : 0;
+      const tip = this.tmp2.set(side * 1.6, -0.02, 0.3).applyQuaternion(this.plane.quaternion).multiplyScalar(s).add(this.plane.position);
       spos.setXYZ(k, tip.x, tip.y, tip.z);
-      slife.setX(k, this.plane.visible ? 0.6 + 0.4 * Math.sin(this.time * 9 + k * 2) : 0);
+      slife.setX(k, 0.6 + 0.4 * Math.sin(this.time * 9 + k * 2));
     });
     spos.needsUpdate = true;
     slife.needsUpdate = true;
@@ -1792,8 +1852,8 @@ export class HeroDiorama {
         w.vel.set([(Math.random() - 0.5) * 0.4, 0.2 + Math.random() * 0.4, (Math.random() - 0.5) * 0.3], i * 3);
         life.setX(i, 1);
       }
-      this.pointer.moved = 0;
     }
+    this.pointer.moved = 0;
     for (let i = 0; i < w.n; i++) {
       const l = life.getX(i);
       if (l <= 0) continue;
@@ -1804,27 +1864,26 @@ export class HeroDiorama {
     life.needsUpdate = true;
   }
 
-  /** Flag pills under every island in range, and the spotlight card beside the focused one. */
+  /** Flag pills on the front rim of each disc, and the spotlight card beside the focused one. */
   private updateLabels() {
-    this.world.updateMatrixWorld();
+    this.world.updateMatrixWorld(true);
     this.islands.forEach((s, i) => {
+      s.group.updateMatrixWorld();
       const el = this.pills[i];
-      const dist = this.camera.position.z - s.group.position.z;
-      const pt = this.tmp.set(0, this.phone ? s.r * 1.55 : -s.r * 1.55, 0).applyMatrix4(s.group.matrixWorld).project(this.camera);
-      const x = (pt.x * 0.5 + 0.5) * this.w;
-      const y = (-pt.y * 0.5 + 0.5) * this.h;
-      const top = this.tmp2.set(0, s.r * 0.5, 0).applyMatrix4(s.group.matrixWorld).project(this.camera);
-      s.screen.x = (top.x * 0.5 + 0.5) * this.w;
-      s.screen.y = (-top.y * 0.5 + 0.5) * this.h;
-      s.screen.dist = dist;
-      const inView = pt.z < 1 && x > -60 && x < this.w + 60 && y > -40 && y < this.h + 40;
-      s.screen.on = s.group.visible && inView && dist < 17;
+      const rim = this.tmp.set(0, -0.06, s.r * 0.98).applyMatrix4(s.group.matrixWorld).project(this.camera);
+      const x = (rim.x * 0.5 + 0.5) * this.w;
+      const y = Math.max(16, Math.min(this.h - 80, (-rim.y * 0.5 + 0.5) * this.h));
+      const c = this.tmp2.copy(s.box.getCenter(this.tmp3)).applyMatrix4(s.group.matrixWorld).project(this.camera);
+      const topY = this.tmp3.set(0, s.box.max.y, 0).applyMatrix4(s.group.matrixWorld).project(this.camera).y;
+      s.screen.x = (c.x * 0.5 + 0.5) * this.w;
+      s.screen.y = (-c.y * 0.5 + 0.5) * this.h;
+      s.screen.top = (-topY * 0.5 + 0.5) * this.h;
+      s.screen.on = s.group.visible && s.arrive > 0.85 && rim.z < 1 && x > 8 && x < this.w - 8;
       if (!el) return;
-      const sc = Math.max(0.72, Math.min(1.08, 6 / Math.max(1, dist)));
-      const fade = s.screen.on ? Math.min(1, (17 - dist) / 4) * (this.focused === i ? 0 : 1) : 0;
-      el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) translate(-50%, ${this.phone ? '-100%' : '0'}) scale(${sc.toFixed(3)})`;
-      el.style.opacity = fade.toFixed(3);
-      el.style.pointerEvents = fade > 0.5 ? 'auto' : 'none';
+      const fade = s.screen.on && this.focused !== i ? 1 : 0;
+      el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) translate(-50%, -50%)`;
+      el.style.opacity = String(fade);
+      el.style.pointerEvents = fade ? 'auto' : 'none';
     });
     const card = this.cardEl;
     const f = this.focused;
@@ -1833,10 +1892,10 @@ export class HeroDiorama {
       const cw = card.offsetWidth;
       const ch = card.offsetHeight;
       const right = s.screen.x < this.w / 2;
-      const gap = s.r * 70 * Math.min(1.4, 6 / Math.max(1, s.screen.dist));
-      let x = right ? s.screen.x + gap : s.screen.x - gap - cw;
+      const half = Math.abs(this.tmp.set(s.box.max.x, 0, 0).applyMatrix4(s.group.matrixWorld).project(this.camera).x * 0.5 + 0.5 - s.screen.x / this.w) * this.w;
+      let x = right ? s.screen.x + half + 16 : s.screen.x - half - 16 - cw;
       x = Math.max(12, Math.min(this.w - cw - 12, x));
-      const y = Math.max(12, Math.min(this.h - ch - 12, s.screen.y - ch / 2));
+      const y = Math.max(12, Math.min(this.h - ch - 80, s.screen.y - ch / 2));
       card.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
       card.style.transformOrigin = right ? '0% 50%' : '100% 50%';
     }
@@ -1845,6 +1904,7 @@ export class HeroDiorama {
   dispose() {
     this.disposed = true;
     this.stop();
+    window.clearTimeout(this.lockTimer);
     this.scene.traverse((o) => {
       const m = o as THREE.Mesh;
       m.geometry?.dispose();
