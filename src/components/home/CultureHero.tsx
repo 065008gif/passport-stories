@@ -92,8 +92,10 @@ const PINK_RGB = SKY_PINK.map(hex);
 /* fixed lights in the painting: [x, y, depth, size, warm?, reflect-from-y] */
 const BRIDGE_LAMPS = [680, 740, 800, 860, 920].map((x) => [x, 524 + (1 - Math.pow((x - 800) / 170, 2)) * 26 + 14] as const);
 const LIGHTS: { x: number; y: number; d: number; r: number; c: 0 | 1; ry: number; rl: number }[] = [
-  ...BRIDGE_LAMPS.map(([x, y]) => ({ x, y, d: 0.42, r: 1, c: 0 as const, ry: 652, rl: 90 })),
-  { x: 792, y: 512, d: 0.42, r: 1.3, c: 1, ry: 660, rl: 110 },
+  ...BRIDGE_LAMPS.map(([x, y]) => ({ x, y, d: 0.42, r: 0.78, c: 0 as const, ry: 652, rl: 80 })),
+  { x: 792, y: 508, d: 0.42, r: 0.75, c: 1, ry: 660, rl: 70 },
+  ...[1496, 1532, 1588, 1624].map((x) => ({ x, y: 747, d: 0.68, r: 0.32, c: 1 as const, ry: 0, rl: 0 })),
+  { x: 1560, y: 788, d: 0.68, r: 0.4, c: 1, ry: 0, rl: 0 },
   { x: 586, y: 503, d: 0.25, r: 0.35, c: 1, ry: 616, rl: 26 },
   { x: 595, y: 527, d: 0.25, r: 0.35, c: 1, ry: 616, rl: 26 },
   ...[930, 965, 1035, 1070].map((x) => ({ x, y: 584, d: 0.25, r: 0.4, c: 1 as const, ry: 614, rl: 30 })),
@@ -117,7 +119,8 @@ const POOLS: [number, number, number, number, number][] = [
   [200, 790, 0.68, 380, 100],
   [800, 840, 1, 190, 100],
   [1205, 772, 0.68, 120, 40],
-  [800, 604, 0.42, 230, 56],
+  [800, 604, 0.42, 200, 44],
+  [1560, 800, 0.68, 140, 34],
   [1000, 588, 0.25, 170, 46],
   [590, 530, 0.25, 70, 100],
 ];
@@ -368,7 +371,7 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
     /* ----------------------------- particles ----------------------------- */
     const lanterns: Lantern[] = [];
     const newLantern = (low: boolean): Lantern => ({
-      x: low ? rand(560, 1060) : rand(-300, 1900),
+      x: low ? rand(520, 1100) : rand(-300, 1900),
       y: low ? rand(540, 640) : rand(40, 600),
       vy: rand(7, 14),
       ph: rand(0, Math.PI * 2),
@@ -378,8 +381,8 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
       hot: 0,
       tilt: rand(-0.12, 0.12),
     });
-    const nLanterns = reduce ? 10 : phone() ? 14 : 28;
-    for (let i = 0; i < nLanterns; i++) lanterns.push(newLantern(i < 8));
+    const nLanterns = reduce ? 8 : phone() ? 10 : 18;
+    for (let i = 0; i < nLanterns; i++) lanterns.push(newLantern(i < 3));
     lanterns.sort((a, b) => a.d - b.d);
 
     const stars: Star[] = Array.from({ length: phone() ? 160 : 280 }, () => {
@@ -838,8 +841,8 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
       });
       LIGHTS.forEach((L, i) => {
         const fl = reduce ? 0.9 : 0.78 + Math.sin(T * 7 + i * 1.7) * 0.1 + Math.sin(T * 17 + i) * 0.06;
-        const hw = (L.c ? 80 : 96) * L.r * sc * fl * (spotHot('bridge') && L.d === 0.42 ? 1.45 : 1);
-        ctx.globalAlpha = 0.62;
+        const hw = (L.c ? 72 : 84) * L.r * sc * fl * (spotHot('bridge') && L.d === 0.42 ? 1.4 : 1);
+        ctx.globalAlpha = 0.5;
         ctx.drawImage(L.c ? haloCool : halo, sx(L.x, L.d) - hw / 2, sy(L.y, L.d) - hw / 2, hw, hw);
       });
       // the blossom glows from within, and sparkles
@@ -922,7 +925,7 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
           if (near > 0) L.x += ((x - ptr.sx) / (dd || 1)) * near * dt * 30;
         } else L.hot *= 0.95;
         if (y < -120) {
-          Object.assign(L, newLantern(true), { d: L.d });
+          Object.assign(L, newLantern(Math.random() < 0.2), { d: L.d, y: rand(560, 700) });
           continue;
         }
         drawLantern(L, x, y, L.size * sc * (0.45 + L.d * 0.9), clamp(L.glow + L.hot * 0.8, 0, 1.7));

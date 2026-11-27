@@ -2414,6 +2414,56 @@ footer.bg-ink {
 }
 
 /* ==================================================================
+   NAVIGATION · a floating bar lit like a sunset and lantern light
+   ================================================================== */
+.site-header { padding: 7px 10px 7px; background: transparent; pointer-events: none; }
+.site-header > * { pointer-events: auto; }
+.nav-shell {
+  position: relative;
+  border-radius: 1.35rem;
+  background:
+    radial-gradient(ellipse 40% 140% at 8% 0%, rgba(255, 236, 200, 0.55), transparent 70%),
+    linear-gradient(100deg, rgba(255, 210, 160, 0.94) 0%, rgba(255, 192, 168, 0.93) 38%, rgba(226, 150, 168, 0.93) 72%, rgba(168, 104, 150, 0.93) 100%);
+  border: 1px solid rgba(255, 190, 110, 0.75);
+  box-shadow:
+    0 0 0 1px rgba(255, 220, 160, 0.25),
+    inset 0 1px 0 rgba(255, 250, 240, 0.7),
+    inset 0 -1px 0 rgba(120, 60, 110, 0.2),
+    0 14px 34px -16px rgba(150, 60, 110, 0.55),
+    0 0 26px -6px rgba(255, 160, 90, 0.45);
+  backdrop-filter: blur(14px) saturate(1.3);
+  -webkit-backdrop-filter: blur(14px) saturate(1.3);
+}
+.nav-plum { color: #3d1f48; }
+.nav-lavender { color: #8b6cf0; }
+.nav-accent { color: #e8603c; }
+.nav-links {
+  background: rgba(255, 246, 236, 0.22);
+  border: 1px solid rgba(255, 196, 120, 0.6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 0 18px -8px rgba(255, 170, 90, 0.6);
+}
+.nav-link { color: #3d1f48; transition: background-color 0.25s var(--ps-ease), color 0.25s var(--ps-ease); }
+.nav-link:hover { background: rgba(255, 248, 240, 0.4); color: #5a2a66; }
+.nav-active {
+  color: #3a1838;
+  background: linear-gradient(180deg, #ffe08a 0%, #ffb64d 48%, #ff8a3d 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    inset 0 -2px 4px rgba(200, 80, 20, 0.25),
+    0 6px 16px -6px rgba(255, 120, 40, 0.75),
+    0 0 18px -4px rgba(255, 190, 90, 0.7);
+}
+.nav-search, .nav-card {
+  background: rgba(255, 248, 238, 0.62);
+  border: 1.5px solid rgba(90, 42, 98, 0.55);
+  color: #e8603c;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition: background-color 0.25s var(--ps-ease), border-color 0.25s var(--ps-ease), box-shadow 0.25s var(--ps-ease);
+}
+.nav-search:hover, .nav-card:hover { background: rgba(255, 250, 242, 0.82); border-color: #8b6cf0; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 0 16px -4px rgba(139, 108, 240, 0.45); }
+.nav-kbd { border: 1px solid rgba(139, 108, 240, 0.6); color: #7a5ad8; }
+
+/* ==================================================================
    HOME · The Culture Map hero (illustrated world, three states)
    ================================================================== */
 .culture-hero { height: 560vh; }
@@ -2535,7 +2585,9 @@ footer.bg-ink {
 
 /* before the journey */
 .culture-start {
-  position: absolute; z-index: 6; left: 50%; bottom: 9%;
+  position: absolute; z-index: 6; left: 50%; bottom: 7%;
+  padding: 0.9rem 1.4rem; border-radius: 1rem;
+  background: radial-gradient(ellipse at center, rgba(30, 10, 50, 0.45), transparent 75%);
   translate: -50% 0;
   text-align: center;
   pointer-events: none;
@@ -2545,8 +2597,8 @@ footer.bg-ink {
 .culture-start-cue {
   margin-top: 1rem;
   display: flex; flex-direction: column; align-items: center; gap: 0.7rem;
-  font-size: 0.95rem; font-weight: 600; color: rgba(255, 246, 232, 0.92);
-  text-shadow: 0 2px 14px rgba(40, 20, 60, 0.6);
+  font-size: 0.95rem; font-weight: 700; color: #fff6e8;
+  text-shadow: 0 1px 2px rgba(30, 10, 50, 0.9), 0 2px 18px rgba(30, 10, 50, 0.85);
 }
 .culture-start-line {
   width: 2px; height: 46px; border-radius: 2px;

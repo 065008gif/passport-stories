@@ -140,7 +140,7 @@ function HangingLantern({ x, y, r, color = '#e2483d', i = 0, string = 0 }: { x: 
     <g className="cw-lamp" style={{ '--i': i } as React.CSSProperties}>
       {string > 0 && <line x1={x} y1={y - r - string} x2={x} y2={y - r} stroke="#3a2a3a" strokeWidth="1.2" />}
       <g className="cw-sway" style={{ transformOrigin: `${x}px ${y - r - string}px` }}>
-        <circle className="cw-glow" cx={x} cy={y} r={r * 3.2} fill="url(#cw-lampglow)" />
+        <circle className="cw-glow" cx={x} cy={y} r={r * 2.4} fill="url(#cw-lampglow)" opacity=".75" />
         <ellipse cx={x} cy={y} rx={r} ry={r * 1.15} fill={color} />
         <ellipse cx={x - r * 0.3} cy={y - r * 0.2} rx={r * 0.35} ry={r * 0.7} fill="#ffe08a" opacity=".75" />
         <path d={`M${x - r},${y} Q${x},${y + r * 0.12} ${x + r},${y}`} stroke="#9a2b2b" strokeWidth=".8" fill="none" opacity=".6" />
@@ -170,6 +170,12 @@ const G = {
   k5: { robe: '#00897b', obi: '#f48fb1', collar: '#fffde7', skin: '#e2b592', hair: '#151016' },
   k6: { robe: '#fdf3e7', obi: '#d32f2f', collar: '#d32f2f', skin: '#e6ba98', hair: '#140e16', trim: '#d32f2f' },
   yukata: { robe: '#283593', obi: '#b0bec5', collar: '#e8eaf6', skin: '#d8a984', hair: '#181216' },
+  // hanfu on the lantern bridge
+  hanfuRed: { robe: '#d32f2f', obi: '#ffcc4d', collar: '#fff3d6', skin: '#e2b48e', hair: '#141016', trim: '#ffcc4d' },
+  hanfuJade: { robe: '#1f8a6e', obi: '#ffd27a', collar: '#fdf3e0', skin: '#d8a882', hair: '#161016' },
+  // Switzerland: a dirndl and an alpine herder's jacket
+  dirndl: { robe: '#c62828', obi: '#ffffff', collar: '#ffffff', skin: '#efc8a8', hair: '#8a5a2a', trim: '#2e7d32' },
+  herder: { robe: '#5d4037', obi: '#e8d5b0', collar: '#ffffff', skin: '#e8bc98', hair: '#3a2a1e' },
 } satisfies Record<string, Garb>;
 
 const PETAL = ['#ff9cc8', '#ffc4de', '#ff6fb0', '#ffe4f0', '#f0559a'];
@@ -438,10 +444,10 @@ export default function CultureWorld() {
             return <HangingLantern key={x} x={x} y={y} r={8.5} i={i} string={8} color={i % 2 ? '#ff3b2f' : '#ff6a1f'} />;
           })}
           {/* the pair lifting a sky lantern */}
-          <Standing x={776} y={588} h={56} g={G.rose} arm="up" className="cw-idle" />
-          <Standing x={808} y={588} h={60} g={G.navy} arm="up" lean={-2} className="cw-idle cw-idle-b" />
+          <Standing x={772} y={590} h={66} g={G.hanfuRed} arm="up" />
+          <Standing x={812} y={590} h={70} g={G.hanfuJade} arm="up" lean={-2} />
           <g className="cw-sky-lantern">
-            <circle className="cw-glow" cx="792" cy="512" r="40" fill="url(#cw-lampglow)" />
+            <circle className="cw-glow" cx="792" cy="508" r="26" fill="url(#cw-lampglow)" opacity=".7" />
             <path d="M782,500 L802,500 L806,524 L778,524 Z" fill="#ffcf7a" />
             <path d="M784,503 L800,503 L802,520 L782,520 Z" fill="#fff2c4" opacity=".8" />
           </g>
@@ -562,12 +568,48 @@ export default function CultureWorld() {
           ))}
           <rect x="1240" y="730" width="3" height="56" fill="#3a2a22" />
           <HangingLantern x={1252} y={744} r={6} i={2} string={8} color="#ffb03a" />
-          <Seated x={1180} y={766} h={40} g={{ robe: '#3f6f7a', trim: '#f2c46a', skin: '#c48a6a', hair: '#2a1c25' }} facing={1} cup />
+          <Seated x={1180} y={768} h={52} g={G.dirndl} facing={1} cup />
+        </g>
+        {/* a wooden chalet with warm windows */}
+        <g>
+          <ellipse cx="1560" cy="806" rx="120" ry="12" fill="#0b2a22" opacity=".5" />
+          <rect x="1478" y="730" width="164" height="74" fill="#8a5432" />
+          <rect x="1478" y="730" width="164" height="74" fill="url(#cw-trunk)" opacity=".12" />
+          {[0, 1, 2, 3, 4, 5, 6].map((k) => <line key={k} x1="1478" y1={740 + k * 10} x2="1642" y2={740 + k * 10} stroke="#6a3e24" strokeWidth="1.4" />)}
+          <path d="M1456,734 L1560,668 L1664,734 L1652,738 L1560,680 L1468,738 Z" fill="#4a2a1c" />
+          <path d="M1470,728 L1560,672 L1650,728 L1640,730 L1560,684 L1480,730 Z" fill="#f4f0ff" />
+          <rect x="1478" y="758" width="164" height="5" fill="#5a3420" />
+          {[1496, 1532, 1588, 1624].map((x) => (
+            <g key={x}>
+              <rect x={x - 9} y="740" width="18" height="14" rx="1.5" fill="#ffd27a" stroke="#4a2a1c" strokeWidth="2" />
+              <rect x={x - 10} y="754" width="20" height="4" fill="#d84a4a" />
+              <circle cx={x - 5} cy="753" r="2" fill="#ff5a6e" />
+              <circle cx={x + 5} cy="753" r="2" fill="#ffffff" />
+            </g>
+          ))}
+          <rect x="1548" y="772" width="24" height="32" rx="2" fill="#ffc861" stroke="#4a2a1c" strokeWidth="2" />
+          <rect x="1606" y="772" width="18" height="14" rx="1.5" fill="#ffd27a" stroke="#4a2a1c" strokeWidth="2" />
+        </g>
+        {/* the Swiss flag */}
+        <g>
+          <rect x="1424" y="700" width="3" height="104" fill="#e8e0d0" />
+          <rect x="1427" y="702" width="32" height="32" fill="#e52b2b" />
+          <rect x="1440" y="708" width="6" height="20" fill="#ffffff" />
+          <rect x="1433" y="715" width="20" height="6" fill="#ffffff" />
+        </g>
+        {/* an alphorn player on the meadow */}
+        <g data-spot="alphorn" className="cw-spot">
+          <Standing x={1372} y={858} h={76} g={G.herder} arm="forward" />
+          <path d="M1364,794 Q1318,822 1266,846" fill="none" stroke="#b8763e" strokeWidth="4" strokeLinecap="round" />
+          <path d="M1266,846 Q1250,854 1244,842 Q1242,832 1256,834" fill="none" stroke="#8a5028" strokeWidth="8" strokeLinecap="round" />
+          <path d="M1300,828 L1306,824 M1330,812 L1336,808" stroke="#e8c070" strokeWidth="2" />
+          <path d="M1356,782 Q1372,770 1388,782 L1384,786 L1360,786 Z" fill="#2e4a2a" />
         </g>
         {/* alpine flowers that sway */}
         <g className="cw-flowers-alp">
           {Array.from({ length: 46 }, (_, i) => {
-            const r = rng(1200 + i);
+            const r = rng(1200 + i * 7919);
+            r();
             const x = 1080 + r() * 590;
             const y = 800 + r() * 150 + (x < 1200 ? (1200 - x) * 0.4 : 0);
             const h = 10 + r() * 18;
@@ -671,5 +713,6 @@ export const SPOTS: Record<string, { label: string; place: string; slug: string 
   tea: { label: 'Tea, poured slowly', place: 'Japan', slug: 'japan' },
   alps: { label: 'Alpenglow on the Matterhorn', place: 'Switzerland', slug: null },
   jetty: { label: 'Quiet hours by an alpine lake', place: 'Switzerland', slug: null },
+  alphorn: { label: 'An alphorn across the valley', place: 'Switzerland', slug: null },
   water: { label: 'Wishes floating downstream', place: 'Many places', slug: null },
 };

@@ -30,7 +30,7 @@ export default function FlyPage() {
       <FlightHome countries={countries} route={route}>
         {/* ------------------------------ Take-off ------------------------------ */}
         <section className={`${SCREEN} is-here md:!pb-36 lg:!pb-12`} aria-labelledby="hero-title">
-          <div className="hero-card stop-card max-w-xl md:max-w-[34rem] md:rounded-[2rem] md:bg-night/75 md:p-7 md:shadow-[0_20px_50px_-25px_rgba(43, 27, 61,.35)] md:backdrop-blur-md">
+          <div className="hero-card stop-card max-w-xl md:max-w-[34rem] md:rounded-[2rem] md:bg-night/75 md:p-7 md:shadow-[0_20px_50px_-25px_rgba(43,27,61,.35)] md:backdrop-blur-md">
             <p className="kicker text-sun">Flight PS 001 · Departing {INDIA.airport}</p>
             <h1 id="hero-title" className="hero-h1 sign mt-1.5 text-[2.4rem] leading-[0.98] sm:mt-2 sm:text-[3.9rem]">
               The world is more <em className="text-coral">interesting</em> than you think.
