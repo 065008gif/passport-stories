@@ -7,11 +7,11 @@
  * and the scroll position is the camera. Scrolling down (and back up) moves
  * through one painted world:
  *
- *   0.00  lanterns on the bridge under a black, starry sky (China)
- *   0.22  tea under the cherry blossoms, the sky turns purplish pink (Japan)
- *   0.44  the Matterhorn under the stars, mist and fireflies (Switzerland)
- *   0.66  the whole world, then the words and the button
- *   0.80  closing: the camera walks down the path, the banks part, lanterns
+ *   0.00  the whole world at once: cherry blossoms (Japan), the lantern bridge
+ *         (China), the Eiffel Tower and the Colosseum, the Supertrees
+ *         (Singapore), the Matterhorn and an aurora (Switzerland)
+ *   0.00 to 0.55  the layers drift apart by depth as you scroll
+ *   0.55  closing: the camera walks down the path, the banks part, lanterns
  *         rush up while the globe section rises over the hero on a cloud edge
  *
  * Performance: the SVG art (cultureWorld.tsx) never animates by itself, so
@@ -49,22 +49,22 @@ type Ring = { x: number; y: number; t: number; s: number };
  * boat and the lake in frame; the close shots ease their zoom the same way.
  */
 const PATH = (phone: boolean, visW: number, visH: number): Shot[] => {
-  const f = (phone ? 0.82 : 1) * clamp(visH / 820, 0.72, 1);
   const so = Math.max(visW / 2100, Math.min(1, visH / 780));
   const hw = visH / so;
   // the tea party, path lanterns and jetty (world y ~830) stay inside the frame with a margin
   const co = Math.max(450, 836 - hw * 0.44);
-  return [
-    { p: 0.0, cx: 792, cy: 548, s: 2.7 * f },
-    { p: 0.1, cx: 795, cy: 556, s: 2.4 * f },
-    { p: 0.22, cx: 150, cy: 650, s: 2.05 * f },
-    { p: 0.32, cx: 180, cy: 645, s: 2.15 * f },
-    { p: 0.44, cx: 1460, cy: 540, s: 1.95 * f },
-    { p: 0.54, cx: 1400, cy: 560, s: 2.05 * f },
-    { p: 0.68, cx: 800, cy: co, s: so },
-  ];
+  // the whole world from the first frame; scrolling only leans in a touch (phones pan across it instead)
+  return phone
+    ? [
+        { p: 0, cx: 260, cy: co, s: so },
+        { p: 0.55, cx: 1420, cy: co, s: so },
+      ]
+    : [
+        { p: 0, cx: 800, cy: co, s: so },
+        { p: 0.55, cx: 800, cy: co - 12, s: so * 1.05 },
+      ];
 };
-const CLOSE_AT = 0.8;
+const CLOSE_AT = 0.55;
 /** Test: aurora curtains over the mountains, merging into the night sky. Set false to remove. */
 const AURORA = true;
 
@@ -94,10 +94,9 @@ const BRIDGE_LAMPS = [680, 740, 800, 860, 920].map((x) => [x, 524 + (1 - Math.po
 const LIGHTS: { x: number; y: number; d: number; r: number; c: 0 | 1; ry: number; rl: number }[] = [
   ...BRIDGE_LAMPS.map(([x, y]) => ({ x, y, d: 0.42, r: 0.78, c: 0 as const, ry: 652, rl: 80 })),
   { x: 801, y: 492, d: 0.42, r: 0.75, c: 1, ry: 660, rl: 70 },
-  ...[1534, 1586].map((x) => ({ x, y: 770, d: 0.68, r: 0.3, c: 1 as const, ry: 0, rl: 0 })),
-  { x: 586, y: 503, d: 0.25, r: 0.35, c: 1, ry: 616, rl: 26 },
-  { x: 595, y: 527, d: 0.25, r: 0.35, c: 1, ry: 616, rl: 26 },
-  ...[930, 965, 1035, 1070].map((x) => ({ x, y: 584, d: 0.25, r: 0.4, c: 1 as const, ry: 614, rl: 30 })),
+  ...[1622, 1658].map((x) => ({ x, y: 600, d: 0.68, r: 0.26, c: 1 as const, ry: 0, rl: 0 })),
+  { x: 545, y: 470, d: 0.25, r: 0.9, c: 1, ry: 618, rl: 60 },
+  { x: 1006, y: 578, d: 0.25, r: 0.9, c: 1, ry: 618, rl: 34 },
   { x: 1342, y: 744, d: 0.68, r: 0.6, c: 1, ry: 770, rl: 34 },
   ...([
     [712, 798, 0.7],
@@ -119,14 +118,13 @@ const POOLS: [number, number, number, number, number][] = [
   [800, 840, 1, 190, 100],
   [1295, 772, 0.68, 120, 40],
   [800, 604, 0.42, 200, 44],
-  [1560, 800, 0.68, 100, 26],
-  [1000, 588, 0.25, 170, 46],
-  [590, 530, 0.25, 70, 100],
+  [1640, 624, 0.68, 80, 20],
+  [1006, 590, 0.25, 120, 26],
 ];
 
 /* where the water shows, in world units (between the banks, around the path) */
 const WATER: [number, number][] = [
-  [-300, 618], [1040, 618], [1040, 668], [1300, 652], [1680, 632], [1900, 628], [1900, 746], [1700, 750], [1520, 760], [1380, 768], [1240, 792],
+  [-300, 618], [1040, 618], [1040, 696], [1300, 690], [1680, 680], [1900, 676], [1900, 746], [1700, 750], [1520, 760], [1380, 768], [1240, 792],
   [1140, 810], [1060, 860], [1010, 905], [980, 880], [900, 820], [852, 772], [748, 772], [700, 820], [648, 858],
   [640, 720], [560, 676], [420, 660], [200, 642], [-60, 652], [-300, 658],
 ];
@@ -227,7 +225,7 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
     let visible = true;
     let last = performance.now();
     let T = 0; // animation clock (seconds)
-    let drift = 0;
+    let scrollPar = 0; // 0 to 1 while the scene is in view: layers drift apart by depth
     let wasRevealed = false;
     let camKey = '';
     const vars: Record<string, string> = {};
@@ -256,9 +254,9 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
     };
     size();
 
-    const layerShift = (d: number) => ({ x: -ptr.x * d * 22, y: -ptr.y * d * 12 });
+    const layerShift = (d: number) => ({ x: -ptr.x * d * 22, y: -ptr.y * d * 12 - scrollPar * d * 34 });
     const sx = (wx: number, d: number) => ox + k * ((wx - ptr.x * d * 22 - c.cx) * c.s + W / 2);
-    const sy = (wy: number, d: number) => oy + k * ((wy - ptr.y * d * 12 - c.cy) * c.s + H / 2);
+    const sy = (wy: number, d: number) => oy + k * ((wy - ptr.y * d * 12 - scrollPar * d * 34 - c.cy) * c.s + H / 2);
     const toWorld = (x: number, y: number, d: number) => {
       const sh = layerShift(d);
       return { x: ((x - ox) / k - W / 2) / c.s + c.cx - sh.x, y: ((y - oy) / k - H / 2) / c.s + c.cy - sh.y };
@@ -434,8 +432,8 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
     });
 
     const flies: Fly[] = Array.from({ length: reduce ? 0 : phone() ? 18 : 34 }, (_, i) => ({
-      x: i < 24 ? rand(1060, 1660) : rand(80, 600),
-      y: i < 24 ? rand(640, 900) : rand(600, 820),
+      x: i < 24 ? rand(1150, 1880) : rand(80, 600),
+      y: i < 24 ? rand(570, 690) : rand(600, 820),
       vx: rand(-8, 8),
       vy: rand(-6, 6),
       ph: rand(0, 6.28),
@@ -474,9 +472,9 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
         const t = `translate(${sh.x.toFixed(1)} ${(sh.y + part * 260).toFixed(1)})`;
         if (fore.getAttribute('transform') !== t) fore.setAttribute('transform', t);
       }
-      const words = smooth(clamp((Ps - 0.6) / 0.09));
+      const words = 1;
       setVar('--words', words.toFixed(3));
-      setVar('--start', (1 - smooth(clamp(Ps / 0.05))).toFixed(3));
+      setVar('--start', (1 - smooth(clamp(Ps / 0.08))).toFixed(3));
       setVar('--close', closeP.toFixed(3));
       const rv = words > 0.5 && closeP < 0.2;
       if (rv !== wasRevealed) {
@@ -503,25 +501,26 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
       if (AURORA && starVis > 0.1) {
         sky.globalCompositeOperation = 'lighter';
         const bands = [
-          { x0: 1060, x1: 1980, y: 470, h: 360, ph: 0, a: 0.9 },
-          { x0: 1200, x1: 1940, y: 420, h: 300, ph: 2.1, a: 0.7 },
-          { x0: 960, x1: 1620, y: 500, h: 240, ph: 4.2, a: 0.5 },
+          { x0: 1290, x1: 1990, y: 450, h: 330, ph: 0, a: 1 },
+          { x0: 1380, x1: 1960, y: 400, h: 270, ph: 2.1, a: 0.85 },
+          { x0: 1320, x1: 1760, y: 470, h: 200, ph: 4.2, a: 0.6 },
         ];
         for (const b of bands) {
           const yb = sy(b.y, 0.05);
           const yt = sy(b.y - b.h, 0.05);
           const g = sky.createLinearGradient(0, yb + 30, 0, yt);
-          g.addColorStop(0, 'rgba(90,255,170,0)');
-          g.addColorStop(0.14, 'rgba(110,255,180,0.7)');
-          g.addColorStop(0.45, 'rgba(70,225,215,0.36)');
-          g.addColorStop(0.8, 'rgba(170,110,255,0.18)');
-          g.addColorStop(1, 'rgba(180,100,255,0)');
+          g.addColorStop(0, 'rgba(80,255,160,0)');
+          g.addColorStop(0.1, 'rgba(120,255,170,0.95)');
+          g.addColorStop(0.32, 'rgba(70,240,190,0.6)');
+          g.addColorStop(0.62, 'rgba(90,190,255,0.28)');
+          g.addColorStop(0.86, 'rgba(230,100,220,0.2)');
+          g.addColorStop(1, 'rgba(230,100,220,0)');
           sky.fillStyle = g;
           const step = 14;
           for (let x = b.x0; x < b.x1; x += step) {
             const f = (x - b.x0) / (b.x1 - b.x0);
             const edge = Math.sin(f * Math.PI);
-            const ray = 0.55 + 0.45 * Math.sin(x * 0.045 + T * 1.3 + b.ph) * Math.sin(x * 0.013 - T * 0.5);
+            const ray = 0.5 + 0.5 * Math.abs(Math.sin(x * 0.05 + T * 1.1 + b.ph) * Math.sin(x * 0.011 - T * 0.4)) + 0.25 * Math.sin(x * 0.21 + T * 3);
             const wave = (xx: number) => Math.sin(xx * 0.006 + T * 0.35 + b.ph) * 34 + Math.sin(xx * 0.017 - T * 0.6) * 10;
             sky.globalAlpha = Math.max(0, b.a * edge * ray * starVis);
             const xa = sx(x, 0.05);
@@ -779,13 +778,14 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
       const speed = Math.abs(P - lastP) / Math.max(dt, 0.001);
       lastP = P;
       const closeP = clamp((Ps - CLOSE_AT) / (1 - CLOSE_AT));
-      const blossom = bump(Ps, 0.12, 0.2, 0.33, 0.42);
-      const pink = Math.max(blossom, 0.5 * bump(Ps, 0.56, 0.66, 0.82, 0.95));
+      const blossom = 0.35 * (1 - closeP);
+      const pink = 0.38 * (1 - closeP);
+      scrollPar = clamp(Ps / CLOSE_AT);
       const starVis = 1 - pink * 0.6;
 
       // petal gusts carry the camera between moments; stronger when you scroll faster
       // a burst from the tree when you scroll into the blossom
-      if (!reduce && blossom > 0.05 && speed > 0.01 && Math.random() < Math.min(0.5, speed * 1.5)) addPetal(rand(-120, 380), rand(360, 560), 0.68, 20);
+      if (!reduce && speed > 0.01 && closeP < 0.2 && Math.random() < Math.min(0.3, speed * 1.2)) addPetal(rand(-120, 380), rand(360, 560), 0.68, 20);
 
       ptr.x += (ptr.tx - ptr.x) * (1 - Math.exp(-dt * 4));
       ptr.y += (ptr.ty - ptr.y) * (1 - Math.exp(-dt * 4));
@@ -795,12 +795,6 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
       let tcx = shot.cx;
       let tcy = shot.cy;
       let ts = shot.s;
-      if (Ps >= 0.68 && ph) {
-        if (!reduce) drift += dt * 0.12;
-        const span = Math.max(0, (W - vw / k) / 2 - 30);
-        tcx = 800 + Math.sin(drift) * span * 0.7 * (1 - closeP) * smooth(clamp((Ps - 0.68) / 0.06));
-        tcy = shot.cy + 20 * smooth(clamp((Ps - 0.68) / 0.06));
-      }
       const q = ease(clamp(closeP / 0.9));
       // closing: the camera tilts up into the starry sky, where the globe section's sky takes over
       c.cx = tcx + (900 - tcx) * q;
@@ -846,6 +840,39 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
         ctx.globalAlpha = 0.5;
         ctx.drawImage(L.c ? haloCool : halo, sx(L.x, L.d) - hw / 2, sy(L.y, L.d) - hw / 2, hw, hw);
       });
+      // the Eiffel Tower sparkles, and the Supertrees glow and slowly change colour
+      for (let i = 0; i < 14; i++) {
+        const f = (i * 0.6180339 + Math.floor(T * 3) * 0.37) % 1;
+        const yy = 360 + f * 240;
+        const half = 4 + (yy - 360) * 0.24;
+        const xx = 545 + (((i * 0.734 + T * 0.5) % 1) * 2 - 1) * half * 0.8;
+        const a = Math.max(0, Math.sin(T * 9 + i * 2.3));
+        if (a < 0.3) continue;
+        const s = 7 * Math.sqrt(sc) * a;
+        ctx.globalAlpha = a;
+        ctx.drawImage(sparkle, sx(xx, 0.25) - s, sy(yy, 0.25) - s, s * 2, s * 2);
+      }
+      ([[1136, 466, 0], [1178, 422, 70], [1222, 488, 160], [1262, 448, 30]] as const).forEach(([x, y, h0], i) => {
+        const hue = (h0 + T * 24) % 360;
+        const s = 70 * sc;
+        ctx.globalAlpha = 0.5 + Math.sin(T * 1.7 + i) * 0.15;
+        ctx.fillStyle = `hsla(${hue}, 95%, 65%, 0.5)`;
+        ctx.beginPath();
+        ctx.ellipse(sx(x, 0.25), sy(y, 0.25), s * 0.55, s * 0.16, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 0.35;
+        ctx.drawImage(haloCool, sx(x, 0.25) - s, sy(y, 0.25) - s * 0.6, s * 2, s * 1.2);
+        for (let j = 0; j < 5; j++) {
+          const yy = y + 30 + ((T * 18 + j * 22) % 110);
+          if (yy > 600) continue;
+          const d = 3.2 * Math.sqrt(sc);
+          ctx.globalAlpha = 0.7;
+          ctx.fillStyle = `hsla(${(hue + 120) % 360}, 100%, 75%, 0.9)`;
+          ctx.beginPath();
+          ctx.arc(sx(x, 0.25), sy(yy, 0.25), d, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      });
       // the blossom glows from within, and sparkles
       const bx = sx(120, 0.68);
       const by = sy(470, 0.68);
@@ -858,17 +885,6 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
         ctx.globalAlpha = a;
         ctx.drawImage(sparkle, sx(t.x, 0.68) - s, sy(t.y, 0.68) - s, s * 2, s * 2);
       }
-      // the waterfall
-      for (let i = 0; i < 6; i++) {
-        const f = (T * 0.9 + i / 6) % 1;
-        ctx.globalAlpha = 0.8 * Math.sin(f * Math.PI);
-        ctx.strokeStyle = '#f4f0ff';
-        ctx.lineWidth = Math.max(1, 2.4 * sc * 0.5);
-        ctx.beginPath();
-        ctx.moveTo(sx(1708 + f * 3, 0.25), sy(520 + f * 92, 0.25));
-        ctx.lineTo(sx(1708 + f * 3.5, 0.25), sy(532 + f * 92, 0.25));
-        ctx.stroke();
-      }
       // fireflies over the meadow and under the tree
       for (const f of flies) {
         f.vx += rand(-20, 20) * dt;
@@ -878,7 +894,7 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
         f.x += f.vx * dt;
         f.y += f.vy * dt;
         if (f.x < 1040 && f.x > 620) f.vx += 30 * dt * (f.x > 830 ? 1 : -1);
-        f.y = clamp(f.y, 600, 920);
+        f.y = f.d === 0.68 && f.x > 1100 ? clamp(f.y, 560, 700) : clamp(f.y, 600, 920);
         const a = Math.pow(Math.max(0, Math.sin(T * 1.3 + f.ph)), 3);
         if (a < 0.03) continue;
         const s = 10 * Math.sqrt(sc);
@@ -1111,10 +1127,9 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
 
         {/* before the journey: a quiet invitation to scroll */}
         <div className="culture-start" aria-hidden={revealed}>
-          <p className="culture-intro">Passport Stories Presents</p>
           <p className="culture-start-cue">
             <span className="culture-start-line" aria-hidden />
-            Scroll to begin the journey
+            Scroll to explore
           </p>
         </div>
 

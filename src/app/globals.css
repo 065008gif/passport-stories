@@ -2584,8 +2584,8 @@ footer.bg-ink {
 /* ==================================================================
    HOME · The Culture Map hero (illustrated world, three states)
    ================================================================== */
-.culture-hero { height: 560vh; }
-@media (max-width: 767px) { .culture-hero { height: 540vh; } }
+.culture-hero { height: 300vh; }
+@media (max-width: 767px) { .culture-hero { height: 330vh; } }
 .culture-stage {
   --words: 0;
   --start: 1;

@@ -333,6 +333,17 @@ export default function CultureWorld() {
           <stop offset=".5" stopColor="#24605e" />
           <stop offset="1" stopColor="#173f46" />
         </linearGradient>
+        <linearGradient id="cw-eiffel" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#fff0b8" />
+          <stop offset=".35" stopColor="#ffc35a" />
+          <stop offset=".75" stopColor="#d9782e" />
+          <stop offset="1" stopColor="#8a3a24" />
+        </linearGradient>
+        <linearGradient id="cw-stone" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#f6c98e" />
+          <stop offset=".6" stopColor="#d48a52" />
+          <stop offset="1" stopColor="#9a5634" />
+        </linearGradient>
         <linearGradient id="cw-trunk" x1="0" y1="0" x2="1" y2="0">
           <stop offset="0" stopColor="#14081a" />
           <stop offset=".7" stopColor="#2e1430" />
@@ -359,10 +370,6 @@ export default function CultureWorld() {
 
       {/* ================= FAR ================= */}
       <g id="cw-far" data-depth="0.12">
-        {/* Fuji, soft and far */}
-        <path d="M420,612 C560,520 640,430 712,388 Q742,372 772,388 C840,428 930,520 1080,612 Z" fill="url(#cw-fuji)" />
-        <path d="M772,388 C840,428 930,520 1080,612 L900,612 C850,540 808,452 772,388 Z" fill="#120b34" opacity=".6" />
-        <path d="M712,388 Q742,372 772,388 L792,402 L776,410 L760,401 L744,414 L728,402 L708,412 L694,400 Z" fill="#ffffff" />
         <path d="M1020,615 L1090,540 L1130,556 L1200,486 L1240,520 L1290,470 L1330,505 L1520,452 L1570,480 L1620,430 L1700,470 L1780,440 L1900,480 L1900,615 Z" fill="#3d3488" />
         <path d="M1200,486 L1216,502 L1206,506 L1196,498 Z M1290,470 L1304,486 L1292,490 L1282,482 Z M1620,430 L1640,450 L1626,454 L1612,446 Z M1520,452 L1536,466 L1522,470 Z" fill="#ffffff" />
         <path d={ridge(-300, 1900, 560, 26, 640, 7, 60)} fill="url(#cw-ridge)" />
@@ -372,40 +379,36 @@ export default function CultureWorld() {
 
       {/* ================= SKYLINE ================= */}
       <g id="cw-skyline" data-depth="0.25">
-        {/* left hill with a pagoda */}
-        <path d={ridge(380, 760, 560, 18, 640, 11, 40)} fill="url(#cw-foothill)" />
-        <g transform="translate(590 560)" fill="#6a2a5e" stroke="#ffb64d" strokeWidth="1.4" strokeLinejoin="round">
-          <rect x="-5" y="-120" width="10" height="120" />
-          {[0, 1, 2, 3, 4].map((t) => {
-            const w = 58 - t * 9;
-            const y = -t * 24;
-            return (
-              <g key={t}>
-                <rect x={-w * 0.36} y={y - 16} width={w * 0.72} height="16" />
-                <path d={`M${-w / 2 - 8},${y - 14} Q0,${y - 26} ${w / 2 + 8},${y - 14} L${w / 2 - 2},${y - 10} L${-w / 2 + 2},${y - 10} Z`} />
-              </g>
-            );
-          })}
-          <path d="M0,-150 L2,-122 L-2,-122 Z" />
-          <rect x="-6" y="-60" width="4" height="7" fill="#ffc65a" className="cw-window" />
-          <rect x="3" y="-36" width="4" height="7" fill="#ffc65a" className="cw-window" style={{ '--i': 2 } as React.CSSProperties} />
+        {/* the Eiffel Tower, lit gold at night (France) */}
+        <g data-spot="eiffel" className="cw-spot">
+          <path d="M486,606 C504,574 518,530 529,486 L534,452 C538,420 541,392 543,368 L545,350 L547,368 C549,392 552,420 556,452 L561,486 C572,530 586,574 604,606 L578,606 Q545,566 512,606 Z" fill="url(#cw-eiffel)" />
+          <path d="M545,350 L545,328" stroke="#ffe6a8" strokeWidth="2.4" strokeLinecap="round" />
+          <rect x="515" y="518" width="60" height="6" rx="1.5" fill="#7a3a24" />
+          <rect x="530" y="450" width="30" height="5" rx="1.5" fill="#7a3a24" />
+          <rect x="539" y="384" width="12" height="4" rx="1" fill="#7a3a24" />
+          <g stroke="#8a4a26" strokeWidth="1.2" opacity=".75">
+            <path d="M520,560 L545,528 L570,560 M512,590 L545,548 L578,590 M532,500 L545,488 L558,500 M534,476 L545,466 L556,476 M538,430 L545,420 L552,430 M539,410 L545,402 L551,410" fill="none" />
+          </g>
+          <path d="M486,606 C504,574 518,530 529,486 L534,452 C538,420 541,392 543,368 L545,350" fill="none" stroke="#fff0c0" strokeWidth="1.4" opacity=".8" />
         </g>
-        {/* palace with domes and chhatris behind the bridge */}
-        <g transform="translate(1000 600)" fill="#7a3364" stroke="#ffc861" strokeWidth="1.6" strokeLinejoin="round">
-          <rect x="-110" y="-46" width="220" height="46" />
-          <path d="M-46,-46 Q-46,-108 0,-118 Q46,-108 46,-46 Z" />
-          <rect x="-2" y="-138" width="4" height="22" />
-          {[-90, 90].map((x) => (
-            <g key={x}>
-              <rect x={x - 6} y="-120" width="12" height="74" />
-              <path d={`M${x - 10},-120 Q${x},-140 ${x + 10},-120 Z`} />
-            </g>
-          ))}
-          {[-62, 62].map((x) => (
-            <path key={x} d={`M${x - 16},-46 L${x - 16},-62 Q${x},-80 ${x + 16},-62 L${x + 16},-46 Z`} />
-          ))}
-          {[-70, -35, 35, 70].map((x, i) => (
-            <path key={x} className="cw-window" style={{ '--i': i } as React.CSSProperties} d={`M${x - 6},-8 L${x - 6},-24 Q${x},-32 ${x + 6},-24 L${x + 6},-8 Z`} fill="#ffcf6a" />
+        {/* the Colosseum, warm light in its arches (Italy) */}
+        <g data-spot="colosseum" className="cw-spot">
+          <path d="M916,606 L916,550 Q1006,530 1096,548 L1096,566 L1084,563 L1078,578 L1096,584 L1096,606 Z" fill="url(#cw-stone)" />
+          {(
+            [
+              [596, 1, 916, 1096],
+              [578, 0.9, 916, 1096],
+              [561, 0.8, 916, 1076],
+            ] as number[][]
+          ).map(([y, s, a, b], r) =>
+            Array.from({ length: Math.floor((b - a - 6) / 15) }, (_, k) => {
+              const x = a + 9 + k * 15;
+              const h = 13 * s;
+              return <path key={`${r}-${k}`} d={`M${x - 4.5},${y + 8} L${x - 4.5},${y + 12 - h} Q${x},${y + 7 - h} ${x + 4.5},${y + 12 - h} L${x + 4.5},${y + 8} Z`} fill="#ffd27a" />;
+            }),
+          )}
+          {[588, 570, 553].map((y) => (
+            <rect key={y} x="916" y={y} width={y === 553 ? 160 : 180} height="2" fill="#9a5a34" />
           ))}
         </g>
         {/* the Matterhorn in alpenglow (Switzerland) */}
@@ -424,13 +427,33 @@ export default function CultureWorld() {
             <path d="M1430,300 L1452,360 L1478,412 M1446,340 L1470,410" stroke="#9d8cff" strokeWidth="2.5" opacity=".75" />
             <path d="M1500,440 L1536,500 L1560,540" stroke="#8a78f0" strokeWidth="2" opacity=".7" />
           </g>
-          {/* a thin waterfall on the far cliff */}
-          <path className="cw-fall" d="M1588,520 C1590,550 1586,580 1592,612" stroke="#fdf3ee" strokeWidth="3" fill="none" strokeLinecap="round" />
         </g>
         {/* green foothills: the mountains stand on land, not on the water */}
         <path d="M1050,622 C1100,600 1150,574 1230,568 C1300,560 1360,548 1440,556 C1520,548 1600,532 1700,540 C1780,532 1850,536 1900,530 L1900,624 L1050,624 Z" fill="url(#cw-foothill)" />
         <path d="M1050,622 C1100,600 1150,574 1230,568 C1300,560 1360,548 1440,556 C1520,548 1600,532 1700,540 C1780,532 1850,536 1900,530" fill="none" stroke="#ffffff" strokeWidth="3" opacity=".55" strokeLinecap="round" />
         <path d="M400,614 C470,600 540,596 600,602 C700,592 820,596 900,604 C980,598 1060,600 1120,612 L1120,620 L400,620 Z" fill="url(#cw-foothill)" opacity=".9" />
+        {/* the Supertrees of Gardens by the Bay (Singapore) */}
+        <g data-spot="supertrees" className="cw-spot">
+          <path d="M1178,457 Q1200,452 1222,500" stroke="#efe6ff" strokeWidth="2.2" fill="none" opacity=".85" />
+          {[
+            [1136, 140, '#8e1a6e', '#ff7ad9'],
+            [1178, 184, '#4a2aa8', '#b9a0ff'],
+            [1222, 118, '#0d7a6c', '#6ff5dc'],
+            [1262, 158, '#a8480e', '#ffcf5a'],
+          ].map(([x, h, c, rim], i) => {
+            const X = x as number;
+            const top = 606 - (h as number);
+            return (
+              <g key={i}>
+                <path d={`M${X - 6},606 C${X - 5},${606 - (h as number) * 0.45} ${X - 3},${top + 40} ${X - 10},${top + 22} L${X + 10},${top + 22} C${X + 3},${top + 40} ${X + 5},${606 - (h as number) * 0.45} ${X + 6},606 Z`} fill={c as string} />
+                <path d={`M${X - 2},604 L${X - 1.5},${top + 26} M${X + 2},604 L${X + 1.5},${top + 26}`} stroke={rim as string} strokeWidth="1.1" strokeDasharray="3 5" opacity=".85" />
+                <path d={`M${X - 36},${top} L${X - 11},${top + 24} L${X + 11},${top + 24} L${X + 36},${top} Z`} fill={c as string} />
+                <path d={`M${X - 36},${top} L${X - 11},${top + 24} M${X - 18},${top} L${X - 5},${top + 24} M${X},${top} L${X},${top + 24} M${X + 18},${top} L${X + 5},${top + 24} M${X + 36},${top} L${X + 11},${top + 24}`} stroke={rim as string} strokeWidth="1" opacity=".7" />
+                <ellipse cx={X} cy={top} rx="36" ry="6" fill={c as string} stroke={rim as string} strokeWidth="2" />
+              </g>
+            );
+          })}
+        </g>
       </g>
 
       {/* ================= WATER + BRIDGE ================= */}
@@ -563,16 +586,26 @@ export default function CultureWorld() {
 
         </g>
         <g id="cw-bank-r">
-        {/* ---- right shore: pines, mist, a meadow and a jetty (Switzerland) ---- */}
-        <g className="cw-pines">
-          {[[1070,649.4,71.7],[1098.9,647.6,69.4],[1123.2,642.5,69.5],[1148.0,648.1,50.3],[1168.2,638.2,83.2],[1193.9,635.8,91.2],[1223.4,641.1,74.3],[1241.6,632.2,70.3],[1258.5,633.1,57.1],[1274.9,635.2,66.3],[1302.7,633.9,75.5],[1325.7,634.1,67.0],[1345.6,636.7,91.8],[1373.4,631.3,60.5],[1392.6,624.9,49.2],[1419.3,624.4,84.9],[1440.7,629.5,85.0],[1456.7,619.4,87.9],[1479.3,627.1,64.3],[1496.3,621.7,81.8],[1516.1,613.8,61.3],[1545.6,619.8,51.4],[1565.0,610.6,48.8],[1592.2,609.6,71.7],[1614.5,608.2,79.7],[1632.3,612.4,51.4],[1654.2,605.7,58.4],[1678,604,72],[1702,606,60],[1726,601,84],[1752,604,66],[1778,600,78],[1804,603,62],[1830,599,88],[1858,602,70],[1884,600,64]].map(([x, y, h], i) => (
-            <g key={i} className="cw-pine" style={{ '--i': i, transformOrigin: `${x}px ${y}px` } as React.CSSProperties}>
-              <path d={`M${x},${y - h} L${x + h * 0.16},${y - h * 0.62} L${x + h * 0.1},${y - h * 0.62} L${x + h * 0.24},${y - h * 0.3} L${x + h * 0.16},${y - h * 0.3} L${x + h * 0.3},${y} L${x - h * 0.3},${y} L${x - h * 0.16},${y - h * 0.3} L${x - h * 0.24},${y - h * 0.3} L${x - h * 0.1},${y - h * 0.62} L${x - h * 0.16},${y - h * 0.62} Z`} fill="url(#cw-pine)" />
-              <path d={`M${x},${y - h} L${x - h * 0.16},${y - h * 0.62} L${x - h * 0.08},${y - h * 0.6} Z`} fill="#a9b8ff" opacity=".55" />
-            </g>
-          ))}
+        {/* ---- right shore: a green foothill with a Swiss village, a meadow and a jetty (Switzerland) ---- */}
+        <path d="M1030,694 C1100,664 1200,640 1330,626 C1480,610 1680,596 1900,590 L1900,676 C1680,684 1400,692 1180,698 C1100,700 1060,700 1030,698 Z" fill="url(#cw-foothill)" />
+        <path d="M1030,694 C1100,664 1200,640 1330,626 C1480,610 1680,596 1900,590" fill="none" stroke="#d8ffe4" strokeWidth="2.2" opacity=".5" />
+        <g>
+          <ellipse cx="1640" cy="624" rx="58" ry="6" fill="#0b2a22" opacity=".4" />
+          <rect x="1604" y="584" width="72" height="38" rx="2" fill="#a0603a" />
+          <path d="M1594,588 L1640,556 L1686,588 Z" fill="#5a2e1e" />
+          <path d="M1601,583 L1640,558 L1679,583 L1672,585 L1640,565 L1608,585 Z" fill="#ffffff" />
+          <rect x="1615" y="594" width="14" height="11" rx="1.5" fill="#ffd27a" />
+          <rect x="1651" y="594" width="14" height="11" rx="1.5" fill="#ffd27a" />
+          <rect x="1634" y="606" width="12" height="16" rx="1.5" fill="#5a2e1e" />
         </g>
-        <path d="M1040,652 Q1300,628 1680,606 L1900,600 L1900,626 L1680,630 Q1300,652 1040,668 Z" fill="#1a5040" />
+        <g>
+          <rect x="1560" y="572" width="2.5" height="58" fill="#f1e8da" />
+          <rect x="1562.5" y="574" width="22" height="22" rx="1.2" fill="#e52b2b" />
+          <rect x="1571" y="578" width="5" height="14" fill="#ffffff" />
+          <rect x="1566.5" y="582.5" width="14" height="5" fill="#ffffff" />
+        </g>
+        <Standing x={1532} y={634} h={54} g={G.dirndl} arm="up" />
+        <Standing x={1716} y={622} h={54} g={G.herder} arm="forward" />
         {/* the meadow */}
         <path d="M1010,960 C1060,860 1140,810 1240,792 C1380,768 1520,760 1680,750 L1900,746 L1900,960 Z" fill="url(#cw-meadow)" />
         <path d="M1060,880 C1120,826 1180,806 1240,794 C1380,770 1520,762 1680,752" fill="none" stroke="#bff0c0" strokeWidth="2" opacity=".5" />
@@ -595,25 +628,6 @@ export default function CultureWorld() {
           <Seated x={1194} y={772} h={48} g={G.herder} facing={1} cup />
           <rect x="1240" y="730" width="3" height="56" fill="#3a2a22" />
           <HangingLantern x={1252} y={744} r={6} i={2} string={8} color="#ffb03a" />
-        </g>
-        {/* a small chalet with two warm windows */}
-        <g>
-          <ellipse cx="1560" cy="804" rx="80" ry="8" fill="#0b2a22" opacity=".45" />
-          <rect x="1508" y="748" width="104" height="54" rx="2" fill="#a0603a" />
-          <path d="M1494,752 L1560,708 L1626,752 Z" fill="#5a2e1e" />
-          <path d="M1504,746 L1560,710 L1616,746 L1606,748 L1560,720 L1514,748 Z" fill="#ffffff" />
-          <rect x="1524" y="762" width="20" height="16" rx="2" fill="#ffd27a" />
-          <rect x="1576" y="762" width="20" height="16" rx="2" fill="#ffd27a" />
-          <rect x="1551" y="778" width="18" height="24" rx="2" fill="#5a2e1e" />
-        </g>
-        {/* a woman in a dirndl waving beside the flag */}
-        <Standing x={1446} y={806} h={64} g={G.dirndl} arm="up" />
-        {/* the Swiss flag beside the chalet */}
-        <g>
-          <rect x="1470" y="712" width="3" height="92" fill="#f1e8da" />
-          <rect x="1473" y="714" width="28" height="28" rx="1.5" fill="#e52b2b" />
-          <rect x="1484" y="719" width="6" height="18" fill="#ffffff" />
-          <rect x="1478" y="725" width="18" height="6" fill="#ffffff" />
         </g>
         {/* alpine flowers that sway */}
         <g className="cw-flowers-alp">
@@ -724,5 +738,8 @@ export const SPOTS: Record<string, { label: string; place: string; slug: string 
   alps: { label: 'Alpenglow on the Matterhorn', place: 'Switzerland', slug: null },
   jetty: { label: 'Quiet hours by an alpine lake', place: 'Switzerland', slug: null },
   alphorn: { label: 'An alphorn across the valley', place: 'Switzerland', slug: null },
+  eiffel: { label: 'The Eiffel Tower sparkling at night', place: 'France', slug: 'france' },
+  colosseum: { label: 'Evening light in the Colosseum', place: 'Italy', slug: 'italy' },
+  supertrees: { label: 'The Supertrees of Gardens by the Bay', place: 'Singapore', slug: 'singapore' },
   water: { label: 'Wishes floating downstream', place: 'Many places', slug: null },
 };
