@@ -91,13 +91,16 @@ const PINK_RGB = SKY_PINK.map(hex);
 
 /* fixed lights in the painting: [x, y, depth, size, warm?, reflect-from-y] */
 const BRIDGE_LAMPS = [680, 740, 800, 860, 920].map((x) => [x, 524 + (1 - Math.pow((x - 800) / 170, 2)) * 26 + 14] as const);
-const LIGHTS: { x: number; y: number; d: number; r: number; c: 0 | 1; ry: number; rl: number }[] = [
+const LIGHTS: { x: number; y: number; d: number; r: number; c: 0 | 1; ry: number; rl: number; tint?: 'v' | 't' }[] = [
   ...BRIDGE_LAMPS.map(([x, y]) => ({ x, y, d: 0.42, r: 0.78, c: 0 as const, ry: 652, rl: 80 })),
   { x: 801, y: 492, d: 0.42, r: 0.75, c: 1, ry: 660, rl: 70 },
   ...[1622, 1658].map((x) => ({ x, y: 600, d: 0.68, r: 0.26, c: 1 as const, ry: 0, rl: 0 })),
   { x: 545, y: 470, d: 0.25, r: 0.9, c: 1, ry: 618, rl: 60 },
-  { x: 1006, y: 578, d: 0.25, r: 0.9, c: 1, ry: 618, rl: 34 },
-  { x: 1342, y: 744, d: 0.68, r: 0.6, c: 1, ry: 770, rl: 34 },
+  { x: 1196, y: 578, d: 0.25, r: 0.9, c: 1, ry: 618, rl: 34 },
+  { x: 420, y: 532, d: 0.25, r: 1, c: 1, ry: 618, rl: 80, tint: 'v' },
+  { x: 1050, y: 570, d: 0.25, r: 0.9, c: 1, ry: 618, rl: 60, tint: 'v' },
+  { x: 1350, y: 470, d: 0.25, r: 1.1, c: 1, ry: 618, rl: 90, tint: 't' },
+  { x: 1102, y: 744, d: 0.68, r: 0.6, c: 1, ry: 770, rl: 34 },
   ...([
     [712, 798, 0.7],
     [888, 798, 0.7],
@@ -116,16 +119,15 @@ const LIGHTS: { x: number; y: number; d: number; r: number; c: 0 | 1; ry: number
 const POOLS: [number, number, number, number, number][] = [
   [200, 790, 0.68, 380, 100],
   [800, 840, 1, 190, 100],
-  [1295, 772, 0.68, 120, 40],
+  [1060, 772, 0.68, 100, 34],
   [800, 604, 0.42, 200, 44],
   [1640, 624, 0.68, 80, 20],
-  [1006, 590, 0.25, 120, 26],
+  [1196, 590, 0.25, 100, 24],
 ];
 
 /* where the water shows, in world units (between the banks, around the path) */
 const WATER: [number, number][] = [
-  [-300, 618], [1040, 618], [1040, 696], [1300, 690], [1680, 680], [1900, 676], [1900, 746], [1700, 750], [1520, 760], [1380, 768], [1240, 792],
-  [1140, 810], [1060, 860], [1010, 905], [980, 880], [900, 820], [852, 772], [748, 772], [700, 820], [648, 858],
+  [-300, 618], [1020, 618], [1020, 700], [1070, 750], [1110, 810], [1112, 960], [1060, 960], [980, 880], [900, 820], [852, 772], [748, 772], [700, 820], [648, 858],
   [640, 720], [560, 676], [420, 660], [200, 642], [-60, 652], [-300, 658],
 ];
 
@@ -307,6 +309,8 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
     const fireGlow = radial(24, [[0, 'rgba(250,255,200,1)'], [0.2, 'rgba(220,255,140,0.8)'], [1, 'rgba(170,255,90,0)']]);
     const mistSp = radial(64, [[0, 'rgba(214,200,255,0.55)'], [0.6, 'rgba(190,170,255,0.2)'], [1, 'rgba(170,150,255,0)']]);
     const steamSp = radial(32, [[0, 'rgba(255,250,245,0.7)'], [0.6, 'rgba(255,240,235,0.25)'], [1, 'rgba(255,240,235,0)']]);
+    const haloViolet = radial(64, [[0, 'rgba(240,220,255,1)'], [0.22, 'rgba(180,130,255,0.6)'], [1, 'rgba(120,70,255,0)']]);
+    const haloTeal = radial(64, [[0, 'rgba(220,255,255,1)'], [0.22, 'rgba(90,220,255,0.6)'], [1, 'rgba(40,140,255,0)']]);
     const pinkBloom = radial(128, [[0, 'rgba(255,120,190,0.55)'], [0.45, 'rgba(255,90,170,0.2)'], [1, 'rgba(255,60,150,0)']]);
     const sparkle = mk(32, 32, (g) => {
       const grd = g.createRadialGradient(16, 16, 0, 16, 16, 16);
@@ -432,14 +436,14 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
     });
 
     const flies: Fly[] = Array.from({ length: reduce ? 0 : phone() ? 18 : 34 }, (_, i) => ({
-      x: i < 24 ? rand(1150, 1880) : rand(80, 600),
-      y: i < 24 ? rand(570, 690) : rand(600, 820),
+      x: i < 24 ? rand(1200, 1880) : rand(80, 600),
+      y: i < 24 ? rand(610, 900) : rand(600, 820),
       vx: rand(-8, 8),
       vy: rand(-6, 6),
       ph: rand(0, 6.28),
       d: 0.68,
     }));
-    const mists = Array.from({ length: 8 }, (_, i) => ({ x: rand(980, 1720), y: 628 + (i % 4) * 16 + rand(-6, 6), w: rand(260, 440), h: rand(30, 52), v: rand(5, 13), d: 0.6 }));
+    const mists = Array.from({ length: 0 }, (_, i) => ({ x: rand(980, 1720), y: 628 + (i % 4) * 16 + rand(-6, 6), w: rand(260, 440), h: rand(30, 52), v: rand(5, 13), d: 0.6 }));
     const puffs: Puff[] = [];
     let puffT = 0;
     const rings: Ring[] = [];
@@ -499,28 +503,29 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
 
       // aurora: soft green to violet curtains above the alps, fading into the sky
       if (AURORA && starVis > 0.1) {
-        sky.globalCompositeOperation = 'lighter';
+        sky.globalCompositeOperation = 'screen';
         const bands = [
-          { x0: 1290, x1: 1990, y: 450, h: 330, ph: 0, a: 1 },
-          { x0: 1380, x1: 1960, y: 400, h: 270, ph: 2.1, a: 0.85 },
-          { x0: 1320, x1: 1760, y: 470, h: 200, ph: 4.2, a: 0.6 },
+          { x0: 1300, x1: 2000, y: 470, h: 380, ph: 0, a: 1 },
+          { x0: 1380, x1: 1980, y: 410, h: 300, ph: 2.1, a: 1 },
+          { x0: 1330, x1: 1820, y: 490, h: 230, ph: 4.2, a: 0.8 },
+          { x0: 1500, x1: 2000, y: 360, h: 220, ph: 5.3, a: 0.7 },
         ];
         for (const b of bands) {
           const yb = sy(b.y, 0.05);
           const yt = sy(b.y - b.h, 0.05);
           const g = sky.createLinearGradient(0, yb + 30, 0, yt);
-          g.addColorStop(0, 'rgba(80,255,160,0)');
-          g.addColorStop(0.1, 'rgba(120,255,170,0.95)');
-          g.addColorStop(0.32, 'rgba(70,240,190,0.6)');
-          g.addColorStop(0.62, 'rgba(90,190,255,0.28)');
-          g.addColorStop(0.86, 'rgba(230,100,220,0.2)');
-          g.addColorStop(1, 'rgba(230,100,220,0)');
+          g.addColorStop(0, 'rgba(20,230,140,0)');
+          g.addColorStop(0.1, 'rgba(40,255,150,1)');
+          g.addColorStop(0.3, 'rgba(30,235,180,0.78)');
+          g.addColorStop(0.6, 'rgba(30,180,245,0.5)');
+          g.addColorStop(0.85, 'rgba(40,110,240,0.18)');
+          g.addColorStop(1, 'rgba(40,90,230,0)');
           sky.fillStyle = g;
           const step = 14;
           for (let x = b.x0; x < b.x1; x += step) {
             const f = (x - b.x0) / (b.x1 - b.x0);
             const edge = Math.sin(f * Math.PI);
-            const ray = 0.5 + 0.5 * Math.abs(Math.sin(x * 0.05 + T * 1.1 + b.ph) * Math.sin(x * 0.011 - T * 0.4)) + 0.25 * Math.sin(x * 0.21 + T * 3);
+            const ray = 0.45 + 0.55 * Math.abs(Math.sin(x * 0.05 + T * 1.1 + b.ph) * Math.sin(x * 0.011 - T * 0.4)) + 0.12 * Math.sin(x * 0.21 + T * 3);
             const wave = (xx: number) => Math.sin(xx * 0.006 + T * 0.35 + b.ph) * 34 + Math.sin(xx * 0.017 - T * 0.6) * 10;
             sky.globalAlpha = Math.max(0, b.a * edge * ray * starVis);
             const xa = sx(x, 0.05);
@@ -674,7 +679,7 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
         }
       };
       col(1215, 622, 230, 0.42, 22, '210,215,255', 0.5 * (1 - pink * 0.5), 1.3);
-      LIGHTS.forEach((L, i) => L.rl > 0 && col(L.x, L.ry, L.rl, L.d === 1 ? 1 : 0.42, 7 * L.r + 3, L.c ? '255,200,110' : '255,120,60', L.c ? 0.55 : 0.75, i * 2.1));
+      LIGHTS.forEach((L, i) => L.rl > 0 && col(L.x, L.ry, L.rl, L.d === 1 ? 1 : 0.42, 7 * L.r + 3, L.tint === 'v' ? '190,140,255' : L.tint === 't' ? '90,220,255' : L.c ? '255,200,110' : '255,120,60', L.c ? 0.55 : 0.75, i * 2.1));
       // ripples
       for (let i = rings.length - 1; i >= 0; i--) {
         const g = rings[i];
@@ -838,7 +843,7 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
         const fl = reduce ? 0.9 : 0.78 + Math.sin(T * 7 + i * 1.7) * 0.1 + Math.sin(T * 17 + i) * 0.06;
         const hw = (L.c ? 72 : 84) * L.r * sc * fl * (spotHot('bridge') && L.d === 0.42 ? 1.4 : 1);
         ctx.globalAlpha = 0.5;
-        ctx.drawImage(L.c ? haloCool : halo, sx(L.x, L.d) - hw / 2, sy(L.y, L.d) - hw / 2, hw, hw);
+        ctx.drawImage(L.tint === 'v' ? haloViolet : L.tint === 't' ? haloTeal : L.c ? haloCool : halo, sx(L.x, L.d) - hw / 2, sy(L.y, L.d) - hw / 2, hw, hw);
       });
       // the Eiffel Tower sparkles, and the Supertrees glow and slowly change colour
       for (let i = 0; i < 14; i++) {
@@ -852,26 +857,48 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
         ctx.globalAlpha = a;
         ctx.drawImage(sparkle, sx(xx, 0.25) - s, sy(yy, 0.25) - s, s * 2, s * 2);
       }
-      ([[1136, 466, 0], [1178, 422, 70], [1222, 488, 160], [1262, 448, 30]] as const).forEach(([x, y, h0], i) => {
-        const hue = (h0 + T * 24) % 360;
-        const s = 70 * sc;
-        ctx.globalAlpha = 0.5 + Math.sin(T * 1.7 + i) * 0.15;
-        ctx.fillStyle = `hsla(${hue}, 95%, 65%, 0.5)`;
-        ctx.beginPath();
-        ctx.ellipse(sx(x, 0.25), sy(y, 0.25), s * 0.55, s * 0.16, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.globalAlpha = 0.35;
-        ctx.drawImage(haloCool, sx(x, 0.25) - s, sy(y, 0.25) - s * 0.6, s * 2, s * 1.2);
-        for (let j = 0; j < 5; j++) {
-          const yy = y + 30 + ((T * 18 + j * 22) % 110);
-          if (yy > 600) continue;
-          const d = 3.2 * Math.sqrt(sc);
-          ctx.globalAlpha = 0.7;
-          ctx.fillStyle = `hsla(${(hue + 120) % 360}, 100%, 75%, 0.9)`;
+      // Supertrees: warm lights twinkling round the canopies, light rising up the trunks
+      ([[1290, 456], [1330, 416], [1368, 482], [1404, 442]] as const).forEach(([x, top], i) => {
+        for (let k = 0; k < 14; k++) {
+          const a = (k / 14) * Math.PI * 2;
+          const tw = Math.pow(Math.max(0, Math.sin(T * 2.2 + k * 1.7 + i * 3)), 3);
+          if (tw < 0.1) continue;
+          const px = x + Math.cos(a) * 38;
+          const py = top + Math.sin(a) * 7;
+          const s = 2.6 * Math.sqrt(sc);
+          ctx.globalAlpha = tw;
+          ctx.fillStyle = k % 3 ? '#ffd890' : '#ffffff';
           ctx.beginPath();
-          ctx.arc(sx(x, 0.25), sy(yy, 0.25), d, 0, Math.PI * 2);
+          ctx.arc(sx(px, 0.25), sy(py, 0.25), s, 0, Math.PI * 2);
           ctx.fill();
         }
+        const yy = 606 - ((T * 26 + i * 37) % (606 - top - 24));
+        ctx.globalAlpha = 0.8;
+        ctx.fillStyle = '#9af6ff';
+        ctx.beginPath();
+        ctx.ellipse(sx(x, 0.25), sy(yy, 0.25), 6 * sc, 2 * sc, 0, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      // London Eye: lights chasing round the rim as it slowly turns
+      for (let k = 0; k < 24; k++) {
+        const a = (k / 24) * Math.PI * 2 + T * 0.06;
+        const chase = Math.pow(Math.max(0, Math.cos(a - T * 1.4)), 6);
+        const s = (2 + chase * 2.6) * Math.sqrt(sc);
+        ctx.globalAlpha = 0.55 + chase * 0.45;
+        ctx.fillStyle = chase > 0.3 ? '#ffffff' : '#e2ccff';
+        ctx.beginPath();
+        ctx.arc(sx(420 + Math.cos(a) * 62, 0.25), sy(532 + Math.sin(a) * 62, 0.25), s, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      // Opera House: projections drifting across the sails
+      ([[1012, 566, 0], [1043, 552, 120], [1071, 560, 240], [1096, 574, 60]] as const).forEach(([x, y, h0], i) => {
+        const hue = (h0 + T * 30) % 360;
+        const s = 26 * sc;
+        ctx.globalAlpha = 0.28 + Math.sin(T * 1.3 + i) * 0.08;
+        ctx.fillStyle = `hsla(${hue}, 90%, 62%, 1)`;
+        ctx.beginPath();
+        ctx.ellipse(sx(x, 0.25), sy(y, 0.25), s * 0.6, s * 0.75, 0, 0, Math.PI * 2);
+        ctx.fill();
       });
       // the blossom glows from within, and sparkles
       const bx = sx(120, 0.68);
@@ -893,8 +920,11 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
         f.vy *= 0.98;
         f.x += f.vx * dt;
         f.y += f.vy * dt;
-        if (f.x < 1040 && f.x > 620) f.vx += 30 * dt * (f.x > 830 ? 1 : -1);
-        f.y = f.d === 0.68 && f.x > 1100 ? clamp(f.y, 560, 700) : clamp(f.y, 600, 920);
+        if (f.x < 1180 && f.x > 620) f.vx += 30 * dt * (f.x > 900 ? 1 : -1);
+        if (f.x > 1100) {
+          f.x = clamp(f.x, 1180, 1890);
+          f.y = clamp(f.y, 620 - (f.x - 1180) * 0.04, 920);
+        } else f.y = clamp(f.y, 600, 920);
         const a = Math.pow(Math.max(0, Math.sin(T * 1.3 + f.ph)), 3);
         if (a < 0.03) continue;
         const s = 10 * Math.sqrt(sc);
@@ -909,7 +939,7 @@ export default function CultureHero({ onPick }: { onPick?: (slug: string) => voi
         puffT -= dt;
         if (puffT < 0) {
           puffT = 0.14;
-          puffs.push({ x: 284 + rand(-3, 3), y: 750, t: 0, d: 0.68, s: 1 }, { x: 1300 + rand(-2, 2), y: 748, t: 0, d: 0.68, s: 0.55 });
+          puffs.push({ x: 284 + rand(-3, 3), y: 750, t: 0, d: 0.68, s: 1 }, { x: 1050 + rand(-2, 2), y: 748, t: 0, d: 0.68, s: 0.55 });
         }
       }
       for (let i = puffs.length - 1; i >= 0; i--) {

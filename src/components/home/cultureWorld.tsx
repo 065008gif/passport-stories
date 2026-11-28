@@ -334,15 +334,55 @@ export default function CultureWorld() {
           <stop offset="1" stopColor="#173f46" />
         </linearGradient>
         <linearGradient id="cw-eiffel" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#fff0b8" />
-          <stop offset=".35" stopColor="#ffc35a" />
-          <stop offset=".75" stopColor="#d9782e" />
-          <stop offset="1" stopColor="#8a3a24" />
+          <stop offset="0" stopColor="#fff6cc" />
+          <stop offset=".3" stopColor="#ffd56a" />
+          <stop offset=".7" stopColor="#f39a2e" />
+          <stop offset="1" stopColor="#b0521e" />
         </linearGradient>
         <linearGradient id="cw-stone" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#f6c98e" />
           <stop offset=".6" stopColor="#d48a52" />
           <stop offset="1" stopColor="#9a5634" />
+        </linearGradient>
+        <pattern id="cw-lattice" width="7" height="7" patternUnits="userSpaceOnUse">
+          <path d="M0,0 L7,7 M7,0 L0,7" stroke="#8a4416" strokeWidth=".8" opacity=".55" />
+        </pattern>
+        <radialGradient id="cw-archglow" cx=".5" cy=".7" r=".7">
+          <stop offset="0" stopColor="#fff2b0" />
+          <stop offset=".5" stopColor="#ffb547" />
+          <stop offset="1" stopColor="#d9681e" />
+        </radialGradient>
+        <linearGradient id="cw-vivid1" x1="0" y1="1" x2=".6" y2="0">
+          <stop offset="0" stopColor="#3a2ad0" />
+          <stop offset=".45" stopColor="#b04ae8" />
+          <stop offset=".8" stopColor="#ff7ad0" />
+          <stop offset="1" stopColor="#ffe0f4" />
+        </linearGradient>
+        <linearGradient id="cw-vivid2" x1="0" y1="1" x2=".6" y2="0">
+          <stop offset="0" stopColor="#1a56c8" />
+          <stop offset=".5" stopColor="#2ec8f0" />
+          <stop offset="1" stopColor="#e8fbff" />
+        </linearGradient>
+        <linearGradient id="cw-vivid3" x1="0" y1="1" x2=".6" y2="0">
+          <stop offset="0" stopColor="#6a2ad8" />
+          <stop offset=".55" stopColor="#d44ad8" />
+          <stop offset="1" stopColor="#7af0ff" />
+        </linearGradient>
+        <linearGradient id="cw-sttrunk" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#3a8cff" />
+          <stop offset=".5" stopColor="#2a46b8" />
+          <stop offset="1" stopColor="#3a1a7a" />
+        </linearGradient>
+        <radialGradient id="cw-stcanopy" cx=".5" cy=".2" r=".8">
+          <stop offset="0" stopColor="#bafff4" />
+          <stop offset=".35" stopColor="#38d6e8" />
+          <stop offset="1" stopColor="#1a4ab0" stopOpacity=".55" />
+        </radialGradient>
+        <linearGradient id="cw-hill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#4fae7c" />
+          <stop offset=".25" stopColor="#2f8a5e" />
+          <stop offset=".6" stopColor="#1c5e44" />
+          <stop offset="1" stopColor="#0d3328" />
         </linearGradient>
         <linearGradient id="cw-trunk" x1="0" y1="0" x2="1" y2="0">
           <stop offset="0" stopColor="#14081a" />
@@ -379,40 +419,82 @@ export default function CultureWorld() {
 
       {/* ================= SKYLINE ================= */}
       <g id="cw-skyline" data-depth="0.25">
-        {/* the Eiffel Tower, lit gold at night (France) */}
+        {/* the London Eye, a violet wheel of light (United Kingdom) */}
+        <g data-spot="londoneye" className="cw-spot">
+          <path d="M420,532 L386,606 M420,532 L404,606 M392,592 L402,592" stroke="#e8dcff" strokeWidth="3" strokeLinecap="round" fill="none" />
+          <circle cx="420" cy="532" r="62" fill="none" stroke="#a77bff" strokeWidth="9" opacity=".28" />
+          <circle cx="420" cy="532" r="62" fill="none" stroke="#dcc6ff" strokeWidth="2.6" />
+          <circle cx="420" cy="532" r="57" fill="none" stroke="#9a6cff" strokeWidth="1.2" opacity=".8" />
+          {Array.from({ length: 16 }, (_, k) => {
+            const a = (k / 16) * Math.PI * 2;
+            return <line key={k} x1="420" y1="532" x2={420 + Math.cos(a) * 57} y2={532 + Math.sin(a) * 57} stroke="#cdb4ff" strokeWidth=".7" opacity=".6" />;
+          })}
+          <circle cx="420" cy="532" r="5" fill="#f4ecff" />
+        </g>
+        {/* the Eiffel Tower, a golden lattice at night (France) */}
         <g data-spot="eiffel" className="cw-spot">
+          <path d="M486,606 C504,574 518,530 529,486 L534,452 C538,420 541,392 543,368 L545,350 L547,368 C549,392 552,420 556,452 L561,486 C572,530 586,574 604,606 L578,606 Q545,566 512,606 Z" fill="none" stroke="#ffcf6a" strokeWidth="9" opacity=".22" strokeLinejoin="round" />
           <path d="M486,606 C504,574 518,530 529,486 L534,452 C538,420 541,392 543,368 L545,350 L547,368 C549,392 552,420 556,452 L561,486 C572,530 586,574 604,606 L578,606 Q545,566 512,606 Z" fill="url(#cw-eiffel)" />
-          <path d="M545,350 L545,328" stroke="#ffe6a8" strokeWidth="2.4" strokeLinecap="round" />
-          <rect x="515" y="518" width="60" height="6" rx="1.5" fill="#7a3a24" />
-          <rect x="530" y="450" width="30" height="5" rx="1.5" fill="#7a3a24" />
-          <rect x="539" y="384" width="12" height="4" rx="1" fill="#7a3a24" />
-          <g stroke="#8a4a26" strokeWidth="1.2" opacity=".75">
-            <path d="M520,560 L545,528 L570,560 M512,590 L545,548 L578,590 M532,500 L545,488 L558,500 M534,476 L545,466 L556,476 M538,430 L545,420 L552,430 M539,410 L545,402 L551,410" fill="none" />
-          </g>
-          <path d="M486,606 C504,574 518,530 529,486 L534,452 C538,420 541,392 543,368 L545,350" fill="none" stroke="#fff0c0" strokeWidth="1.4" opacity=".8" />
+          <path d="M486,606 C504,574 518,530 529,486 L534,452 C538,420 541,392 543,368 L545,350 L547,368 C549,392 552,420 556,452 L561,486 C572,530 586,574 604,606 L578,606 Q545,566 512,606 Z" fill="url(#cw-lattice)" />
+          <path d="M545,350 L545,326" stroke="#fff3c4" strokeWidth="2.4" strokeLinecap="round" />
+          <circle cx="545" cy="326" r="2.4" fill="#ffffff" />
+          <path d="M512,606 Q545,566 578,606" fill="none" stroke="#fff2b8" strokeWidth="2" />
+          <rect x="512" y="516" width="66" height="7" rx="2" fill="#9a4a1c" />
+          <rect x="514" y="518" width="62" height="2.4" fill="#fff0b0" />
+          <rect x="528" y="448" width="34" height="5" rx="1.5" fill="#9a4a1c" />
+          <rect x="530" y="449.5" width="30" height="2" fill="#fff0b0" />
+          <rect x="538" y="383" width="14" height="4" rx="1" fill="#9a4a1c" />
+          <path d="M486,606 C504,574 518,530 529,486 L534,452 C538,420 541,392 543,368 L545,350 L547,368 C549,392 552,420 556,452 L561,486 C572,530 586,574 604,606" fill="none" stroke="#fff4c8" strokeWidth="1.3" opacity=".9" />
+        </g>
+        {/* the Sydney Opera House, its sails lit with colour (Australia) */}
+        <g data-spot="opera" className="cw-spot">
+          <rect x="986" y="592" width="140" height="14" rx="2" fill="#e8c493" />
+          <rect x="990" y="598" width="132" height="3" fill="#fff0c8" opacity=".9" />
+          {(
+            [
+              [994, 40, 44, 'cw-vivid1'],
+              [1020, 46, 56, 'cw-vivid2'],
+              [1050, 42, 50, 'cw-vivid3'],
+              [1080, 32, 36, 'cw-vivid1'],
+              [1100, 26, 28, 'cw-vivid2'],
+            ] as [number, number, number, string][]
+          ).map(([x, w, h, f], i) => (
+            <g key={i}>
+              <path d={`M${x},593 C${x + w * 0.1},${593 - h * 0.7} ${x + w * 0.45},${593 - h} ${x + w * 0.92},${593 - h * 1.02} C${x + w * 0.74},${593 - h * 0.62} ${x + w * 0.9},${593 - h * 0.22} ${x + w},593 Z`} fill={`url(#${f})`} />
+              <path d={`M${x + w * 0.2},${593 - h * 0.3} Q${x + w * 0.5},${593 - h * 0.75} ${x + w * 0.85},${593 - h * 0.9}`} fill="none" stroke="#ffffff" strokeWidth=".9" opacity=".55" />
+              <path d={`M${x},593 C${x + w * 0.1},${593 - h * 0.7} ${x + w * 0.45},${593 - h} ${x + w * 0.92},${593 - h * 1.02}`} fill="none" stroke="#f6eeff" strokeWidth="1.1" />
+            </g>
+          ))}
         </g>
         {/* the Colosseum, warm light in its arches (Italy) */}
         <g data-spot="colosseum" className="cw-spot">
-          <path d="M916,606 L916,550 Q1006,530 1096,548 L1096,566 L1084,563 L1078,578 L1096,584 L1096,606 Z" fill="url(#cw-stone)" />
+          <path d="M1130,606 L1130,544 Q1196,532 1262,542 L1262,556 L1254,554 L1250,566 L1262,570 L1262,606 Z" fill="url(#cw-stone)" />
+          {Array.from({ length: 10 }, (_, k) => (
+            <rect key={k} x={1136 + k * 12} y={548} width="3.2" height="4" fill="#6a3a22" opacity=".8" />
+          ))}
           {(
             [
-              [596, 1, 916, 1096],
-              [578, 0.9, 916, 1096],
-              [561, 0.8, 916, 1076],
+              [556, 12, 1262],
+              [571, 13, 1262],
+              [587, 15, 1262],
             ] as number[][]
-          ).map(([y, s, a, b], r) =>
-            Array.from({ length: Math.floor((b - a - 6) / 15) }, (_, k) => {
-              const x = a + 9 + k * 15;
-              const h = 13 * s;
-              return <path key={`${r}-${k}`} d={`M${x - 4.5},${y + 8} L${x - 4.5},${y + 12 - h} Q${x},${y + 7 - h} ${x + 4.5},${y + 12 - h} L${x + 4.5},${y + 8} Z`} fill="#ffd27a" />;
-            }),
-          )}
-          {[588, 570, 553].map((y) => (
-            <rect key={y} x="916" y={y} width={y === 553 ? 160 : 180} height="2" fill="#9a5a34" />
+          ).map(([y, h, end], r) => (
+            <g key={r}>
+              <rect x="1130" y={y - 2} width={end - 1130} height="2.4" fill="#a8683e" />
+              {Array.from({ length: 11 }, (_, k) => {
+                const x = 1136 + k * 11.8;
+                return (
+                  <g key={k}>
+                    <path d={`M${x - 4.6},${y + h} L${x - 4.6},${y + 4} Q${x},${y - 1.5} ${x + 4.6},${y + 4} L${x + 4.6},${y + h} Z`} fill="#7a4a2a" />
+                    <path d={`M${x - 3.4},${y + h} L${x - 3.4},${y + 4.5} Q${x},${y + 0.5} ${x + 3.4},${y + 4.5} L${x + 3.4},${y + h} Z`} fill="url(#cw-archglow)" opacity={r === 2 ? 0.8 : 1} />
+                  </g>
+                );
+              })}
+            </g>
           ))}
         </g>
         {/* the Matterhorn in alpenglow (Switzerland) */}
-        <g data-spot="alps" className="cw-spot" transform="translate(120 0)">
+        <g data-spot="alps" className="cw-spot" transform="translate(200 0)">
           <polygon points="1170,615 1258,522 1298,472 1334,402 1361,332 1391,262 1402,256 1409,300 1417,352 1439,432 1420,520 1380,615" fill="url(#cw-peak-lit)" />
           <polygon points="1402,256 1420,272 1450,340 1490,420 1540,500 1612,615 1380,615 1420,520 1439,432 1417,352 1409,300" fill="url(#cw-peak-shade)" />
           <path d="M1383,282 L1391,262 L1402,256 L1420,272 L1436,306 L1424,302 L1414,318 L1404,300 L1394,312 L1388,296 Z" fill="#ffffff" />
@@ -429,30 +511,39 @@ export default function CultureWorld() {
           </g>
         </g>
         {/* green foothills: the mountains stand on land, not on the water */}
-        <path d="M1050,622 C1100,600 1150,574 1230,568 C1300,560 1360,548 1440,556 C1520,548 1600,532 1700,540 C1780,532 1850,536 1900,530 L1900,624 L1050,624 Z" fill="url(#cw-foothill)" />
-        <path d="M1050,622 C1100,600 1150,574 1230,568 C1300,560 1360,548 1440,556 C1520,548 1600,532 1700,540 C1780,532 1850,536 1900,530" fill="none" stroke="#ffffff" strokeWidth="3" opacity=".55" strokeLinecap="round" />
+        <path d="M1262,624 C1300,604 1350,586 1420,576 C1500,562 1600,546 1700,540 C1780,532 1850,536 1900,530 L1900,624 L1262,624 Z" fill="url(#cw-foothill)" />
+        <path d="M1262,624 C1300,604 1350,586 1420,576 C1500,562 1600,546 1700,540 C1780,532 1850,536 1900,530" fill="none" stroke="#ffffff" strokeWidth="3" opacity=".55" strokeLinecap="round" />
         <path d="M400,614 C470,600 540,596 600,602 C700,592 820,596 900,604 C980,598 1060,600 1120,612 L1120,620 L400,620 Z" fill="url(#cw-foothill)" opacity=".9" />
         {/* the Supertrees of Gardens by the Bay (Singapore) */}
         <g data-spot="supertrees" className="cw-spot">
-          <path d="M1178,457 Q1200,452 1222,500" stroke="#efe6ff" strokeWidth="2.2" fill="none" opacity=".85" />
-          {[
-            [1136, 140, '#8e1a6e', '#ff7ad9'],
-            [1178, 184, '#4a2aa8', '#b9a0ff'],
-            [1222, 118, '#0d7a6c', '#6ff5dc'],
-            [1262, 158, '#a8480e', '#ffcf5a'],
-          ].map(([x, h, c, rim], i) => {
-            const X = x as number;
-            const top = 606 - (h as number);
+          {(
+            [
+              [1290, 150],
+              [1330, 190],
+              [1368, 124],
+              [1404, 164],
+            ] as number[][]
+          ).map(([x, h], i) => {
+            const top = 606 - h;
             return (
               <g key={i}>
-                <path d={`M${X - 6},606 C${X - 5},${606 - (h as number) * 0.45} ${X - 3},${top + 40} ${X - 10},${top + 22} L${X + 10},${top + 22} C${X + 3},${top + 40} ${X + 5},${606 - (h as number) * 0.45} ${X + 6},606 Z`} fill={c as string} />
-                <path d={`M${X - 2},604 L${X - 1.5},${top + 26} M${X + 2},604 L${X + 1.5},${top + 26}`} stroke={rim as string} strokeWidth="1.1" strokeDasharray="3 5" opacity=".85" />
-                <path d={`M${X - 36},${top} L${X - 11},${top + 24} L${X + 11},${top + 24} L${X + 36},${top} Z`} fill={c as string} />
-                <path d={`M${X - 36},${top} L${X - 11},${top + 24} M${X - 18},${top} L${X - 5},${top + 24} M${X},${top} L${X},${top + 24} M${X + 18},${top} L${X + 5},${top + 24} M${X + 36},${top} L${X + 11},${top + 24}`} stroke={rim as string} strokeWidth="1" opacity=".7" />
-                <ellipse cx={X} cy={top} rx="36" ry="6" fill={c as string} stroke={rim as string} strokeWidth="2" />
+                <path d={`M${x - 7},606 C${x - 6},${606 - h * 0.45} ${x - 3},${top + 44} ${x - 11},${top + 22} L${x + 11},${top + 22} C${x + 3},${top + 44} ${x + 6},${606 - h * 0.45} ${x + 7},606 Z`} fill="url(#cw-sttrunk)" />
+                <path d={`M${x - 3},604 L${x - 2},${top + 26} M${x + 3},604 L${x + 2},${top + 26} M${x},604 L${x},${top + 26}`} stroke="#6fe2ff" strokeWidth=".8" opacity=".7" />
+                {[0.3, 0.5, 0.7].map((f) => (
+                  <ellipse key={f} cx={x + (f === 0.5 ? -3 : 3)} cy={606 - h * f} rx="3.4" ry="2.4" fill="#2fb87a" opacity=".85" />
+                ))}
+                <path d={`M${x - 38},${top} Q${x - 20},${top + 12} ${x - 11},${top + 24} L${x + 11},${top + 24} Q${x + 20},${top + 12} ${x + 38},${top} Z`} fill="url(#cw-stcanopy)" />
+                {Array.from({ length: 11 }, (_, k) => {
+                  const fx = -38 + k * 7.6;
+                  return <line key={k} x1={x + fx} y1={top} x2={x + fx * 0.28} y2={top + 24} stroke="#7fe8ff" strokeWidth=".8" opacity=".75" />;
+                })}
+                <ellipse cx={x} cy={top} rx="38" ry="7" fill="#1e5ec0" fillOpacity=".55" stroke="#9af0ff" strokeWidth="1.6" />
+                <ellipse cx={x} cy={top + 12} rx="9" ry="6" fill="#d8fff8" opacity=".9" />
               </g>
             );
           })}
+          <path d="M1330,470 C1360,456 1396,470 1404,500" fill="none" stroke="#5ae4ff" strokeWidth="5" opacity=".35" />
+          <path d="M1330,470 C1360,456 1396,470 1404,500" fill="none" stroke="#d8fbff" strokeWidth="1.8" />
         </g>
       </g>
 
@@ -465,7 +556,7 @@ export default function CultureWorld() {
         <ellipse cx="905" cy="612" rx="520" ry="90" fill="url(#cw-sunpath)" />
 
         {/* the Matterhorn mirrored in the lake, broken by ripples */}
-        <g data-spot="alps" className="cw-spot cw-reflection" mask="url(#cw-reflect-mask)" transform="translate(120 0)">
+        <g data-spot="alps" className="cw-spot cw-reflection" mask="url(#cw-reflect-mask)" transform="translate(200 0)">
           <g transform="translate(0 1230) scale(1 -1)">
             <polygon points="1170,615 1258,522 1298,472 1334,402 1361,332 1391,262 1402,256 1409,300 1417,352 1439,432 1420,520 1380,615" fill="#d9ccff" />
             <polygon points="1402,256 1420,272 1450,340 1490,420 1540,500 1612,615 1380,615 1420,520 1439,432 1417,352 1409,300" fill="#2c2070" />
@@ -586,9 +677,11 @@ export default function CultureWorld() {
 
         </g>
         <g id="cw-bank-r">
-        {/* ---- right shore: a green foothill with a Swiss village, a meadow and a jetty (Switzerland) ---- */}
-        <path d="M1030,694 C1100,664 1200,640 1330,626 C1480,610 1680,596 1900,590 L1900,676 C1680,684 1400,692 1180,698 C1100,700 1060,700 1030,698 Z" fill="url(#cw-foothill)" />
-        <path d="M1030,694 C1100,664 1200,640 1330,626 C1480,610 1680,596 1900,590" fill="none" stroke="#d8ffe4" strokeWidth="2.2" opacity=".5" />
+        {/* ---- one green foothill running from the mountain down to the lake, with the Swiss village on it ---- */}
+        <path d="M1020,700 C1100,668 1200,640 1330,626 C1480,610 1680,596 1900,590 L1900,960 L1112,960 C1122,880 1112,806 1072,752 C1052,728 1034,712 1020,700 Z" fill="url(#cw-hill)" />
+        <path d="M1020,700 C1100,668 1200,640 1330,626 C1480,610 1680,596 1900,590" fill="none" stroke="#e4ffe8" strokeWidth="2.4" opacity=".55" />
+        <path d="M1020,700 C1034,712 1052,728 1072,752 C1112,806 1122,880 1112,960" fill="none" stroke="#c8ffd8" strokeWidth="2" opacity=".35" />
+        {/* the chalet, the flag and the people, on the hill */}
         <g>
           <ellipse cx="1640" cy="624" rx="58" ry="6" fill="#0b2a22" opacity=".4" />
           <rect x="1604" y="584" width="72" height="38" rx="2" fill="#a0603a" />
@@ -597,6 +690,7 @@ export default function CultureWorld() {
           <rect x="1615" y="594" width="14" height="11" rx="1.5" fill="#ffd27a" />
           <rect x="1651" y="594" width="14" height="11" rx="1.5" fill="#ffd27a" />
           <rect x="1634" y="606" width="12" height="16" rx="1.5" fill="#5a2e1e" />
+          <rect x="1600" y="603" width="80" height="3" fill="#7a3e22" />
         </g>
         <g>
           <rect x="1560" y="572" width="2.5" height="58" fill="#f1e8da" />
@@ -606,23 +700,15 @@ export default function CultureWorld() {
         </g>
         <Standing x={1532} y={634} h={54} g={G.dirndl} arm="up" />
         <Standing x={1716} y={622} h={54} g={G.herder} arm="forward" />
-        {/* the meadow */}
-        <path d="M1010,960 C1060,860 1140,810 1240,792 C1380,768 1520,760 1680,750 L1900,746 L1900,960 Z" fill="url(#cw-meadow)" />
-        <path d="M1060,880 C1120,826 1180,806 1240,794 C1380,770 1520,762 1680,752" fill="none" stroke="#bff0c0" strokeWidth="2" opacity=".5" />
-        {/* a rowboat tied to the jetty */}
-        <g className="cw-floater cw-boat" style={{ '--i': 2 } as React.CSSProperties}>
-          <ellipse cx="1090" cy="772" rx="46" ry="5" fill="#3b2b4a" opacity=".25" />
-          <path d="M1046,760 Q1090,778 1136,760 L1128,770 Q1090,786 1052,770 Z" fill="#8a4d3a" />
-          <path d="M1046,760 Q1090,774 1136,760" stroke="#c98a5a" strokeWidth="2" fill="none" />
-          <path d="M1136,760 Q1160,770 1172,780" stroke="#5a3a2e" strokeWidth="1" fill="none" />
-        </g>
-        {/* the jetty, with someone watching the light */}
-        <g data-spot="jetty" className="cw-spot" transform="translate(90 0)">
+        {/* a little path down the hill to the jetty */}
+        <path d="M1540,640 C1420,670 1260,700 1150,744 C1120,756 1100,766 1090,776" fill="none" stroke="#e8d8a8" strokeWidth="4" opacity=".35" strokeLinecap="round" />
+        {/* the jetty at the foot of the hill */}
+        <g data-spot="jetty" className="cw-spot" transform="translate(-150 0)">
           <path d="M1150,768 L1236,792 L1250,782 L1168,760 Z" fill="#a8704a" />
           {[0, 1, 2, 3, 4, 5].map((k) => (
             <path key={k} d={`M${1156 + k * 15},${766 + k * 4} L${1172 + k * 14},${760 + k * 4}`} stroke="#6a4430" strokeWidth="1.5" />
           ))}
-          {[1158, 1196, 1234].map((x, k) => (
+          {[1158, 1196].map((x, k) => (
             <rect key={x} x={x} y={770 + k * 10} width="5" height={18 + k * 4} fill="#5a3a2a" />
           ))}
           <Seated x={1194} y={772} h={48} g={G.herder} facing={1} cup />
@@ -741,5 +827,7 @@ export const SPOTS: Record<string, { label: string; place: string; slug: string 
   eiffel: { label: 'The Eiffel Tower sparkling at night', place: 'France', slug: 'france' },
   colosseum: { label: 'Evening light in the Colosseum', place: 'Italy', slug: 'italy' },
   supertrees: { label: 'The Supertrees of Gardens by the Bay', place: 'Singapore', slug: 'singapore' },
+  londoneye: { label: 'The London Eye over the Thames', place: 'United Kingdom', slug: 'united-kingdom' },
+  opera: { label: 'Vivid lights on the Opera House sails', place: 'Australia', slug: 'australia' },
   water: { label: 'Wishes floating downstream', place: 'Many places', slug: null },
 };
